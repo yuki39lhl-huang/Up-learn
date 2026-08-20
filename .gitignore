@@ -1,0 +1,27 @@
+# Build
+**/target/
+**/node_modules/
+**/dist/
+**/dist-ssr/
+build/
+
+# IDE / OS
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.DS_Store
+*.suo
+*.sw?
+
+# Secrets / local only
+markdown/apikey
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*

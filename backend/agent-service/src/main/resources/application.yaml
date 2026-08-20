@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: agent-service
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 1234
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/langchain4j
+    username: root
+    password: 1234
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+langchain4j:
+  open-ai:
+    chat-model:
+      base-url: https://api.deepseek.com
+      api-key: ${ANTHROPIC_AUTH_TOKEN} #系统变量的 apikey
+      model-name: deepseek-v4-flash
+      log-requests: true
+      log-responses: true
+    streaming-chat-model:
+      base-url: https://api.deepseek.com
+      api-key: ${ANTHROPIC_AUTH_TOKEN} #系统变量的 apikey
+      model-name: deepseek-v4-flash
+      log-requests: true
+      log-responses: true
+    embedding-model:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      api-key: sk-ws-H.EPHERYR.a8gy.MEUCIAESi06olrCSF_OitCxkegsbOKOFDFthcakCT-RnhcD9AiEA0QZQGksgkGkXSrglAhENzlI3CahtKH6QQyApV0HoZTc #alibaba向量模型
+      model-name: qwen3.7-text-embedding
+      log-requests: true
+      log-responses: true
+      max-segments-per-batch: 20 #最大一次性切割文本上限
+
+  community:
+    redis:
+      host: localhost
+      port: 6379
+      password: 1234
+
+logging:
+  level:
+    dev.langchain4j: debug

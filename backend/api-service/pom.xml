@@ -15,10 +15,12 @@
     <description>Feign 接口与共享 DTO（jar，不可独立部署）</description>
 
     <dependencies>
+        <!-- common-service -->
         <dependency>
             <groupId>com.yukimomo</groupId>
             <artifactId>common-service</artifactId>
         </dependency>
+        <!-- spring cloud openfeign -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>

@@ -39,6 +39,7 @@
 
     <dependencyManagement>
         <dependencies>
+        <!-- spring cloud -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -46,6 +47,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- spring cloud alibaba -->
             <dependency>
                 <groupId>com.alibaba.cloud</groupId>
                 <artifactId>spring-cloud-alibaba-dependencies</artifactId>
@@ -53,6 +55,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- mybatis-plus -->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-bom</artifactId>
@@ -60,21 +63,25 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- hutool -->
             <dependency>
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
             </dependency>
+            <!-- knife4j -->
             <dependency>
                 <groupId>com.baizhukui</groupId>
                 <artifactId>knife4j-openapi3-boot4-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
             </dependency>
+            <!-- common-service -->
             <dependency>
                 <groupId>com.yukimomo</groupId>
                 <artifactId>common-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- api-service -->
             <dependency>
                 <groupId>com.yukimomo</groupId>
                 <artifactId>api-service</artifactId>
@@ -84,11 +91,13 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- spring boot test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -99,6 +108,7 @@
     <build>
         <pluginManagement>
             <plugins>
+                <!-- spring boot maven plugin -->
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
@@ -106,6 +116,7 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <!-- maven compiler plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

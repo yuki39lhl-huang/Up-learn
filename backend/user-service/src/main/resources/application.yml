@@ -1,0 +1,62 @@
+server:
+  # 本机 IDEA 直连端口；经 Gateway 时对外仍走网关
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+  profiles:
+    # 默认用 dev（本机连 Docker Desktop 映射端口）
+    # 若服务也跑进 Docker 同网段，可再加 profile 把 host 换成 ul-mysql、port 换成 3306
+    active: dev
+  datasource:
+    # ul.db.* 来自 application-{profile}.yml，不是 Docker DNS 自动解析
+    url: jdbc:mysql://${ul.db.host}:${ul.db.port}/up_learn?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: ${ul.db.pw}
+  cloud:
+    nacos:
+      # Nacos 3.x：8848 映射到宿主机 8858（8088 只是控制台 UI，不能当 server-addr）
+      server-addr: localhost:8858
+      # 控制台已初始化，账号密码均为 nacos
+      username: nacos
+      password: nacos
+      discovery:
+        # true=临时实例（进程挂了会自动摘除，本地调试更合适）
+        ephemeral: true
+
+# MyBatis-Plus
+mybatis-plus:
+  configuration:
+    # 枚举类型处理器：库字段枚举 ↔ Java 枚举
+    default-enum-type-handler: com.baomidou.mybatisplus.extension.handlers.EnumTypeHandler
+  global-config:
+    db-config:
+      update-strategy: not-null
+      id-type: auto
+
+logging:
+  level:
+    com.yukimomo: debug
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    path: logs/user-service.log
+
+# Knife4j / OpenAPI3（Boot4）
+knife4j:
+  enable: true
+  openapi:
+    title: 升学通用户接口文档
+    description: 升学通用户接口文档
+    email: yuki39Lhl@gmail.com
+    concat: 柚希
+    url: https://github.com/yuki39lhl-huang
+    version: 1.0.0
+    group:
+      default:
+        group-name: default
+        api-rule: package
+        api-rule-resources:
+          - com.yukimomo.user.controller

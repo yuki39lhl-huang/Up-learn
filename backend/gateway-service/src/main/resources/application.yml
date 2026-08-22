@@ -1,0 +1,40 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    # 与基线、Nacos 服务名一致；路由 lb:// 也用这个名字
+    name: gateway-service
+  cloud:
+    nacos:
+      # 宿主机映射 8858 → 容器 8848；控制台是 8088，不要写进 server-addr
+      server-addr: localhost:8858
+      username: nacos
+      password: nacos
+      discovery:
+        ephemeral: true
+    gateway:
+      server:
+        webmvc:
+          routes:
+            # 一期：用户服务（注册/登录等）
+            - id: user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/api/user/**
+            # 后续 school / practice 上线后按同样方式追加
+            # - id: school-service
+            #   uri: lb://school-service
+            #   predicates:
+            #     - Path=/api/school/**,/api/major/**
+
+logging:
+  level:
+    '[org.springframework.cloud.gateway]': info
+    '[com.yukimomo]': debug
+
+# 与 user-service 保持一致，网关验签 Access JWT
+ul:
+  jwt:
+    secret: up-learn-dev-jwt-secret-key-change-in-production!!
+    access-ttl-ms: 1800000

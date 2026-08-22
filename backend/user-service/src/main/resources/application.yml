@@ -6,11 +6,9 @@ spring:
   application:
     name: user-service
   profiles:
-    # 默认用 dev（本机连 Docker Desktop 映射端口）
-    # 若服务也跑进 Docker 同网段，可再加 profile 把 host 换成 ul-mysql、port 换成 3306
     active: dev
   datasource:
-    # ul.db.* 来自 application-{profile}.yml，不是 Docker DNS 自动解析
+    # 这里虽然读取的是dev文件但是在测试的时候指定spring读取local文件,这里是方便以后部署到docker的时候读取dev文件
     url: jdbc:mysql://${ul.db.host}:${ul.db.port}/up_learn?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
@@ -25,12 +23,14 @@ spring:
       discovery:
         # true=临时实例（进程挂了会自动摘除，本地调试更合适）
         ephemeral: true
+  data:
+    redis:
+      # 端口/host 见 application-{profile}.yml 的 ul.redis.*
+      host: ${ul.redis.host}
+      port: ${ul.redis.port}
 
-# MyBatis-Plus
+# MyBatis-Plus（3.5+ 通用枚举默认可不配 default-enum-type-handler）
 mybatis-plus:
-  configuration:
-    # 枚举类型处理器：库字段枚举 ↔ Java 枚举
-    default-enum-type-handler: com.baomidou.mybatisplus.extension.handlers.EnumTypeHandler
   global-config:
     db-config:
       update-strategy: not-null
@@ -38,25 +38,39 @@ mybatis-plus:
 
 logging:
   level:
-    com.yukimomo: debug
+    # 包名带点，用 [] 引起来，IDE 才不会黄线
+    '[com.yukimomo]': debug
   pattern:
     dateformat: HH:mm:ss:SSS
   file:
     path: logs/user-service.log
 
-# Knife4j / OpenAPI3（Boot4）
+# Knife4j Boot4 + springdoc（openapi3 不要用 knife4j.openapi，那是 openapi2 的）
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  group-configs:
+    - group: default
+      paths-to-match: /**
+      packages-to-scan: com.yukimomo.user.controller
+
 knife4j:
   enable: true
-  openapi:
-    title: 升学通用户接口文档
-    description: 升学通用户接口文档
-    email: yuki39Lhl@gmail.com
-    concat: 柚希
-    url: https://github.com/yuki39lhl-huang
-    version: 1.0.0
-    group:
-      default:
-        group-name: default
-        api-rule: package
-        api-rule-resources:
-          - com.yukimomo.user.controller
+  setting:
+    language: zh_cn
+
+# JWT（Access 短效 JWT + Refresh 存 Redis）
+ul:
+  jwt:
+    secret: up-learn-dev-jwt-secret-key-change-in-production!!
+    access-ttl-ms: 1800000
+    refresh-ttl-seconds: 604800
+  login:
+    # 验证码有效期（秒）
+    code-ttl-seconds: 300
+    # 同一邮箱发送间隔（秒）
+    send-interval-seconds: 60
+    # 开发环境 true：验证码打日志，不真实发邮件
+    dev-log-code: true

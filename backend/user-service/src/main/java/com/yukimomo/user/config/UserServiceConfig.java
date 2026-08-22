@@ -1,0 +1,9 @@
+package com.yukimomo.user.config;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@EnableConfigurationProperties({UlLoginProperties.class, UlRefreshTokenProperties.class})
+public class UserServiceConfig {
+}

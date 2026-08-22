@@ -15,6 +15,12 @@
     <description>用户与目标院校</description>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.yukimomo</groupId>
             <artifactId>common-service</artifactId>

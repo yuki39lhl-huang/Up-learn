@@ -1,0 +1,65 @@
+{
+  "groups": [
+    {
+      "name": "ul",
+      "description": "升学通中间件连接(ul.db.* 供 JDBC 占位符使用)"
+    }
+  ],
+  "properties": [
+    {
+      "name": "ul.db.host",
+      "type": "java.lang.String",
+      "description": "MySQL 主机：本机 profile 用 localhost,Docker profile 用 ul-mysql。"
+    },
+    {
+      "name": "ul.db.port",
+      "type": "java.lang.Integer",
+      "description": "MySQL 端口：本机映射口（如 3308,或容器内 3306。"
+    },
+    {
+      "name": "ul.db.pw",
+      "type": "java.lang.String",
+      "description": "MySQL root 密码。"
+    },
+    {
+      "name": "ul.redis.host",
+      "type": "java.lang.String",
+      "description": "Redis 主机：本机 localhost，Docker 用 ul-redis-master。"
+    },
+    {
+      "name": "ul.redis.port",
+      "type": "java.lang.Integer",
+      "description": "Redis 端口：本机映射 6380，容器内 6379。"
+    },
+    {
+      "name": "ul.jwt.secret",
+      "type": "java.lang.String",
+      "description": "JWT 签名密钥，须与 gateway 一致。"
+    },
+    {
+      "name": "ul.jwt.access-ttl-ms",
+      "type": "java.lang.Long",
+      "description": "Access Token 有效期（毫秒），默认 1800000（30 分钟）。"
+    },
+    {
+      "name": "ul.jwt.refresh-ttl-seconds",
+      "type": "java.lang.Integer",
+      "description": "Refresh Token 在 Redis 中的有效期（秒），默认 604800（7 天）。"
+    },
+    {
+      "name": "ul.login.code-ttl-seconds",
+      "type": "java.lang.Integer",
+      "description": "登录验证码有效期（秒）。"
+    },
+    {
+      "name": "ul.login.send-interval-seconds",
+      "type": "java.lang.Integer",
+      "description": "同一邮箱验证码发送间隔（秒）。"
+    },
+    {
+      "name": "ul.login.dev-log-code",
+      "type": "java.lang.Boolean",
+      "description": "开发模式：验证码仅打日志。"
+    }
+  ]
+}

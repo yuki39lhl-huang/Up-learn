@@ -1,8 +1,0 @@
-# profile=local：备用本机配置（启动时加 --spring.profiles.active=local）
-ul:
-  db:
-    # 一般仍是 localhost；若 MySQL 在别的机器再改成对应 IP
-    host: localhost
-    port: 3308
-    # 与 Docker ul-mysql 的 MYSQL_ROOT_PASSWORD 一致
-    pw: 1234

@@ -1,0 +1,10 @@
+# profile=local：IDEA 本机启动，连 Docker 映射端口
+ul:
+  db:
+    host: localhost
+    port: 3308
+    pw: 1234
+  redis:
+    # ul-redis 主库映射：6380 → 容器 6379（不要用旧单例 6379）
+    host: localhost
+    port: 6380

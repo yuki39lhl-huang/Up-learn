@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='user-service · 用户账号（邮箱登录；无手机号/短信）';
+  COMMENT='user-service · 用户账号（邮箱验证码登录；password_hash 为占位哈希）';
 
 CREATE TABLE IF NOT EXISTS `user_target` (
   `id`         BIGINT      NOT NULL AUTO_INCREMENT,

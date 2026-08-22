@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "ul.jwt.secret",
+      "type": "java.lang.String",
+      "description": "JWT HMAC 密钥（生产环境务必替换）。"
+    },
+    {
+      "name": "ul.jwt.access-ttl-ms",
+      "type": "java.lang.Long",
+      "description": "Access Token 有效期（毫秒），默认 1800000（30 分钟）。"
+    }
+  ]
+}

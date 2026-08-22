@@ -1,8 +1,0 @@
-# profile=dev：在 Windows / IDEA 本机启动，通过 Docker Desktop 端口映射访问中间件
-ul:
-  db:
-    # 本机访问映射口，不要写 ul-mysql / mysql（那是容器内网主机名）
-    host: localhost
-    # ul-mysql 映射：宿主机 3308 → 容器 3306
-    port: 3308
-    pw: 1234

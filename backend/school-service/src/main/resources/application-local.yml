@@ -1,0 +1,6 @@
+# profile=local：IDEA 本机启动，连 Docker 映射端口
+ul:
+  db:
+    host: localhost
+    port: 3308
+    pw: 1234

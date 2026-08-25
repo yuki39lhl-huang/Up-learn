@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `user_target` (
   `id`         BIGINT      NOT NULL AUTO_INCREMENT,
   `user_id`    BIGINT      NOT NULL COMMENT 'user.id',
   `school_id`  BIGINT      NOT NULL COMMENT 'school.id（跨服务只存ID，无外键）',
-  `major_id`   BIGINT               DEFAULT NULL COMMENT 'major.id，可选',
+  `major_id`   BIGINT               DEFAULT NULL COMMENT 'school_major.id，可选（某校开设）',
   `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
@@ -64,12 +64,24 @@ CREATE TABLE IF NOT EXISTS `school` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='school-service · 院校';
 
-CREATE TABLE IF NOT EXISTS `major` (
+CREATE TABLE IF NOT EXISTS `major_dict` (
+  `id`             BIGINT       NOT NULL AUTO_INCREMENT,
+  `name`           VARCHAR(128) NOT NULL COMMENT '专业名称（全局唯一语义）',
+  `major_category` VARCHAR(64)           DEFAULT NULL COMMENT '专业类，如计算机类',
+  `deleted`        TINYINT      NOT NULL DEFAULT 0,
+  `created_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updated_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_major_dict_name` (`name`),
+  KEY `idx_major_dict_category` (`major_category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='school-service · 专业词典（Combobox / 筛选用）';
+
+CREATE TABLE IF NOT EXISTS `school_major` (
   `id`             BIGINT       NOT NULL AUTO_INCREMENT,
   `school_id`      BIGINT       NOT NULL COMMENT 'school.id',
-  `name`           VARCHAR(128) NOT NULL,
-  `major_category` VARCHAR(64)           DEFAULT NULL COMMENT '专业类，如计算机类',
-  `exam_subjects`  VARCHAR(255)          DEFAULT NULL COMMENT '考试科目，逗号或JSON',
+  `major_dict_id`  BIGINT       NOT NULL COMMENT 'major_dict.id',
+  `exam_subjects`  VARCHAR(255)          DEFAULT NULL COMMENT '考试科目，逗号分隔',
   `avg_score`      INT                   DEFAULT NULL COMMENT '均分',
   `enrollment`     INT                   DEFAULT NULL COMMENT '招生人数',
   `tuition`        INT                   DEFAULT NULL COMMENT '学费（元/年）',
@@ -79,11 +91,14 @@ CREATE TABLE IF NOT EXISTS `major` (
   `created_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updated_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
-  KEY `idx_major_school` (`school_id`),
-  KEY `idx_major_category` (`major_category`),
-  KEY `idx_major_year` (`year`)
+  UNIQUE KEY `uk_school_major_year` (`school_id`, `major_dict_id`, `year`),
+  KEY `idx_school_major_school` (`school_id`),
+  KEY `idx_school_major_dict` (`major_dict_id`),
+  KEY `idx_school_major_year` (`year`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='school-service · 专业';
+  COMMENT='school-service · 院校开设专业（招生信息）';
+
+-- 旧表 major 已废弃，新库勿再建；已有库执行 sql/phase1/migrate_major_dict.sql
 
 CREATE TABLE IF NOT EXISTS `school_year_stat` (
   `id`          BIGINT      NOT NULL AUTO_INCREMENT,

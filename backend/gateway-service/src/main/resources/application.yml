@@ -22,11 +22,11 @@ spring:
               uri: lb://user-service
               predicates:
                 - Path=/api/user/**
-            # 后续 school / practice 上线后按同样方式追加
-            # - id: school-service
-            #   uri: lb://school-service
-            #   predicates:
-            #     - Path=/api/school/**,/api/major/**
+            # 院校 / 专业（公开接口）
+            - id: school-service
+              uri: lb://school-service
+              predicates:
+                - Path=/api/school/**,/api/major/**
 
 logging:
   level:

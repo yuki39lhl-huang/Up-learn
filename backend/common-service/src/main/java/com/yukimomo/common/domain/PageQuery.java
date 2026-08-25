@@ -11,6 +11,7 @@ import lombok.Data;
  */
 @Data
 public class PageQuery {
+    //起始页计算公式(页码-1)*每页条数
 
     /** 默认每页条数 */
     public static final int DEFAULT_PAGE_SIZE = 10;

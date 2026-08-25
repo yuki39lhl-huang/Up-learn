@@ -1,0 +1,6 @@
+# profile=dev：服务进 Docker（ul-net）时读取
+ul:
+  db:
+    host: ul-mysql
+    port: 3306
+    pw: 1234

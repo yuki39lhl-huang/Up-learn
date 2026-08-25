@@ -27,7 +27,7 @@ public class UserAuthController {
     private final UserAuthService userAuthService;
 
     @Operation(summary = "发送登录验证码", description = "邮箱验证码登录；未注册邮箱验证通过后自动注册")
-    @PostMapping("/login/send-code")
+    @PostMapping("/login/send-code")//valid是检测dto是否符合要求,如果不符合要求,则返回400错误
     public Result<Void> sendLoginCode(@Valid @RequestBody LoginSendCodeDTO dto) {
         userAuthService.sendLoginCode(dto.getEmail());
         return Result.ok();

@@ -14,6 +14,6 @@ public class MajorOptionVO {
 
     /** 词典 ID → list.majorDictId */
     private Long id;
-    private String name;
-    private String majorCategory;
+    private String name;//专业名称-计算机程序与设计
+    private String majorCategory;//专业类别-计算机类
 }

@@ -13,6 +13,7 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -57,9 +58,12 @@ public class SchoolController {
      * @param id school.id
      */
     @Operation(summary = "院校开设专业列表",
-            description = "返回 school_major；id 用于目标院校，majorDictId 为词典 ID")
+            description = "返回该校全部开设专业；可选 majorDictId/majorCategory 用于相关度排序（精确专业置顶，同类次之）")
     @GetMapping("/{id}/majors")
-    public Result<List<MajorVO>> majors(@PathVariable Long id) {
-        return Result.ok(schoolService.listMajorsBySchoolId(id));
+    public Result<List<MajorVO>> majors(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long majorDictId,
+            @RequestParam(required = false) String majorCategory) {
+        return Result.ok(schoolService.listMajorsBySchoolId(id, majorDictId, majorCategory));
     }
 }

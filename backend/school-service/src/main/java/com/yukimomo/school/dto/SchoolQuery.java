@@ -27,6 +27,6 @@ public class SchoolQuery extends PageQuery {
     private Long majorDictId;
     @Schema(description = "专业类精确匹配（可选，一般有 majorDictId 可不传）", example = "计算机类")
     private String majorCategory;
-    @Schema(description = "true 时仅公办", example = "true")
+    @Schema(description = "true 时公办院校排序靠前（不排除民办）", example = "true")
     private Boolean preferPublic;
 }

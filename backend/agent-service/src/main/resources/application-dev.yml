@@ -1,0 +1,9 @@
+# profile=dev：Docker 内网服务名（与 user/practice-service 一致）
+ul:
+  db:
+    host: ul-mysql
+    port: 3306
+    pw: 1234
+  redis:
+    host: ul-redis-master
+    port: 6379

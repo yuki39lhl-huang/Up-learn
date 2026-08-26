@@ -1,0 +1,491 @@
+/**
+ * Gmail 式控制台布局：底层侧栏 + 顶层白色内容面板
+ */
+:root {
+  --gmail-shell-bg: #f0f4f9;
+  --gmail-sidebar-w: 256px;
+  --gmail-sidebar-rail: 72px;
+  --gmail-topbar-h: 64px;
+  --gmail-panel-radius: 16px;
+}
+
+.gmail-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--gmail-shell-bg);
+}
+
+/* ── 顶层：全宽顶栏（汉堡 + Logo + 通知/用户） ── */
+.gmail-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--gmail-topbar-h);
+  padding: 0 12px 0 8px;
+  flex-shrink: 0;
+  background: var(--gmail-shell-bg);
+  z-index: 20;
+}
+
+.gmail-menu-btn {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--st-on-surface-variant);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.gmail-menu-btn:hover {
+  background: rgb(0 0 0 / 6%);
+}
+
+.gmail-menu-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.gmail-logo {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  padding: 8px 4px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.gmail-topbar__spacer {
+  flex: 1;
+}
+
+.gmail-topbar__meta {
+  font-size: 12px;
+  color: var(--st-on-surface-variant);
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.gmail-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gmail-icon-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--st-on-surface-variant);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.gmail-icon-btn:hover {
+  background: rgb(0 0 0 / 6%);
+}
+
+.gmail-icon-btn--active {
+  background: rgb(0 88 190 / 12%);
+  color: var(--st-secondary);
+}
+
+.gmail-icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.gmail-avatar-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.15s ease;
+}
+
+.gmail-avatar-btn--active {
+  box-shadow: 0 0 0 2px var(--st-secondary-container);
+}
+
+/* ── 底层：侧栏 + 面板容器 ── */
+.gmail-frame {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 侧栏（与顶栏同色，底层） */
+.gmail-sidebar {
+  width: var(--gmail-sidebar-w);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0 16px;
+  background: var(--gmail-shell-bg);
+  transition: width 0.22s ease;
+  overflow: hidden;
+}
+
+.gmail-sidebar--collapsed {
+  width: var(--gmail-sidebar-rail);
+}
+
+.gmail-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px;
+  overflow-y: auto;
+}
+
+.gmail-sidebar--collapsed .gmail-nav {
+  padding: 0 10px;
+  align-items: center;
+}
+
+.gmail-nav__item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 0 999px 999px 0;
+  background: transparent;
+  color: var(--st-on-surface);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.gmail-sidebar--collapsed .gmail-nav__item {
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.gmail-nav__item svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--st-on-surface-variant);
+}
+
+.gmail-nav__item:hover {
+  background: rgb(0 0 0 / 5%);
+}
+
+.gmail-nav__item--active {
+  background: #d3e3fd;
+  color: #001d35;
+  font-weight: 600;
+}
+
+.gmail-nav__item--active svg {
+  color: #001d35;
+}
+
+.gmail-nav__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gmail-sidebar--collapsed .gmail-nav__label {
+  display: none;
+}
+
+.gmail-sidebar__foot {
+  padding: 8px 12px 0;
+  margin-top: auto;
+}
+
+.gmail-sidebar--collapsed .gmail-sidebar__foot {
+  padding: 8px 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gmail-api {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0 16px;
+  font-size: 11px;
+  color: var(--st-on-surface-variant);
+  white-space: nowrap;
+}
+
+.gmail-sidebar--collapsed .gmail-api {
+  display: none;
+}
+
+.gmail-api__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--st-primary-container);
+}
+
+/* ── 上层：白色浮动面板 ── */
+.gmail-panel-host {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px 16px 0;
+}
+
+.gmail-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+  border-top-left-radius: var(--gmail-panel-radius);
+  border-top-right-radius: var(--gmail-panel-radius);
+  box-shadow:
+    0 1px 2px rgb(60 64 67 / 12%),
+    0 2px 6px rgb(60 64 67 / 8%);
+  overflow: hidden;
+}
+
+.gmail-panel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--st-outline-variant);
+  flex-shrink: 0;
+}
+
+.gmail-panel__bar h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--st-on-surface);
+}
+
+.gmail-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* 面板内：设置/账号 子侧栏 */
+.gmail-panel__split {
+  display: flex;
+  min-height: 100%;
+}
+
+.gmail-panel__aside {
+  width: 200px;
+  flex-shrink: 0;
+  padding: 16px 0;
+  border-right: 1px solid var(--st-outline-variant);
+  background: #fafbfc;
+}
+
+.gmail-panel__aside-title {
+  margin: 0 0 8px;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--st-on-surface-variant);
+}
+
+.gmail-panel__link {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  font-size: 14px;
+  color: var(--st-on-surface-variant);
+  cursor: pointer;
+}
+
+.gmail-panel__link:hover {
+  background: rgb(0 0 0 / 4%);
+}
+
+.gmail-panel__link--active {
+  background: rgb(0 88 190 / 10%);
+  color: var(--st-secondary);
+  font-weight: 600;
+}
+
+.gmail-panel__content {
+  flex: 1;
+  min-width: 0;
+  padding: 24px;
+  overflow: auto;
+}
+
+.gmail-panel__content--flush {
+  padding: 0;
+}
+
+.gmail-panel__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  text-align: center;
+  color: var(--st-on-surface-variant);
+}
+
+.gmail-panel__empty svg {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  opacity: 0.45;
+}
+
+.gmail-panel__empty h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: var(--st-on-surface);
+}
+
+.gmail-panel__empty p {
+  margin: 0;
+  max-width: 360px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+/* 通知列表 */
+.notify-toolbar {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--st-outline-variant);
+  font-size: 13px;
+  color: var(--st-on-surface-variant);
+}
+
+.notify-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notify-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+.notify-item:hover {
+  background: #f8f9fa;
+}
+
+.notify-item--unread {
+  background: rgb(0 88 190 / 4%);
+}
+
+.notify-item__dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.notify-item--unread .notify-item__dot {
+  background: var(--st-secondary);
+}
+
+.notify-item__body strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.notify-item__body p {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--st-on-surface-variant);
+}
+
+.notify-item__body small {
+  font-size: 12px;
+  color: var(--st-on-surface-variant);
+}
+
+.workbench-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  text-align: center;
+  color: var(--st-on-surface-variant);
+}
+
+.workbench-placeholder h3 {
+  margin: 12px 0 8px;
+  font-size: 18px;
+  color: var(--st-on-surface);
+}
+
+@media (max-width: 768px) {
+  .gmail-topbar__meta {
+    display: none;
+  }
+
+  .gmail-panel-host {
+    padding-right: 8px;
+  }
+
+  .gmail-sidebar:not(.gmail-sidebar--collapsed) {
+    width: var(--gmail-sidebar-rail);
+  }
+
+  .gmail-sidebar:not(.gmail-sidebar--collapsed) .gmail-nav__label,
+  .gmail-sidebar:not(.gmail-sidebar--collapsed) .gmail-api {
+    display: none;
+  }
+
+  .gmail-sidebar:not(.gmail-sidebar--collapsed) .gmail-nav__item {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+}

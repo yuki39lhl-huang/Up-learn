@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * 专业公开接口：词典选项 + 开设详情（网关白名单，无需 Token）。
  */
@@ -36,6 +38,12 @@ public class MajorController {
     @GetMapping("/options")
     public Result<PageDTO<MajorOptionVO>> options(@ParameterObject MajorOptionQuery query) {
         return Result.ok(schoolService.listMajorOptions(query));
+    }
+
+    @Operation(summary = "专业类列表", description = "词典 major_category 去重，供级联筛选第一级")
+    @GetMapping("/categories")
+    public Result<List<String>> categories() {
+        return Result.ok(schoolService.listMajorCategories());
     }
 
     /**

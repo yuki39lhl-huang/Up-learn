@@ -1,16 +1,28 @@
+server:
+  port: 8085
+
 spring:
   application:
     name: agent-service
+  profiles:
+    active: local
+  cloud:
+    nacos:
+      server-addr: localhost:8858
+      username: nacos
+      password: nacos
+      discovery:
+        ephemeral: true
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: 1234
+      host: ${ul.redis.host}
+      port: ${ul.redis.port}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/langchain4j
+    url: jdbc:mysql://${ul.db.host}:${ul.db.port}/up_learn?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: 1234
+    password: ${ul.db.pw}
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
@@ -19,30 +31,29 @@ langchain4j:
   open-ai:
     chat-model:
       base-url: https://api.deepseek.com
-      api-key: ${ANTHROPIC_AUTH_TOKEN} #系统变量的 apikey
+      api-key: ${ANTHROPIC_AUTH_TOKEN}
       model-name: deepseek-v4-flash
       log-requests: true
       log-responses: true
     streaming-chat-model:
       base-url: https://api.deepseek.com
-      api-key: ${ANTHROPIC_AUTH_TOKEN} #系统变量的 apikey
+      api-key: ${ANTHROPIC_AUTH_TOKEN}
       model-name: deepseek-v4-flash
       log-requests: true
       log-responses: true
     embedding-model:
       base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-      api-key: sk-ws-H.EPHERYR.a8gy.MEUCIAESi06olrCSF_OitCxkegsbOKOFDFthcakCT-RnhcD9AiEA0QZQGksgkGkXSrglAhENzlI3CahtKH6QQyApV0HoZTc #alibaba向量模型
+      api-key: ${DASHSCOPE_API_KEY}
       model-name: qwen3.7-text-embedding
       log-requests: true
       log-responses: true
-      max-segments-per-batch: 20 #最大一次性切割文本上限
-
+      max-segments-per-batch: 20
   community:
     redis:
-      host: localhost
-      port: 6379
-      password: 1234
+      host: ${ul.redis.host}
+      port: ${ul.redis.port}
 
 logging:
   level:
     dev.langchain4j: debug
+    '[com.yukimomo]': debug

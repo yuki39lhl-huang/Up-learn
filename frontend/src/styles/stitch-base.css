@@ -1,0 +1,93 @@
+@import './stitch-tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.43;
+  color: var(--st-on-surface);
+  background: var(--st-bg);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+/* Stitch 卡片：白底 + 1px 边框 + 轻阴影，最大圆角 8px */
+.st-card {
+  background: var(--st-surface);
+  border: 1px solid var(--st-outline-variant);
+  border-radius: var(--st-radius-md);
+  box-shadow: var(--st-shadow-card);
+}
+
+.st-card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--st-outline-variant);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--st-on-surface-variant);
+}
+
+.st-card-body {
+  padding: 16px;
+}
+
+/* 状态 Chip */
+.st-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--st-radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.st-chip--public {
+  background: rgb(34 197 94 / 12%);
+  color: #004b1e;
+}
+
+.st-chip--private {
+  background: rgb(255 142 77 / 15%);
+  color: #6d2d00;
+}
+
+.st-display-lg {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 38px;
+  letter-spacing: -0.02em;
+}
+
+.st-display-md {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+}
+
+.st-headline {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.st-label-caps {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--st-on-surface-variant);
+}
+
+.st-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 13px;
+}

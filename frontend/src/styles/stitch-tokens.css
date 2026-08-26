@@ -1,0 +1,35 @@
+/**
+ * Stitch 设计系统 Token
+ * 来源：Stitch 项目「专升本招生查询与刷题平台 Web 设计」designMd · Admission & Practice Logic
+ */
+:root {
+  /* 品牌色 */
+  --st-primary: #006e2f;
+  --st-primary-container: #22c55e;
+  --st-on-primary: #ffffff;
+  --st-secondary: #0058be;
+  --st-secondary-container: #2170e4;
+  --st-tertiary: #9d4300;
+  --st-tertiary-container: #ff8e4d;
+
+  /* 表面 */
+  --st-bg: #f9f9ff;
+  --st-surface: #ffffff;
+  --st-surface-container: #e7eefe;
+  --st-surface-container-low: #f0f3ff;
+  --st-on-surface: #151c27;
+  --st-on-surface-variant: #3d4a3d;
+  --st-outline: #6d7b6c;
+  --st-outline-variant: #bccbb9;
+
+  /* 圆角 · 间距（8px 基准） */
+  --st-radius-sm: 4px;
+  --st-radius-md: 8px;
+  --st-shadow-card: 0 1px 3px rgb(21 28 39 / 5%);
+
+  /* Element Plus 主题对齐 Stitch */
+  --el-color-primary: var(--st-primary);
+  --el-color-success: var(--st-primary-container);
+  --el-border-radius-base: var(--st-radius-sm);
+  --el-font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}

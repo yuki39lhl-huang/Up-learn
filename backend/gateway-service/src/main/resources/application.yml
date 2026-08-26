@@ -27,6 +27,16 @@ spring:
               uri: lb://school-service
               predicates:
                 - Path=/api/school/**,/api/major/**
+            # 刷题（需 Access Token，不进白名单）
+            - id: practice-service
+              uri: lb://practice-service
+              predicates:
+                - Path=/api/practice/**
+            # 一点通 AI（需 Access Token）
+            - id: agent-service
+              uri: lb://agent-service
+              predicates:
+                - Path=/api/agent/**
 
 logging:
   level:

@@ -29,12 +29,13 @@ public interface SchoolService {
     SchoolVO getSchool(Long id);
 
     /**
-     * 某校开设专业列表。
+     * 某校开设专业列表；可按筛选上下文排序（精确专业优先，同类次之）。
      *
      * @param schoolId school.id
-     * @return 每项 id 为 school_major.id（目标院校用）
+     * @param majorDictId 用户当前选中的专业词典 ID（可选）
+     * @param majorCategory 用户当前选中的专业类（可选）
      */
-    List<MajorVO> listMajorsBySchoolId(Long schoolId);
+    List<MajorVO> listMajorsBySchoolId(Long schoolId, Long majorDictId, String majorCategory);
 
     /**
      * 开设详情。
@@ -48,4 +49,7 @@ public interface SchoolService {
      * 选中后把返回的 {@code id} 作为院校 list 的 {@code majorDictId}。
      */
     PageDTO<MajorOptionVO> listMajorOptions(MajorOptionQuery query);
+
+    /** 专业类列表（词典 distinct，供级联第一级） */
+    List<String> listMajorCategories();
 }

@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Import;
  * </ul>
  */
 @AutoConfiguration
-@EnableConfigurationProperties(UlJwtProperties.class)
+@EnableConfigurationProperties({UlJwtProperties.class, UlDbProperties.class, UlRedisProperties.class})
 @Import(MvcConfig.class)
 @ComponentScan(basePackages = {
         "com.yukimomo.common.advice",

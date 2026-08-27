@@ -17,4 +17,10 @@ public final class PracticeRedisConstants {
      * TTL 设到当天结束（次日 0 点），保证同一用户当天拿到同一题。
      */
     public static final String DAILY_QUESTION_PREFIX = "ul:practice:daily:";
+
+    /**
+     * 每日一练锁定科目。
+     * 完整 Key：{@code ul:practice:daily:subject:{userId}:{yyyyMMdd}}。
+     */
+    public static final String DAILY_SUBJECT_PREFIX = "ul:practice:daily:subject:";
 }

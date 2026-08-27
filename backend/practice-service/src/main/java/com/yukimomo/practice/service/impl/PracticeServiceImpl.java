@@ -19,6 +19,7 @@ import com.yukimomo.practice.mapper.QuestionMapper;
 import com.yukimomo.practice.mapper.StudyStatsMapper;
 import com.yukimomo.practice.mapper.WrongQuestionMapper;
 import com.yukimomo.practice.service.PracticeService;
+import com.yukimomo.practice.vo.DailyStatusVO;
 import com.yukimomo.practice.vo.AnswerHistoryVO;
 import com.yukimomo.practice.vo.QuestionVO;
 import com.yukimomo.practice.vo.StudyStatsVO;
@@ -63,34 +64,80 @@ public class PracticeServiceImpl implements PracticeService {
     /** 存字符串：每日题只缓存 questionId */
     private final StringRedisTemplate stringRedisTemplate;
 
+    /** 每日一练来源标识，与前端 submit source 一致 */
+    private static final String SOURCE_DAILY = "daily";
+
     /**
      * 每日一练流程：
-     * 1) 拼 Key = 前缀 + userId + 当天 yyyyMMdd
-     * 2) 命中缓存且题目仍存在 → 直接返回
-     * 3) 否则随机抽题，写入 Redis，TTL 到次日 0 点
+     * 1) 若今日已完成（source=daily 提交）→ 返回当日已做题
+     * 2) 拼 Key = 前缀 + userId + 当天 yyyyMMdd
+     * 3) 未完成且传入新 subject → 可换题；命中缓存且题目仍存在 → 直接返回
+     * 4) 否则随机抽题，写入 Redis，TTL 到次日 0 点
      */
     @Override
     public QuestionVO daily(String subject) {
-        // 未登录会抛 UnauthorizedException（网关正常时应已有 user-id）
         Long userId = UserContext.requireUserId();
         String day = LocalDate.now().format(DAY_FMT);
-        String key = PracticeRedisConstants.DAILY_QUESTION_PREFIX + userId + ":" + day;
+        String questionKey = PracticeRedisConstants.DAILY_QUESTION_PREFIX + userId + ":" + day;
+        String subjectKey = PracticeRedisConstants.DAILY_SUBJECT_PREFIX + userId + ":" + day;
 
-        // 先查 Redis，保证「同一天同一用户同一题」
-        String cachedId = stringRedisTemplate.opsForValue().get(key);
-        if (StrUtil.isNotBlank(cachedId)) {
-            Question cached = questionMapper.selectById(Long.valueOf(cachedId));
-            // 缓存题若被逻辑删除，则走下方重新抽题
-            if (cached != null) {
-                return toQuestionVo(cached);
+        AnswerRecord todayDaily = findTodayDailyRecord(userId);
+        if (todayDaily != null) {
+            Question done = questionMapper.selectById(todayDaily.getQuestionId());
+            if (done != null) {
+                return toQuestionVo(done);
             }
         }
 
-        Question question = pickRandom(subject);
+        String lockedSubject = stringRedisTemplate.opsForValue().get(subjectKey);
+        String normalizedSubject = StrUtil.trim(subject);
+        boolean subjectChanged = StrUtil.isNotBlank(normalizedSubject)
+                && StrUtil.isNotBlank(lockedSubject)
+                && !StrUtil.equals(normalizedSubject, lockedSubject);
+
+        if (!subjectChanged) {
+            String cachedId = stringRedisTemplate.opsForValue().get(questionKey);
+            if (StrUtil.isNotBlank(cachedId)) {
+                Question cached = questionMapper.selectById(Long.valueOf(cachedId));
+                if (cached != null) {
+                    return toQuestionVo(cached);
+                }
+            }
+        }
+
+        String pickSubject = StrUtil.isNotBlank(normalizedSubject) ? normalizedSubject : lockedSubject;
+        Question question = pickRandom(pickSubject);
         long ttlSeconds = secondsUntilTomorrow();
-        // Value 只存 id；TTL 用 Duration，到期后 Key 自动删除
-        stringRedisTemplate.opsForValue().set(key, String.valueOf(question.getId()), Duration.ofSeconds(ttlSeconds));
+        stringRedisTemplate.opsForValue().set(questionKey, String.valueOf(question.getId()), Duration.ofSeconds(ttlSeconds));
+        if (StrUtil.isNotBlank(pickSubject)) {
+            stringRedisTemplate.opsForValue().set(subjectKey, pickSubject, Duration.ofSeconds(ttlSeconds));
+        }
         return toQuestionVo(question);
+    }
+
+    @Override
+    public DailyStatusVO dailyStatus() {
+        Long userId = UserContext.requireUserId();
+        String day = LocalDate.now().format(DAY_FMT);
+        String questionKey = PracticeRedisConstants.DAILY_QUESTION_PREFIX + userId + ":" + day;
+        String subjectKey = PracticeRedisConstants.DAILY_SUBJECT_PREFIX + userId + ":" + day;
+
+        DailyStatusVO vo = new DailyStatusVO();
+        AnswerRecord todayDaily = findTodayDailyRecord(userId);
+        vo.setCompletedToday(todayDaily != null);
+
+        String lockedSubject = stringRedisTemplate.opsForValue().get(subjectKey);
+        vo.setSubject(lockedSubject);
+
+        if (todayDaily != null) {
+            vo.setQuestionId(todayDaily.getQuestionId());
+        } else {
+            String cachedId = stringRedisTemplate.opsForValue().get(questionKey);
+            if (StrUtil.isNotBlank(cachedId)) {
+                vo.setQuestionId(Long.valueOf(cachedId));
+            }
+        }
+        return vo;
     }
 
     /**
@@ -124,17 +171,19 @@ public class PracticeServiceImpl implements PracticeService {
         record.setUserId(userId);
         record.setQuestionId(question.getId());
         record.setUserAnswer(userAnswer);
-        // DB 用 TINYINT：1/0，不用 Boolean，避免驱动差异
         record.setCorrect(correct ? 1 : 0);
-        // source 为空时默认 "submit"
-        record.setSource(StrUtil.blankToDefault(dto.getSource(), "submit"));
+        String source = StrUtil.blankToDefault(dto.getSource(), "submit");
+        if (SOURCE_DAILY.equalsIgnoreCase(source) && findTodayDailyRecord(userId) != null) {
+            throw new BadRequestException("今日每日一练已完成，明天再来吧");
+        }
+        record.setSource(source);
         answerRecordMapper.insert(record);
 
         // 一期：答对不从错题本移除，仅答错累加
         if (!correct) {
             upsertWrong(userId, question.getId());
         }
-        upsertStats(userId, correct);
+        upsertStats(userId, correct, SOURCE_DAILY.equalsIgnoreCase(source));
 
         // 提交结果才带答案与解析
         SubmitResultVO vo = new SubmitResultVO();
@@ -242,21 +291,23 @@ public class PracticeServiceImpl implements PracticeService {
                 new LambdaQueryWrapper<StudyStats>().eq(StudyStats::getUserId, userId)
         );
         StudyStatsVO vo = new StudyStatsVO();
+        int totalCheckIn = countTotalCheckInDays(userId);
+        int streak = computeDailyStreak(userId);
         if (stats == null) {
             vo.setTotalAnswered(0);
             vo.setCorrectCount(0);
-            // setScale(2)：与有记录时精度一致，如 0.00
             vo.setAccuracy(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
-            vo.setStreak(0);
+            vo.setStreak(streak);
+            vo.setTotalCheckInDays(totalCheckIn);
             return vo;
         }
         vo.setTotalAnswered(stats.getTotalAnswered());
         vo.setCorrectCount(stats.getCorrectCount());
-        // 三元：库里 accuracy 为 null 时兜底 0.00
         vo.setAccuracy(stats.getAccuracy() != null
                 ? stats.getAccuracy()
                 : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
-        vo.setStreak(stats.getStreak() != null ? stats.getStreak() : 0);
+        vo.setStreak(streak);
+        vo.setTotalCheckInDays(totalCheckIn);
         return vo;
     }
 
@@ -318,35 +369,24 @@ public class PracticeServiceImpl implements PracticeService {
      * </ul>
      * 注意：必须用 update 前的 {@code updatedAt} 判断「上次日期」，update 后会被刷新。
      */
-    private void upsertStats(Long userId, boolean correct) {
+    private void upsertStats(Long userId, boolean correct, boolean countStreak) {
         StudyStats stats = studyStatsMapper.selectOne(
                 new LambdaQueryWrapper<StudyStats>().eq(StudyStats::getUserId, userId)
         );
-        LocalDate today = LocalDate.now();
         if (stats == null) {
             StudyStats row = new StudyStats();
             row.setUserId(userId);
             row.setTotalAnswered(1);
             row.setCorrectCount(correct ? 1 : 0);
             row.setAccuracy(calcAccuracy(1, correct ? 1 : 0));
-            row.setStreak(1);
+            row.setStreak(countStreak ? computeDailyStreak(userId) : 0);
             studyStatsMapper.insert(row);
             return;
         }
 
-        // 先取出「上次提交日」，再改计数，避免被本次 update 覆盖语义
-        LocalDate lastDay = stats.getUpdatedAt() != null
-                ? stats.getUpdatedAt().toLocalDate()
-                : null;
         int streak = stats.getStreak() == null ? 0 : stats.getStreak();
-        if (lastDay == null) {
-            streak = 1;
-        } else if (lastDay.equals(today)) {
-            // 当日已有提交，维持 streak，故意空分支
-        } else if (lastDay.equals(today.minusDays(1))) {
-            streak = streak + 1;
-        } else {
-            streak = 1;
+        if (countStreak) {
+            streak = computeDailyStreak(userId);
         }
 
         int total = (stats.getTotalAnswered() == null ? 0 : stats.getTotalAnswered()) + 1;
@@ -356,6 +396,65 @@ public class PracticeServiceImpl implements PracticeService {
         stats.setAccuracy(calcAccuracy(total, correctCount));
         stats.setStreak(streak);
         studyStatsMapper.updateById(stats);
+    }
+
+    /** 今日是否已有 source=daily 的答题记录 */
+    private AnswerRecord findTodayDailyRecord(Long userId) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        return answerRecordMapper.selectOne(
+                new LambdaQueryWrapper<AnswerRecord>()
+                        .eq(AnswerRecord::getUserId, userId)
+                        .eq(AnswerRecord::getSource, SOURCE_DAILY)
+                        .ge(AnswerRecord::getCreatedAt, startOfDay)
+                        .orderByDesc(AnswerRecord::getCreatedAt)
+                        .last("LIMIT 1")
+        );
+    }
+
+    /** 累计签到：完成 daily 的去重日期数 */
+    private int countTotalCheckInDays(Long userId) {
+        List<AnswerRecord> records = answerRecordMapper.selectList(
+                new LambdaQueryWrapper<AnswerRecord>()
+                        .eq(AnswerRecord::getUserId, userId)
+                        .eq(AnswerRecord::getSource, SOURCE_DAILY)
+                        .select(AnswerRecord::getCreatedAt)
+        );
+        if (records == null || records.isEmpty()) {
+            return 0;
+        }
+        return (int) records.stream()
+                .filter(r -> r.getCreatedAt() != null)
+                .map(r -> r.getCreatedAt().toLocalDate())
+                .distinct()
+                .count();
+    }
+
+    /**
+     * 连续签到：从今天（若已签）或昨天起向前数连续有 daily 记录的天数。
+     * 今日未签但昨日已签时， streak 仍保留至当日 24 点前。
+     */
+    private int computeDailyStreak(Long userId) {
+        LocalDate today = LocalDate.now();
+        LocalDate cursor = findTodayDailyRecord(userId) != null ? today : today.minusDays(1);
+        int streak = 0;
+        while (hasDailyOn(userId, cursor)) {
+            streak++;
+            cursor = cursor.minusDays(1);
+        }
+        return streak;
+    }
+
+    private boolean hasDailyOn(Long userId, LocalDate day) {
+        LocalDateTime start = day.atStartOfDay();
+        LocalDateTime end = day.plusDays(1).atStartOfDay();
+        Long count = answerRecordMapper.selectCount(
+                new LambdaQueryWrapper<AnswerRecord>()
+                        .eq(AnswerRecord::getUserId, userId)
+                        .eq(AnswerRecord::getSource, SOURCE_DAILY)
+                        .ge(AnswerRecord::getCreatedAt, start)
+                        .lt(AnswerRecord::getCreatedAt, end)
+        );
+        return count != null && count > 0;
     }
 
     /** 正确率 = 正确数 / 总题数 * 100，保留两位，四舍五入 */

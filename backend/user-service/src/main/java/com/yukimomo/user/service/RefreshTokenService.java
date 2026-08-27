@@ -1,9 +1,9 @@
 package com.yukimomo.user.service;
 
 import cn.hutool.core.util.RandomUtil;
+import com.yukimomo.common.config.UlJwtProperties;
 import com.yukimomo.common.exception.BizException;
 import com.yukimomo.common.exception.ErrorCode;
-import com.yukimomo.user.config.UlRefreshTokenProperties;
 import com.yukimomo.user.constant.UserRedisConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -21,7 +21,7 @@ public class RefreshTokenService {
     private static final String VALUE_SEPARATOR = ":";
 
     private final StringRedisTemplate stringRedisTemplate;
-    private final UlRefreshTokenProperties refreshTokenProperties;
+    private final UlJwtProperties jwtProperties;
 
     public String create(Long userId, String email) {
         String token = RandomUtil.randomString(64);
@@ -30,7 +30,7 @@ public class RefreshTokenService {
         stringRedisTemplate.opsForValue().set(
                 key,
                 value,
-                Duration.ofSeconds(refreshTokenProperties.getRefreshTtlSeconds()));
+                Duration.ofSeconds(jwtProperties.getRefreshTtlSeconds()));
         return token;
     }
 

@@ -51,7 +51,7 @@ async function handleLogin() {
     const vo = await loginByCode(email.value.trim(), code.value.trim())
     auth.setSession(vo)
     ElMessage.success('登录成功')
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/console'
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/console#dashboard'
     router.push(redirect)
   } catch (e) {
     ElMessage.error(e instanceof Error ? e.message : '登录失败')

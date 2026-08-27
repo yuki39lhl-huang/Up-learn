@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { fetchMajorCategories, fetchMajorOptions, fetchSchoolList, fetchSchoolMajors } from '../../api/school'
 import type { MajorOptionVO, MajorVO, SchoolVO } from '../../types/api'
@@ -50,6 +50,33 @@ async function loadSchools() {
   }
 }
 
+function resetMajorPanel() {
+  selectedSchool.value = null
+  schoolMajors.value = []
+}
+
+function onPageChange(page: number) {
+  pageNo.value = page
+  loadSchools()
+}
+
+function onSearch() {
+  resetMajorPanel()
+  pageNo.value = 1
+  loadSchools()
+}
+
+/** 专业筛选变更：刷新院校列表，若当前校仍在结果中则同步刷新专业列表 */
+async function reloadWithSelection() {
+  const keep = selectedSchool.value
+  pageNo.value = 1
+  await loadSchools()
+  if (keep && schools.value.some((s) => s.id === keep.id)) {
+    selectedSchool.value = keep
+    await showMajors(keep)
+  }
+}
+
 async function searchMajorOptions(query: string) {
   if (!majorCategory.value) {
     majorOptions.value = []
@@ -64,8 +91,9 @@ async function searchMajorOptions(query: string) {
       pageSize: 30,
     })
     majorOptions.value = data.list
-  } catch {
+  } catch (e) {
     majorOptions.value = []
+    ElMessage.error(e instanceof Error ? e.message : '专业选项加载失败')
   } finally {
     majorSearchLoading.value = false
   }
@@ -77,7 +105,11 @@ function onMajorCategoryChange() {
   if (majorCategory.value) {
     searchMajorOptions('')
   }
-  onSearch()
+  reloadWithSelection()
+}
+
+async function onMajorDictChange() {
+  await reloadWithSelection()
 }
 
 async function showMajors(row: SchoolVO) {
@@ -96,13 +128,6 @@ async function showMajors(row: SchoolVO) {
   }
 }
 
-function onSearch() {
-  pageNo.value = 1
-  selectedSchool.value = null
-  schoolMajors.value = []
-  loadSchools()
-}
-
 function typeChip(row: SchoolVO) {
   return row.type === '公办' ? 'st-chip--public' : 'st-chip--private'
 }
@@ -116,12 +141,12 @@ function isMajorHighlighted(m: MajorVO) {
 onMounted(async () => {
   try {
     majorCategories.value = await fetchMajorCategories()
-  } catch {
+  } catch (e) {
     majorCategories.value = []
+    ElMessage.error(e instanceof Error ? e.message : '专业类型加载失败')
   }
   loadSchools()
 })
-watch([pageNo], loadSchools)
 </script>
 
 <template>
@@ -158,8 +183,8 @@ watch([pageNo], loadSchools)
           :remote-method="searchMajorOptions"
           :loading="majorSearchLoading"
           style="width: 180px"
-          @change="onSearch"
-          @clear="onSearch"
+          @change="onMajorDictChange"
+          @clear="onMajorDictChange"
         >
           <el-option
             v-for="item in majorOptions"
@@ -210,12 +235,13 @@ watch([pageNo], loadSchools)
 
       <div class="pager">
         <el-pagination
-          v-model:current-page="pageNo"
+          :current-page="pageNo"
           :page-size="pageSize"
           :total="total"
           layout="prev, pager, next"
           small
           background
+          @current-change="onPageChange"
         />
       </div>
 

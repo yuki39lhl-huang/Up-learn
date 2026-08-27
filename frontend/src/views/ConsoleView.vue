@@ -3,21 +3,26 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import SchoolQueryPanel from '../components/stitch/SchoolQueryPanel.vue'
+import DashboardPanel from '../components/stitch/DashboardPanel.vue'
 import PracticePanel from '../components/stitch/PracticePanel.vue'
 import AgentChatPanel from '../components/stitch/AgentChatPanel.vue'
 import BrandLogo from '../components/stitch/BrandLogo.vue'
 import StitchIcon from '../components/stitch/StitchIcon.vue'
 import { useAuthStore } from '../stores/auth'
+import { useExamPrefsStore } from '../stores/examPrefs'
 import { logout } from '../api/user'
 import '../styles/console-workbench.css'
 
-type ModuleKey = 'dashboard' | 'school' | 'daily' | 'random' | 'papers' | 'community' | 'agent'
+const CONSOLE_HOME = '#dashboard'
+
+type ModuleKey = 'dashboard' | 'school' | 'random' | 'papers' | 'community' | 'agent'
 type SystemKey = 'ui-settings' | 'notifications' | 'account'
 type ViewKey = ModuleKey | SystemKey
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const examPrefs = useExamPrefsStore()
 
 const SIDEBAR_COLLAPSED_KEY = 'ul_console_sidebar_collapsed'
 const sidebarCollapsed = ref(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1')
@@ -30,10 +35,9 @@ function toggleSidebar() {
 const uiSettingsTab = ref('appearance')
 const accountTab = ref('profile')
 
-const navItems: { key: ModuleKey; label: string; icon: 'home' | 'school' | 'daily' | 'practice' | 'paper' | 'community' | 'agent' }[] = [
+const navItems: { key: ModuleKey; label: string; icon: 'home' | 'school' | 'practice' | 'paper' | 'community' | 'agent' }[] = [
   { key: 'dashboard', label: '主页', icon: 'home' },
   { key: 'school', label: '院校查询', icon: 'school' },
-  { key: 'daily', label: '每日一练', icon: 'daily' },
   { key: 'random', label: '随机刷题', icon: 'practice' },
   { key: 'papers', label: '历年真题', icon: 'paper' },
   { key: 'community', label: '社区', icon: 'community' },
@@ -52,15 +56,14 @@ const accountNav = [
 ]
 
 const mockNotifications = [
-  { id: 1, title: '每日一练提醒', desc: '今天还有 3 道题未完成', time: '2 小时前', unread: true },
+  { id: 1, title: '每日一练提醒', desc: '今天还有 1 道题未完成', time: '2 小时前', unread: true },
   { id: 2, title: '院校数据更新', desc: '广东省 2025 招生计划已同步', time: '昨天', unread: false },
 ]
 
 function hashToView(hash: string): ViewKey {
   const h = hash.replace('#', '')
-  if (h === '' || h === 'dashboard' || h === 'home') return 'dashboard'
+  if (h === 'daily' || h === 'home' || h === '' || h === 'dashboard') return 'dashboard'
   if (h === 'school') return 'school'
-  if (h === 'daily') return 'daily'
   if (h === 'practice' || h === 'random') return 'random'
   if (h === 'papers') return 'papers'
   if (h === 'community') return 'community'
@@ -77,7 +80,6 @@ const pageTitle = computed(() => {
   const map: Record<ViewKey, string> = {
     dashboard: '主页',
     school: '院校查询',
-    daily: '每日一练',
     random: '随机刷题',
     papers: '历年真题',
     community: '社区',
@@ -104,8 +106,20 @@ function selectSystem(key: SystemKey) {
   router.replace({ path: '/console', hash: viewHash(key) })
 }
 
+const seasonMeta = computed(() => {
+  const year = new Date().getFullYear()
+  const province = examPrefs.prefs.province.trim()
+  return province ? `${year} 招考季 · ${province}` : `${year} 招考季 · 待选省份`
+})
+
 function syncFromRoute() {
-  activeView.value = hashToView(route.hash || '#dashboard')
+  const hash = route.hash
+  if (!hash || hash === '#') {
+    activeView.value = 'dashboard'
+    router.replace({ path: '/console', hash: CONSOLE_HOME })
+    return
+  }
+  activeView.value = hashToView(hash)
 }
 
 async function handleLogout() {
@@ -135,7 +149,7 @@ watch(() => route.hash, syncFromRoute)
         <BrandLogo />
       </button>
       <div class="gmail-topbar__spacer" />
-      <span class="gmail-topbar__meta">2026 招考季 · 广东</span>
+      <span class="gmail-topbar__meta">{{ seasonMeta }}</span>
       <div class="gmail-topbar__actions">
         <button
           type="button"
@@ -301,14 +315,7 @@ watch(() => route.hash, syncFromRoute)
 
             <!-- 业务模块 -->
             <div v-else class="gmail-panel__content gmail-panel__content--flush">
-              <section v-if="activeView === 'dashboard'" class="st-card" style="margin: 16px">
-                <header class="st-card-header">升学主页</header>
-                <div class="st-card-body workbench-placeholder">
-                  <StitchIcon name="home" />
-                  <h3>主页 · 规划中</h3>
-                  <p>将展示所选省份的考试倒计时，以及刷题数量、正确率、学习目标等统计。</p>
-                </div>
-              </section>
+              <DashboardPanel v-if="activeView === 'dashboard'" />
 
               <template v-else-if="activeView === 'school'">
                 <div style="padding: 16px">
@@ -316,11 +323,8 @@ watch(() => route.hash, syncFromRoute)
                 </div>
               </template>
 
-              <div v-else-if="activeView === 'daily' || activeView === 'random'" style="padding: 16px">
-                <PracticePanel
-                  :key="activeView"
-                  :default-mode="activeView === 'daily' ? 'daily' : 'random'"
-                />
+              <div v-else-if="activeView === 'random'" style="padding: 16px">
+                <PracticePanel key="random" default-mode="random" />
               </div>
 
               <section v-else-if="activeView === 'papers'" class="st-card" style="margin: 16px">

@@ -18,6 +18,8 @@ public class StudyStatsVO {
     private Integer correctCount;
     /** 正确率百分比，保留两位小数 */
     private BigDecimal accuracy;
-    /** 连续打卡天数 */
+    /** 连续打卡天数（仅 daily 签到） */
     private Integer streak;
+    /** 累计签到天数（完成 daily 的去重日期数） */
+    private Integer totalCheckInDays;
 }

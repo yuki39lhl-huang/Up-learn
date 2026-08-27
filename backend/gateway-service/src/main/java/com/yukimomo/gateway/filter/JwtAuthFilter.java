@@ -38,7 +38,8 @@ public class JwtAuthFilter implements Filter, Ordered {
             "/api/user/logout",
             // 院校公开查询（基线：院校接口无需 Token）
             "/api/school",
-            "/api/major"
+            "/api/major",
+            "/api/exam-subjects"
     );
 
     //JwtUtils工具类,用于解析access JWT token

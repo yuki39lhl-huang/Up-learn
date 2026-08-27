@@ -19,9 +19,14 @@ const router = createRouter({
       path: '/console',
       component: () => import('../views/ConsoleView.vue'),
       meta: { title: '工作台', requiresAuth: true },
+      beforeEnter: (to) => {
+        if (!to.hash || to.hash === '#') {
+          return { path: '/console', hash: '#dashboard', replace: true }
+        }
+      },
     },
     // 兼容旧路径
-    { path: '/practice', redirect: '/console' },
+    { path: '/practice', redirect: { path: '/console', hash: '#dashboard' } },
   ],
 })
 
@@ -31,7 +36,7 @@ router.beforeEach((to) => {
     return { path: '/home', query: { login: '1', redirect: to.fullPath } }
   }
   if (to.meta.guest && auth.isLoggedIn && to.path === '/login') {
-    return { path: '/console' }
+    return { path: '/console', hash: '#dashboard' }
   }
   return true
 })

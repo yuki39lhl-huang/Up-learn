@@ -21,4 +21,9 @@ public class UlJwtProperties {
      * Access Token 有效期（毫秒）。默认 1_800_000 = 30 分钟。
      */
     private long accessTtlMs = 1_800_000L;
+
+    /**
+     * Refresh Token 在 Redis 中的有效期（秒）。默认 604_800 = 7 天。
+     */
+    private int refreshTtlSeconds = 604_800;
 }

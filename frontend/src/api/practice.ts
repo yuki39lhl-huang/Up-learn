@@ -1,5 +1,9 @@
 import request, { getData } from './request'
-import type { QuestionVO, StudyStatsVO, SubmitResultVO } from '../types/api'
+import type { DailyStatusVO, QuestionVO, StudyStatsVO, SubmitResultVO } from '../types/api'
+
+export function fetchDailyStatus() {
+  return getData<DailyStatusVO>(request.get('/practice/daily/status'))
+}
 
 export function fetchDaily(subject?: string) {
   return getData<QuestionVO>(

@@ -13,7 +13,7 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const showLoginModal = ref(false)
-const loginRedirect = ref('/console')
+const loginRedirect = ref('/console#dashboard')
 
 const schools = ref<SchoolVO[]>([])
 const loadingSchools = ref(false)
@@ -85,7 +85,7 @@ const papers = [
 const subjects = ['政治', '大学英语', '高等数学', '计算机基础']
 
 function goConsole(hash?: string) {
-  const target = hash ? `/console${hash}` : '/console'
+  const target = hash ? `/console${hash}` : '/console#dashboard'
   if (!auth.isLoggedIn) {
     loginRedirect.value = target
     showLoginModal.value = true
@@ -106,7 +106,7 @@ function onLoginSuccess() {
 function openLoginFromQuery() {
   if (route.query.login !== '1') return
   const redirect = route.query.redirect
-  loginRedirect.value = typeof redirect === 'string' ? redirect : '/console'
+  loginRedirect.value = typeof redirect === 'string' ? redirect : '/console#dashboard'
   showLoginModal.value = true
   router.replace({ path: '/home' })
 }
@@ -133,7 +133,7 @@ async function loadSchools() {
 }
 
 function chipClass(row: SchoolVO) {
-  return row.type === '公办' || row.preferPublic ? 'chip chip--public' : 'chip chip--private'
+  return row.type === '公办' ? 'chip chip--public' : 'chip chip--private'
 }
 
 onMounted(() => {

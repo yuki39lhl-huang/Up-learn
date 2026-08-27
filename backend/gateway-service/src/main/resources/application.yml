@@ -5,6 +5,8 @@ spring:
   application:
     # 与基线、Nacos 服务名一致；路由 lb:// 也用这个名字
     name: gateway-service
+  profiles:
+    active: dev
   cloud:
     nacos:
       # 宿主机映射 8858 → 容器 8848；控制台是 8088，不要写进 server-addr
@@ -13,6 +15,8 @@ spring:
       password: nacos
       discovery:
         ephemeral: true
+        # 本机 IDEA 默认 127.0.0.1；Docker 部署可设环境变量 NACOS_REGISTER_IP 覆盖
+        ip: ${NACOS_REGISTER_IP:127.0.0.1}
     gateway:
       server:
         webmvc:
@@ -26,7 +30,7 @@ spring:
             - id: school-service
               uri: lb://school-service
               predicates:
-                - Path=/api/school/**,/api/major/**
+                - Path=/api/school/**,/api/major/**,/api/exam-subjects/**
             # 刷题（需 Access Token，不进白名单）
             - id: practice-service
               uri: lb://practice-service

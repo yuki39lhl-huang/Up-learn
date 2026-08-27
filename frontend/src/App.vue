@@ -39,7 +39,7 @@ async function handleLogout() {
         <router-link to="/home" class="nav-link" active-class="nav-link--active">首页</router-link>
         <router-link
           v-if="auth.isLoggedIn"
-          to="/console"
+          to="/console#dashboard"
           class="nav-link"
           active-class="nav-link--active"
         >
@@ -50,7 +50,7 @@ async function handleLogout() {
         <template v-if="auth.isLoggedIn">
           <el-avatar :size="28" :src="auth.user?.avatarUrl" />
           <span class="user-name">{{ auth.user?.nickname }}</span>
-          <el-button v-if="showWorkbenchLink" type="primary" size="small" @click="router.push('/console')">
+          <el-button v-if="showWorkbenchLink" type="primary" size="small" @click="router.push('/console#dashboard')">
             进入工作台
           </el-button>
           <el-button link @click="handleLogout">退出</el-button>

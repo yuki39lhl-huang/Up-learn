@@ -1,14 +1,76 @@
 {
+  "groups": [
+    {
+      "name": "ul.db",
+      "type": "com.yukimomo.common.config.UlDbProperties",
+      "description": "MySQL 连接占位符，供 JDBC URL 与 profile 文件使用。"
+    },
+    {
+      "name": "ul.redis",
+      "type": "com.yukimomo.common.config.UlRedisProperties",
+      "description": "Redis 连接占位符。"
+    },
+    {
+      "name": "ul.jwt",
+      "type": "com.yukimomo.common.config.UlJwtProperties",
+      "description": "JWT 签名与 Access Token 有效期；Refresh TTL 供 user-service 使用。"
+    }
+  ],
   "properties": [
+    {
+      "name": "ul.db.host",
+      "type": "java.lang.String",
+      "description": "MySQL 主机：local 用 localhost，Docker dev 用 ul-mysql。"
+    },
+    {
+      "name": "ul.db.port",
+      "type": "java.lang.Integer",
+      "description": "MySQL 端口：local 映射 3308，容器内 3306。"
+    },
+    {
+      "name": "ul.db.pw",
+      "type": "java.lang.String",
+      "description": "MySQL root 密码。"
+    },
+    {
+      "name": "ul.redis.host",
+      "type": "java.lang.String",
+      "description": "Redis 主机：local 用 localhost，Docker dev 用 ul-redis-master。"
+    },
+    {
+      "name": "ul.redis.port",
+      "type": "java.lang.Integer",
+      "description": "Redis 端口：local 映射 6380，容器内 6379。"
+    },
     {
       "name": "ul.jwt.secret",
       "type": "java.lang.String",
-      "description": "JWT HMAC 密钥（生产环境务必替换）。"
+      "description": "JWT HMAC 密钥，须与 gateway 一致。"
     },
     {
       "name": "ul.jwt.access-ttl-ms",
       "type": "java.lang.Long",
       "description": "Access Token 有效期（毫秒），默认 1800000（30 分钟）。"
+    },
+    {
+      "name": "ul.jwt.refresh-ttl-seconds",
+      "type": "java.lang.Integer",
+      "description": "Refresh Token 在 Redis 中的有效期（秒），默认 604800（7 天）。"
+    },
+    {
+      "name": "ul.login.code-ttl-seconds",
+      "type": "java.lang.Integer",
+      "description": "登录验证码有效期（秒）。"
+    },
+    {
+      "name": "ul.login.send-interval-seconds",
+      "type": "java.lang.Integer",
+      "description": "同一邮箱验证码发送间隔（秒）。"
+    },
+    {
+      "name": "ul.login.dev-log-code",
+      "type": "java.lang.Boolean",
+      "description": "开发模式：验证码仅打日志，不真实发邮件。"
     }
   ]
 }

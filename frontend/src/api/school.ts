@@ -35,6 +35,28 @@ export function fetchMajorCategories() {
   return getData<string[]>(request.get('/major/categories'))
 }
 
+export interface ExamSubjectGroup {
+  options: string[]
+  defaults: string[]
+}
+
+export interface ExamSubjectOptions {
+  province: string
+  majorCategory?: string | null
+  public: ExamSubjectGroup
+  foundation: ExamSubjectGroup
+  comprehensive: ExamSubjectGroup
+}
+
+/** 备考设置考试科目选项及默认规则 */
+export function fetchExamSubjectOptions(province: string, majorCategory?: string) {
+  return getData<ExamSubjectOptions>(
+    request.get('/exam-subjects/options', {
+      params: { province, majorCategory },
+    }),
+  )
+}
+
 export interface SchoolMajorsQuery {
   majorDictId?: number
   majorCategory?: string

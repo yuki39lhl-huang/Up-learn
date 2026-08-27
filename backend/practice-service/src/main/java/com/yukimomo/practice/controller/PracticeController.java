@@ -5,6 +5,7 @@ import com.yukimomo.common.domain.PageQuery;
 import com.yukimomo.common.domain.Result;
 import com.yukimomo.practice.dto.SubmitAnswerDTO;
 import com.yukimomo.practice.service.PracticeService;
+import com.yukimomo.practice.vo.DailyStatusVO;
 import com.yukimomo.practice.vo.AnswerHistoryVO;
 import com.yukimomo.practice.vo.QuestionVO;
 import com.yukimomo.practice.vo.StudyStatsVO;
@@ -40,6 +41,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class PracticeController {
 
     private final PracticeService practiceService;
+
+    @GetMapping("/daily/status")
+    public Result<DailyStatusVO> dailyStatus() {
+        return Result.ok(practiceService.dailyStatus());
+    }
 
     /**
      * 每日一练。

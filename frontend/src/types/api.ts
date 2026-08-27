@@ -23,6 +23,23 @@ export interface LoginVO {
   avatarUrl: string
 }
 
+export interface ExamSubjectSelectionVO {
+  public: string[]
+  foundation: string[]
+  comprehensive: string[]
+}
+
+export interface UserExamPreferenceVO {
+  id: number
+  userId: number
+  province: string
+  cohortYear: number
+  majorCategory: string
+  subjectSelection: ExamSubjectSelectionVO
+  dailySubject: string
+  dailySubjectMode: 'fixed' | 'random'
+}
+
 export interface SchoolVO {
   id: number
   name: string
@@ -77,7 +94,16 @@ export interface StudyStatsVO {
   totalAnswered: number
   correctCount: number
   accuracy: number
+  /** 连续签到天数 */
   streak: number
+  /** 累计签到天数 */
+  totalCheckInDays: number
+}
+
+export interface DailyStatusVO {
+  completedToday: boolean
+  subject: string | null
+  questionId: number | null
 }
 
 export interface ChatReplyVO {

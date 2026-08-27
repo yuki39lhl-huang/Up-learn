@@ -3,6 +3,7 @@ package com.yukimomo.practice.service;
 import com.yukimomo.common.domain.PageDTO;
 import com.yukimomo.common.domain.PageQuery;
 import com.yukimomo.practice.dto.SubmitAnswerDTO;
+import com.yukimomo.practice.vo.DailyStatusVO;
 import com.yukimomo.practice.vo.AnswerHistoryVO;
 import com.yukimomo.practice.vo.QuestionVO;
 import com.yukimomo.practice.vo.StudyStatsVO;
@@ -23,6 +24,11 @@ public interface PracticeService {
      * @param subject 可选，精确科目；仅在「当天尚未缓存」时参与抽题
      */
     QuestionVO daily(String subject);
+
+    /**
+     * 每日一练当日状态：是否已完成、锁定科目、题目 id。
+     */
+    DailyStatusVO dailyStatus();
 
     /**
      * 随机刷题：每次重新抽题，不写 Redis。

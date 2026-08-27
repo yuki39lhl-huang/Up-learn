@@ -1,42 +1,38 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { fetchDaily, fetchRandom, fetchStats, submitAnswer } from '../../api/practice'
-import type { QuestionVO, StudyStatsVO, SubmitResultVO } from '../../types/api'
+import { fetchDaily, fetchRandom } from '../../api/practice'
+import { usePracticeQuiz, type PracticeMode } from '../../composables/usePracticeQuiz'
 import { parseOption } from '../../utils/option'
 import StitchIcon from './StitchIcon.vue'
 
-type Mode = 'daily' | 'random'
-
 const props = withDefaults(
   defineProps<{
-    defaultMode?: Mode
+    defaultMode?: PracticeMode
   }>(),
   { defaultMode: 'daily' },
 )
 
-const loading = ref(false)
-const submitting = ref(false)
-const mode = ref<Mode>(props.defaultMode)
-const question = ref<QuestionVO | null>(null)
-const selected = ref('')
-const result = ref<SubmitResultVO | null>(null)
-const stats = ref<StudyStatsVO | null>(null)
+const mode = ref<PracticeMode>(props.defaultMode)
+
+const {
+  loading,
+  submitting,
+  question,
+  selected,
+  result,
+  stats,
+  loadStats,
+  resetAnswer,
+  optionClass,
+  submit,
+} = usePracticeQuiz()
 
 const panelTitle = computed(() => (mode.value === 'daily' ? '每日一练' : '随机刷题'))
 
-async function loadStats() {
-  try {
-    stats.value = await fetchStats()
-  } catch {
-    /* 统计失败不阻断 */
-  }
-}
-
-async function loadQuestion(nextMode: Mode) {
+async function loadQuestion(nextMode: PracticeMode) {
   mode.value = nextMode
-  selected.value = ''
-  result.value = null
+  resetAnswer()
   loading.value = true
   try {
     question.value = nextMode === 'daily' ? await fetchDaily() : await fetchRandom()
@@ -49,26 +45,7 @@ async function loadQuestion(nextMode: Mode) {
 }
 
 async function handleSubmit() {
-  if (!question.value || !selected.value) {
-    ElMessage.warning('请先选择答案')
-    return
-  }
-  submitting.value = true
-  try {
-    result.value = await submitAnswer(question.value.id, selected.value, mode.value)
-    await loadStats()
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '提交失败')
-  } finally {
-    submitting.value = false
-  }
-}
-
-function optionClass(label: string) {
-  if (!result.value) return ''
-  if (label === result.value.answer) return 'option--correct'
-  if (label === result.value.userAnswer && !result.value.correct) return 'option--wrong'
-  return ''
+  await submit(mode.value)
 }
 
 onMounted(async () => {
@@ -129,10 +106,10 @@ onMounted(async () => {
           <el-button v-if="!result" type="primary" :loading="submitting" @click="handleSubmit">
             提交答案
           </el-button>
-          <template v-else>
-            <el-button type="primary" plain @click="loadQuestion('daily')">下一题</el-button>
-            <el-button @click="loadQuestion('random')">随机一题</el-button>
+          <template v-else-if="mode === 'random'">
+            <el-button @click="loadQuestion('random')">再来一题</el-button>
           </template>
+          <p v-else class="daily-done-tip">今日每日一练请在主页完成</p>
         </div>
       </template>
 

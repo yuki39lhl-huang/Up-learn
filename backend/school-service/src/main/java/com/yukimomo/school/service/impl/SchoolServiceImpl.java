@@ -142,17 +142,6 @@ public class SchoolServiceImpl implements SchoolService {
         return 2;
     }
 
-    /** 按 school_major.id 查开设详情，并关联 major_dict 取名称/类别。 */
-    @Override
-    public MajorVO getSchoolMajor(Long schoolMajorId) {
-        SchoolMajor offering = schoolMajorMapper.selectById(schoolMajorId);
-        if (offering == null) {
-            throw new BizException(ErrorCode.MAJOR_NOT_FOUND);
-        }
-        MajorDict dict = majorDictMapper.selectById(offering.getMajorDictId());
-        return SchoolConvert.toMajorVO(offering, dict);
-    }
-
     /** 分页查 major_dict；kw 有值则名称模糊，供 Combobox。 */
     @Override
     public PageDTO<MajorOptionVO> listMajorOptions(MajorOptionQuery query) {

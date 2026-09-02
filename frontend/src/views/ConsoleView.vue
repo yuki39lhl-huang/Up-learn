@@ -15,7 +15,7 @@ import { logout } from '../api/user'
 import { consumeConsoleDashboardEntry, consoleLocation, pushConsole } from '../utils/consoleNav'
 import '../styles/console-workbench.css'
 
-type ModuleKey = 'dashboard' | 'school' | 'random' | 'papers' | 'community' | 'agent'
+type ModuleKey = 'dashboard' | 'school' | 'syllabus' | 'random' | 'papers' | 'community' | 'agent'
 type SystemKey = 'ui-settings' | 'notifications' | 'account'
 type ViewKey = ModuleKey | SystemKey
 
@@ -34,9 +34,14 @@ function toggleSidebar() {
 
 const uiSettingsTab = ref('appearance')
 
-const navItems: { key: ModuleKey; label: string; icon: 'home' | 'school' | 'practice' | 'paper' | 'community' | 'agent' }[] = [
+const navItems: {
+  key: ModuleKey
+  label: string
+  icon: 'home' | 'school' | 'syllabus' | 'practice' | 'paper' | 'community' | 'agent'
+}[] = [
   { key: 'dashboard', label: '主页', icon: 'home' },
   { key: 'school', label: '院校查询', icon: 'school' },
+  { key: 'syllabus', label: '考纲查询', icon: 'syllabus' },
   { key: 'random', label: '随机刷题', icon: 'practice' },
   { key: 'papers', label: '历年真题', icon: 'paper' },
   { key: 'community', label: '社区', icon: 'community' },
@@ -58,6 +63,7 @@ function hashToView(hash: string): ViewKey {
   const h = hash.replace('#', '')
   if (h === 'daily' || h === 'home' || h === '' || h === 'dashboard') return 'dashboard'
   if (h === 'school') return 'school'
+  if (h === 'syllabus') return 'syllabus'
   if (h === 'practice' || h === 'random') return 'random'
   if (h === 'papers') return 'papers'
   if (h === 'community') return 'community'
@@ -74,6 +80,7 @@ const pageTitle = computed(() => {
   const map: Record<ViewKey, string> = {
     dashboard: '主页',
     school: '院校查询',
+    syllabus: '考纲查询',
     random: '随机刷题',
     papers: '历年真题',
     community: '社区',
@@ -282,6 +289,15 @@ async function handleLogout() {
               <div v-show="activeView === 'school'" style="padding: 16px">
                 <SchoolQueryPanel />
               </div>
+
+              <section
+                v-show="activeView === 'syllabus'"
+                class="st-card"
+                style="margin: 16px"
+              >
+                <header class="st-card-header">考纲查询</header>
+                <div class="st-card-body" />
+              </section>
 
               <div v-show="activeView === 'random'" style="padding: 16px">
                 <PracticePanel key="random" default-mode="random" />

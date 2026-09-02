@@ -18,6 +18,7 @@ defineProps<{
     | 'menu'
     | 'agent'
     | 'home'
+    | 'syllabus'
 }>()
 </script>
 
@@ -98,6 +99,11 @@ defineProps<{
     <template v-else-if="name === 'home'">
       <path d="M3 10.5 12 3l9 7.5" />
       <path d="M5 10v10h14V10" />
+    </template>
+    <template v-else-if="name === 'syllabus'">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
+      <path d="M8 7h8M8 11h6" />
     </template>
   </svg>
 </template>

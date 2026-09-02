@@ -1,10 +1,18 @@
 import type { Router, RouteLocationRaw } from 'vue-router'
 
-export type ConsoleModule = 'dashboard' | 'school' | 'random' | 'papers' | 'community' | 'agent'
+export type ConsoleModule =
+  | 'dashboard'
+  | 'school'
+  | 'syllabus'
+  | 'random'
+  | 'papers'
+  | 'community'
+  | 'agent'
 
 const MODULE_HASH: Record<ConsoleModule, string> = {
   dashboard: '#dashboard',
   school: '#school',
+  syllabus: '#syllabus',
   random: '#practice',
   papers: '#papers',
   community: '#community',
@@ -64,6 +72,7 @@ export function pushConsoleHref(router: Router, href: string) {
     '#home': 'dashboard',
     '#daily': 'dashboard',
     '#school': 'school',
+    '#syllabus': 'syllabus',
     '#practice': 'random',
     '#random': 'random',
     '#papers': 'papers',

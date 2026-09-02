@@ -38,13 +38,6 @@ public interface SchoolService {
     List<MajorVO> listMajorsBySchoolId(Long schoolId, Long majorDictId, String majorCategory);
 
     /**
-     * 开设详情。
-     *
-     * @param schoolMajorId school_major.id
-     */
-    MajorVO getSchoolMajor(Long schoolMajorId);
-
-    /**
      * 专业词典选项（Combobox）。
      * 选中后把返回的 {@code id} 作为院校 list 的 {@code majorDictId}。
      */

@@ -14,4 +14,11 @@ public class DailyStatusVO {
     private String subject;
     /** 当日题目 id；未抽题时为 null */
     private Long questionId;
+    /** 今日已提交时回填，用于刷新后恢复作答与解析 */
+    private String userAnswer;
+    private Boolean correct;
+    private String answer;
+    private String analysis;
+    /** 今日已完成时随机展示的鼓励寄语 */
+    private String encouragement;
 }

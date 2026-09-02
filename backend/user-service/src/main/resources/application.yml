@@ -74,3 +74,10 @@ ul:
     send-interval-seconds: 60
     # 开发环境 true：验证码打日志，不真实发邮件
     dev-log-code: true
+  oss:
+    enabled: false
+    endpoint: oss-cn-beijing.aliyuncs.com
+    bucket: up-learn
+    public-base-url: https://up-learn.cn-beijing.taihangrda.cn
+    avatar-dir: avatar
+    presign-ttl-seconds: 7200

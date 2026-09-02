@@ -1,4 +1,11 @@
 # profile=local：IDEA 本机启动，连 Docker 映射端口
+spring:
+  cloud:
+    nacos:
+      discovery:
+        # 固定本机回环，避免 Nacos 注册成 192.168.x.x 导致网关 lb 连不上
+        ip: 127.0.0.1
+
 ul:
   db:
     host: localhost

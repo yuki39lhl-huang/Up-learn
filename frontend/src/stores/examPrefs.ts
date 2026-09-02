@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { deleteExamPreference, fetchExamPreference, saveExamPreference } from '../api/user'
+import { deleteExamPreference, fetchExamPreference, saveExamPreference, saveRandomSubjectFilter } from '../api/user'
 import { useAuthStore } from './auth'
 import { isCohortInRange } from '../utils/examCountdown'
 import {
@@ -11,6 +11,7 @@ import {
 } from '../utils/examSubjects'
 
 export type DailySubjectMode = 'fixed' | 'random'
+export type RandomSubjectMode = 'all' | 'single'
 
 export interface ExamPrefs {
   province: string
@@ -20,6 +21,8 @@ export interface ExamPrefs {
   subjectSelection: ExamSubjectSelection | null
   dailySubject: string
   dailySubjectMode: DailySubjectMode
+  randomSubjectMode: RandomSubjectMode
+  randomSubject: string
 }
 
 const PREFS_KEY = 'ul_exam_prefs'
@@ -32,6 +35,8 @@ const defaults: ExamPrefs = {
   subjectSelection: null,
   dailySubject: '',
   dailySubjectMode: 'fixed',
+  randomSubjectMode: 'all',
+  randomSubject: '',
 }
 
 function normalizeSlot(value: string | string[] | undefined): string[] {
@@ -40,9 +45,13 @@ function normalizeSlot(value: string | string[] | undefined): string[] {
   return []
 }
 
-function normalizeSelection(raw: Partial<ExamSubjectSelection>): ExamSubjectSelection {
+function normalizeSelection(raw: Partial<ExamSubjectSelection> & { publicSubjects?: string[] }): ExamSubjectSelection {
+  const publicList =
+    raw.public?.filter(Boolean).length
+      ? normalizeSlot(raw.public)
+      : normalizeSlot(raw.publicSubjects)
   return {
-    public: normalizeSlot(raw.public),
+    public: publicList,
     foundation: normalizeSlot(raw.foundation as string | string[] | undefined),
     comprehensive: normalizeSlot(raw.comprehensive as string | string[] | undefined),
   }
@@ -77,6 +86,8 @@ function readPrefs(): ExamPrefs {
       subjectSelection,
       dailySubject: parsed.dailySubject ?? '',
       dailySubjectMode: parsed.dailySubjectMode ?? 'fixed',
+      randomSubjectMode: parsed.randomSubjectMode === 'single' ? 'single' : 'all',
+      randomSubject: parsed.randomSubject ?? '',
     }
   } catch {
     return { ...defaults }
@@ -86,6 +97,8 @@ function readPrefs(): ExamPrefs {
 export const useExamPrefsStore = defineStore('examPrefs', () => {
   const auth = useAuthStore()
   const prefs = ref<ExamPrefs>(readPrefs())
+  /** 备考重置计数，供各业务面板同步清空 UI */
+  const resetVersion = ref(0)
 
   const examSubjects = computed(() =>
     prefs.value.subjectSelection ? selectionToAllSubjects(prefs.value.subjectSelection) : [],
@@ -118,11 +131,19 @@ export const useExamPrefsStore = defineStore('examPrefs', () => {
     if (owner && owner !== String(userId)) {
       prefs.value = { ...defaults }
       localStorage.removeItem(PREFS_OWNER_KEY)
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs.value))
     }
+
+    const localSnapshot = { ...prefs.value }
 
     try {
       const remote = await fetchExamPreference()
-      if (!remote) return
+      if (!remote) {
+        if (!localStorage.getItem(PREFS_OWNER_KEY) && localSnapshot.province) {
+          localStorage.setItem(PREFS_OWNER_KEY, String(userId))
+        }
+        return
+      }
       prefs.value = {
         province: remote.province,
         cohortYear: remote.cohortYear,
@@ -130,10 +151,13 @@ export const useExamPrefsStore = defineStore('examPrefs', () => {
         subjectSelection: normalizeSelection(remote.subjectSelection),
         dailySubject: remote.dailySubject,
         dailySubjectMode: remote.dailySubjectMode,
+        randomSubjectMode: remote.randomSubjectMode === 'single' ? 'single' : 'all',
+        randomSubject: remote.randomSubject ?? '',
       }
       localStorage.setItem(PREFS_OWNER_KEY, String(userId))
     } catch {
       /* 云端读取失败时继续使用本地设置 */
+      prefs.value = localSnapshot
     }
   }
 
@@ -178,6 +202,7 @@ export const useExamPrefsStore = defineStore('examPrefs', () => {
     const empty: ExamPrefs = { ...defaults }
     prefs.value = empty
     localStorage.setItem(PREFS_KEY, JSON.stringify(empty))
+    resetVersion.value += 1
   }
 
   function pickDailySubject(): string {
@@ -195,8 +220,36 @@ export const useExamPrefsStore = defineStore('examPrefs', () => {
     return toPracticeSubject(examSubject) ?? examSubject
   }
 
+  /** 随机刷题：映射后的题库科目列表（政治/大学英语/高等数学/计算机基础） */
+  function practiceSubjects(): string[] {
+    const selection = prefs.value.subjectSelection
+    return selection ? toPracticeSubjects(selection) : []
+  }
+
+  /** 科目标签展示：single 显示科目名，all 显示「全随机」 */
+  function randomFilterLabel(): string {
+    if (prefs.value.randomSubjectMode === 'single' && prefs.value.randomSubject) {
+      return prefs.value.randomSubject
+    }
+    return '全随机'
+  }
+
+  /** 保存随机刷题科目筛选并同步云端 */
+  async function saveRandomFilter(mode: RandomSubjectMode, subject?: string) {
+    patch({
+      randomSubjectMode: mode,
+      randomSubject: mode === 'single' ? subject ?? '' : '',
+    })
+    if (!auth.isLoggedIn) return
+    await saveRandomSubjectFilter({
+      randomSubjectMode: mode,
+      randomSubject: mode === 'single' ? subject : undefined,
+    })
+  }
+
   return {
     prefs,
+    resetVersion,
     examSubjects,
     hasProvince,
     hasMajorCategory,
@@ -207,5 +260,8 @@ export const useExamPrefsStore = defineStore('examPrefs', () => {
     saveRemote,
     deleteRemote,
     pickDailyPracticeSubject,
+    practiceSubjects,
+    randomFilterLabel,
+    saveRandomFilter,
   }
 })

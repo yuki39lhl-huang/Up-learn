@@ -23,4 +23,10 @@ public final class PracticeRedisConstants {
      * 完整 Key：{@code ul:practice:daily:subject:{userId}:{yyyyMMdd}}。
      */
     public static final String DAILY_SUBJECT_PREFIX = "ul:practice:daily:subject:";
+
+    /**
+     * 随机刷题当日已做题目（按科）。
+     * 完整 Key：{@code ul:practice:random:done:{userId}:{yyyyMMdd}:{subject}}，Set 存 questionId。
+     */
+    public static final String RANDOM_DONE_PREFIX = "ul:practice:random:done:";
 }

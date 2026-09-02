@@ -5,6 +5,7 @@ import { ElMessage } from 'element-plus'
 import { useAuthStore } from './stores/auth'
 import { logout } from './api/user'
 import BrandLogo from './components/stitch/BrandLogo.vue'
+import { markConsoleDashboardEntry, pushConsole } from './utils/consoleNav'
 
 const route = useRoute()
 const router = useRouter()
@@ -39,7 +40,7 @@ async function handleLogout() {
         <router-link to="/home" class="nav-link" active-class="nav-link--active">首页</router-link>
         <router-link
           v-if="auth.isLoggedIn"
-          to="/console#dashboard"
+          :to="{ path: '/console', hash: '#dashboard' }"
           class="nav-link"
           active-class="nav-link--active"
         >
@@ -50,7 +51,12 @@ async function handleLogout() {
         <template v-if="auth.isLoggedIn">
           <el-avatar :size="28" :src="auth.user?.avatarUrl" />
           <span class="user-name">{{ auth.user?.nickname }}</span>
-          <el-button v-if="showWorkbenchLink" type="primary" size="small" @click="router.push('/console#dashboard')">
+          <el-button
+            v-if="showWorkbenchLink"
+            type="primary"
+            size="small"
+            @click="markConsoleDashboardEntry(); pushConsole(router, 'dashboard')"
+          >
             进入工作台
           </el-button>
           <el-button link @click="handleLogout">退出</el-button>
@@ -94,12 +100,6 @@ async function handleLogout() {
   gap: 8px;
   cursor: pointer;
   flex-shrink: 0;
-}
-
-.brand-logo {
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--st-primary);
 }
 
 .brand-tag {

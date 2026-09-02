@@ -66,3 +66,8 @@ export interface SchoolMajorsQuery {
 export function fetchSchoolMajors(schoolId: number, query: SchoolMajorsQuery = {}) {
   return getData<MajorVO[]>(request.get(`/school/${schoolId}/majors`, { params: query }))
 }
+
+/** 院校开设专业详情（school_major.id） */
+export function fetchMajorDetail(schoolMajorId: number) {
+  return getData<MajorVO>(request.get(`/major/${schoolMajorId}`))
+}

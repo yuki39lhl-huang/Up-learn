@@ -1,7 +1,6 @@
 package com.yukimomo.practice.service.impl;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yukimomo.common.domain.PageDTO;
@@ -9,19 +8,29 @@ import com.yukimomo.common.domain.PageQuery;
 import com.yukimomo.common.exception.BadRequestException;
 import com.yukimomo.common.utils.UserContext;
 import com.yukimomo.practice.constant.PracticeRedisConstants;
+import com.yukimomo.practice.dto.AddPracticeNoteDTO;
+import com.yukimomo.practice.dto.AddWrongBookDTO;
+import com.yukimomo.practice.dto.RandomResetDTO;
 import com.yukimomo.practice.dto.SubmitAnswerDTO;
 import com.yukimomo.practice.entity.AnswerRecord;
+import com.yukimomo.practice.entity.DailyEncouragement;
 import com.yukimomo.practice.entity.Question;
 import com.yukimomo.practice.entity.StudyStats;
-import com.yukimomo.practice.entity.WrongQuestion;
 import com.yukimomo.practice.mapper.AnswerRecordMapper;
+import com.yukimomo.practice.mapper.DailyEncouragementMapper;
 import com.yukimomo.practice.mapper.QuestionMapper;
 import com.yukimomo.practice.mapper.StudyStatsMapper;
-import com.yukimomo.practice.mapper.WrongQuestionMapper;
+import com.yukimomo.practice.service.PracticeNoteService;
 import com.yukimomo.practice.service.PracticeService;
+import com.yukimomo.practice.service.RandomPracticeService;
+import com.yukimomo.practice.service.WrongBookService;
+import com.yukimomo.practice.support.QuestionSupport;
 import com.yukimomo.practice.vo.DailyStatusVO;
 import com.yukimomo.practice.vo.AnswerHistoryVO;
+import com.yukimomo.practice.vo.PracticeNoteVO;
 import com.yukimomo.practice.vo.QuestionVO;
+import com.yukimomo.practice.vo.RandomPendingHintVO;
+import com.yukimomo.practice.vo.RandomResetVO;
 import com.yukimomo.practice.vo.StudyStatsVO;
 import com.yukimomo.practice.vo.SubmitResultVO;
 import com.yukimomo.practice.vo.WrongQuestionVO;
@@ -37,12 +46,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -59,13 +66,18 @@ public class PracticeServiceImpl implements PracticeService {
 
     private final QuestionMapper questionMapper;
     private final AnswerRecordMapper answerRecordMapper;
-    private final WrongQuestionMapper wrongQuestionMapper;
+    private final DailyEncouragementMapper dailyEncouragementMapper;
     private final StudyStatsMapper studyStatsMapper;
     /** 存字符串：每日题只缓存 questionId */
     private final StringRedisTemplate stringRedisTemplate;
+    private final RandomPracticeService randomPracticeService;
+    private final WrongBookService wrongBookService;
+    private final PracticeNoteService practiceNoteService;
+    private final QuestionSupport questionSupport;
 
     /** 每日一练来源标识，与前端 submit source 一致 */
     private static final String SOURCE_DAILY = "daily";
+    private static final String SOURCE_RANDOM = "random";
 
     /**
      * 每日一练流程：
@@ -85,7 +97,7 @@ public class PracticeServiceImpl implements PracticeService {
         if (todayDaily != null) {
             Question done = questionMapper.selectById(todayDaily.getQuestionId());
             if (done != null) {
-                return toQuestionVo(done);
+                return questionSupport.toQuestionVo(done);
             }
         }
 
@@ -100,7 +112,7 @@ public class PracticeServiceImpl implements PracticeService {
             if (StrUtil.isNotBlank(cachedId)) {
                 Question cached = questionMapper.selectById(Long.valueOf(cachedId));
                 if (cached != null) {
-                    return toQuestionVo(cached);
+                    return questionSupport.toQuestionVo(cached);
                 }
             }
         }
@@ -112,7 +124,7 @@ public class PracticeServiceImpl implements PracticeService {
         if (StrUtil.isNotBlank(pickSubject)) {
             stringRedisTemplate.opsForValue().set(subjectKey, pickSubject, Duration.ofSeconds(ttlSeconds));
         }
-        return toQuestionVo(question);
+        return questionSupport.toQuestionVo(question);
     }
 
     @Override
@@ -131,6 +143,14 @@ public class PracticeServiceImpl implements PracticeService {
 
         if (todayDaily != null) {
             vo.setQuestionId(todayDaily.getQuestionId());
+            vo.setUserAnswer(todayDaily.getUserAnswer());
+            vo.setCorrect(Objects.equals(todayDaily.getCorrect(), 1));
+            vo.setEncouragement(pickDailyEncouragement(userId, day));
+            Question answered = questionMapper.selectById(todayDaily.getQuestionId());
+            if (answered != null) {
+                vo.setAnswer(answered.getAnswer());
+                vo.setAnalysis(answered.getAnalysis());
+            }
         } else {
             String cachedId = stringRedisTemplate.opsForValue().get(questionKey);
             if (StrUtil.isNotBlank(cachedId)) {
@@ -141,17 +161,26 @@ public class PracticeServiceImpl implements PracticeService {
     }
 
     /**
-     * 随机刷题：只校验登录，每次重新 {@link #pickRandom}，不缓存。
+     * 随机刷题：按备考科目与间隔复习选题池抽题。
      */
     @Override
-    public QuestionVO random(String subject) {
-        UserContext.requireUserId();
-        return toQuestionVo(pickRandom(subject));
+    public QuestionVO random() {
+        Long userId = UserContext.requireUserId();
+        return questionSupport.toQuestionVo(randomPracticeService.pickQuestion(userId));
+    }
+
+    @Override
+    public RandomPendingHintVO randomPendingHint() {
+        Long userId = UserContext.requireUserId();
+        List<String> otherSubjects = randomPracticeService.listOtherSubjectsWithPendingWrong(userId);
+        RandomPendingHintVO vo = new RandomPendingHintVO();
+        vo.setOtherSubjects(otherSubjects);
+        vo.setShowHint(!otherSubjects.isEmpty());
+        return vo;
     }
 
     /**
-     * 提交判分（事务）：写历史 → 错则 upsert 错题 → upsert 统计 → 组装含解析的结果。
-     * rollbackFor=Exception：任意受检/运行时异常都回滚，避免半写入。
+     * 提交判分（事务）：写 answer_record；随机刷题更新 user_question_record；其余场景 upsert study_stats。
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -179,11 +208,15 @@ public class PracticeServiceImpl implements PracticeService {
         record.setSource(source);
         answerRecordMapper.insert(record);
 
-        // 一期：答对不从错题本移除，仅答错累加
-        if (!correct) {
-            upsertWrong(userId, question.getId());
+        boolean isRandom = RandomPracticeService.isRandomSource(source);
+        boolean isDaily = SOURCE_DAILY.equalsIgnoreCase(source);
+
+        if (isRandom) {
+            // 随机刷题：间隔复习调度 + 当日已做 Redis，不写入 study_stats
+            randomPracticeService.onAnswerSubmitted(userId, question, correct);
+        } else {
+            upsertStats(userId, correct, isDaily);
         }
-        upsertStats(userId, correct, SOURCE_DAILY.equalsIgnoreCase(source));
 
         // 提交结果才带答案与解析
         SubmitResultVO vo = new SubmitResultVO();
@@ -195,48 +228,113 @@ public class PracticeServiceImpl implements PracticeService {
         return vo;
     }
 
-    /**
-     * 错题分页：先查 wrong_question，再一次性 load 题目 Map，组装 VO（防 N+1）。
-     */
     @Override
-    public PageDTO<WrongQuestionVO> listWrong(PageQuery query) {
+    public PageDTO<WrongQuestionVO> listWrong(PageQuery query, String date, String subject) {
+        return wrongBookService.list(query, date, subject);
+    }
+
+    @Override
+    public WrongQuestionVO addWrongBook(AddWrongBookDTO dto) {
+        return wrongBookService.add(dto);
+    }
+
+    @Override
+    public WrongQuestionVO getWrongBook(Long id) {
+        return wrongBookService.get(id);
+    }
+
+    @Override
+    public void deleteWrongBook(Long id) {
+        wrongBookService.delete(id);
+    }
+
+    @Override
+    public int deleteAllWrongBook(String date, String subject) {
+        return wrongBookService.deleteAll(date, subject);
+    }
+
+    @Override
+    public PracticeNoteVO addNote(AddPracticeNoteDTO dto) {
+        return practiceNoteService.add(dto);
+    }
+
+    @Override
+    public PracticeNoteVO getNote(Long id) {
+        return practiceNoteService.get(id);
+    }
+
+    @Override
+    public PageDTO<PracticeNoteVO> listNotes(PageQuery query, String date, String subject) {
+        return practiceNoteService.list(query, date, subject);
+    }
+
+    @Override
+    public void deleteNote(Long id) {
+        practiceNoteService.delete(id);
+    }
+
+    @Override
+    public int deleteAllNotes(String date, String subject) {
+        return practiceNoteService.deleteAll(date, subject);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public RandomResetVO resetRandom(RandomResetDTO dto) {
         Long userId = UserContext.requireUserId();
-        // toMpPage(列名, asc=false) → 按最近答错时间倒序
-        Page<WrongQuestion> page = wrongQuestionMapper.selectPage(
-                query.toMpPage("last_wrong_at", false),
-                new LambdaQueryWrapper<WrongQuestion>().eq(WrongQuestion::getUserId, userId)
-        );
-        if (page.getRecords() == null || page.getRecords().isEmpty()) {
-            return PageDTO.empty();
+        RandomResetVO vo = randomPracticeService.resetProgress(userId, dto.getScope(), dto.getSubject());
+        clearRandomAnswerRecords(userId, vo.getSubjects());
+        return vo;
+    }
+
+    /** 清空重刷时同步清除随机刷题答题记录，统计归零。 */
+    private void clearRandomAnswerRecords(Long userId, List<String> subjects) {
+        if (subjects == null || subjects.isEmpty()) {
+            return;
         }
+        List<Long> questionIds = questionMapper.selectList(
+                new LambdaQueryWrapper<Question>()
+                        .in(Question::getSubject, subjects)
+                        .select(Question::getId)
+        ).stream().map(Question::getId).toList();
+        if (questionIds.isEmpty()) {
+            return;
+        }
+        answerRecordMapper.delete(
+                new LambdaQueryWrapper<AnswerRecord>()
+                        .eq(AnswerRecord::getUserId, userId)
+                        .eq(AnswerRecord::getSource, SOURCE_RANDOM)
+                        .in(AnswerRecord::getQuestionId, questionIds)
+        );
+    }
 
-        // stream 收集本页全部 questionId，批量查题
-        Map<Long, Question> questionMap = loadQuestions(page.getRecords().stream()
-                .map(WrongQuestion::getQuestionId)
-                .collect(Collectors.toSet()));
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void resetRandomProgress() {
+        Long userId = UserContext.requireUserId();
+        randomPracticeService.resetAllProgress(userId);
+        answerRecordMapper.delete(
+                new LambdaQueryWrapper<AnswerRecord>()
+                        .eq(AnswerRecord::getUserId, userId)
+                        .eq(AnswerRecord::getSource, SOURCE_RANDOM)
+        );
+    }
 
-        List<WrongQuestionVO> list = page.getRecords().stream().map(w -> {
-            WrongQuestionVO vo = new WrongQuestionVO();
-            vo.setId(w.getId());
-            vo.setQuestionId(w.getQuestionId());
-            vo.setWrongCount(w.getWrongCount());
-            vo.setLastWrongAt(w.getLastWrongAt());
-            Question q = questionMap.get(w.getQuestionId());
-            // 题目被删时仍保留错题行，但题干字段为空
-            if (q != null) {
-                vo.setSubject(q.getSubject());
-                vo.setStem(q.getStem());
-                vo.setOptions(parseOptions(q.getOptionsJson()));
-                vo.setDifficulty(q.getDifficulty());
-            }
-            return vo;
-        }).toList();
-
-        PageDTO<WrongQuestionVO> dto = new PageDTO<>();
-        dto.setTotal(page.getTotal());
-        dto.setPages(page.getPages());
-        dto.setList(list);
-        return dto;
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void resetDailyCheckIn() {
+        Long userId = UserContext.requireUserId();
+        answerRecordMapper.delete(
+                new LambdaQueryWrapper<AnswerRecord>()
+                        .eq(AnswerRecord::getUserId, userId)
+                        .eq(AnswerRecord::getSource, SOURCE_DAILY)
+        );
+        studyStatsMapper.delete(
+                new LambdaQueryWrapper<StudyStats>().eq(StudyStats::getUserId, userId)
+        );
+        String day = LocalDate.now().format(DAY_FMT);
+        stringRedisTemplate.delete(PracticeRedisConstants.DAILY_QUESTION_PREFIX + userId + ":" + day);
+        stringRedisTemplate.delete(PracticeRedisConstants.DAILY_SUBJECT_PREFIX + userId + ":" + day);
     }
 
     /**
@@ -253,7 +351,7 @@ public class PracticeServiceImpl implements PracticeService {
             return PageDTO.empty();
         }
 
-        Map<Long, Question> questionMap = loadQuestions(page.getRecords().stream()
+        Map<Long, Question> questionMap = questionSupport.loadByIds(page.getRecords().stream()
                 .map(AnswerRecord::getQuestionId)
                 .collect(Collectors.toSet()));
 
@@ -285,8 +383,12 @@ public class PracticeServiceImpl implements PracticeService {
      * 读 study_stats；无行则返回全 0，前端无需再判 null。
      */
     @Override
-    public StudyStatsVO stats() {
+    public StudyStatsVO stats(String source) {
         Long userId = UserContext.requireUserId();
+        if (RandomPracticeService.isRandomSource(source)) {
+            return computeSourceStats(userId, SOURCE_RANDOM);
+        }
+
         StudyStats stats = studyStatsMapper.selectOne(
                 new LambdaQueryWrapper<StudyStats>().eq(StudyStats::getUserId, userId)
         );
@@ -311,6 +413,30 @@ public class PracticeServiceImpl implements PracticeService {
         return vo;
     }
 
+    /** 按 source 汇总答题记录；用于随机刷题统计（不含打卡 streak）。 */
+    private StudyStatsVO computeSourceStats(Long userId, String source) {
+        List<AnswerRecord> records = answerRecordMapper.selectList(
+                new LambdaQueryWrapper<AnswerRecord>()
+                        .eq(AnswerRecord::getUserId, userId)
+                        .eq(AnswerRecord::getSource, source)
+        );
+        StudyStatsVO vo = new StudyStatsVO();
+        vo.setStreak(0);
+        vo.setTotalCheckInDays(0);
+        if (records == null || records.isEmpty()) {
+            vo.setTotalAnswered(0);
+            vo.setCorrectCount(0);
+            vo.setAccuracy(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            return vo;
+        }
+        int total = records.size();
+        int correctCount = (int) records.stream().filter(r -> Objects.equals(r.getCorrect(), 1)).count();
+        vo.setTotalAnswered(total);
+        vo.setCorrectCount(correctCount);
+        vo.setAccuracy(calcAccuracy(total, correctCount));
+        return vo;
+    }
+
     /**
      * 库内随机一题；有 subject 则精确过滤。
      * {@code last} 追加原生 SQL 片段，ORDER BY RAND() 适合一期小数据量。
@@ -330,31 +456,6 @@ public class PracticeServiceImpl implements PracticeService {
                     : "题库为空，请先导入种子数据");
         }
         return question;
-    }
-
-    /**
-     * 错题 upsert：无则 insert count=1；有则 count+1 并刷新 last_wrong_at。
-     */
-    private void upsertWrong(Long userId, Long questionId) {
-        WrongQuestion existing = wrongQuestionMapper.selectOne(
-                new LambdaQueryWrapper<WrongQuestion>()
-                        .eq(WrongQuestion::getUserId, userId)
-                        .eq(WrongQuestion::getQuestionId, questionId)
-        );
-        LocalDateTime now = LocalDateTime.now();
-        if (existing == null) {
-            WrongQuestion row = new WrongQuestion();
-            row.setUserId(userId);
-            row.setQuestionId(questionId);
-            row.setWrongCount(1);
-            row.setLastWrongAt(now);
-            wrongQuestionMapper.insert(row);
-            return;
-        }
-        // 三元防 wrongCount 为 null
-        existing.setWrongCount(existing.getWrongCount() == null ? 1 : existing.getWrongCount() + 1);
-        existing.setLastWrongAt(now);
-        wrongQuestionMapper.updateById(existing);
     }
 
     /**
@@ -396,6 +497,23 @@ public class PracticeServiceImpl implements PracticeService {
         stats.setAccuracy(calcAccuracy(total, correctCount));
         stats.setStreak(streak);
         studyStatsMapper.updateById(stats);
+    }
+
+    /**
+     * 从寄语库随机取一条（按用户+日期种子，同日稳定、跨日变化）。
+     */
+    private String pickDailyEncouragement(Long userId, String day) {
+        List<DailyEncouragement> rows = dailyEncouragementMapper.selectList(
+                new LambdaQueryWrapper<DailyEncouragement>()
+                        .eq(DailyEncouragement::getEnabled, 1)
+                        .orderByAsc(DailyEncouragement::getSortOrder)
+                        .orderByAsc(DailyEncouragement::getId)
+        );
+        if (rows == null || rows.isEmpty()) {
+            return null;
+        }
+        Random rng = new Random(userId ^ day.hashCode());
+        return rows.get(rng.nextInt(rows.size())).getContent();
     }
 
     /** 今日是否已有 source=daily 的答题记录 */
@@ -465,46 +583,9 @@ public class PracticeServiceImpl implements PracticeService {
         return BigDecimal.valueOf(correctCount * 100.0 / total).setScale(2, RoundingMode.HALF_UP);
     }
 
-    /**
-     * 按 id 集合批量查题，转成 Map&lt;id, Question&gt; 方便 O(1) 回填。
-     * merge 函数 (a,b)-&gt;a：万一重复 id 保留第一条。
-     */
-    private Map<Long, Question> loadQuestions(Set<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return questionMapper.selectList(new LambdaQueryWrapper<Question>().in(Question::getId, ids))
-                .stream()
-                .collect(Collectors.toMap(Question::getId, Function.identity(), (a, b) -> a));
-    }
-
-    /**
-     * 距次日 0 点的秒数，作为每日题 Redis TTL；至少 1 秒，避免 Duration 非法。
-     */
     private static long secondsUntilTomorrow() {
         LocalDateTime tomorrowStart = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT);
         long seconds = Duration.between(LocalDateTime.now(), tomorrowStart).getSeconds();
         return Math.max(seconds, 1L);
-    }
-
-    /**
-     * Entity → 出题 VO：不拷贝 answer/analysis。
-     */
-    private static QuestionVO toQuestionVo(Question q) {
-        QuestionVO vo = new QuestionVO();
-        vo.setId(q.getId());
-        vo.setSubject(q.getSubject());
-        vo.setStem(q.getStem());
-        vo.setOptions(parseOptions(q.getOptionsJson()));
-        vo.setDifficulty(q.getDifficulty());
-        return vo;
-    }
-
-    /** 把 options_json 字符串解析成 List&lt;String&gt;；空串返回空列表 */
-    private static List<String> parseOptions(String optionsJson) {
-        if (StrUtil.isBlank(optionsJson)) {
-            return Collections.emptyList();
-        }
-        return JSONUtil.toList(optionsJson, String.class);
     }
 }

@@ -14,9 +14,10 @@ export function usePracticeQuiz() {
   const result = ref<SubmitResultVO | null>(null)
   const stats = ref<StudyStatsVO | null>(null)
 
-  async function loadStats() {
+  /** 随机刷题用 answer_record 聚合；其余场景用 study_stats + 打卡 */
+  async function loadStats(mode?: PracticeMode) {
     try {
-      stats.value = await fetchStats()
+      stats.value = await fetchStats(mode === 'random' ? 'random' : undefined)
     } catch {
       /* 统计失败不阻断 */
     }
@@ -45,7 +46,7 @@ export function usePracticeQuiz() {
     submitting.value = true
     try {
       result.value = await submitAnswer(question.value.id, selected.value, mode)
-      await loadStats()
+      await loadStats(mode)
       await options?.onSuccess?.()
       return true
     } catch (e) {

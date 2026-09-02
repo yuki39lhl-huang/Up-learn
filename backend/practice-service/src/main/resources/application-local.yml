@@ -1,4 +1,10 @@
 # profile=local：IDEA 本机启动，连 Docker 映射端口
+spring:
+  cloud:
+    nacos:
+      discovery:
+        ip: 127.0.0.1
+
 ul:
   db:
     host: localhost

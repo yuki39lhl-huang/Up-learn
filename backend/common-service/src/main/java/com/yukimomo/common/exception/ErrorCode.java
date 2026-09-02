@@ -39,6 +39,10 @@ public enum ErrorCode {
     LOGIN_CODE_INVALID(1005, "验证码错误或已过期"),
     LOGIN_CODE_SEND_TOO_FREQUENT(1006, "验证码发送过于频繁，请稍后再试"),
     REFRESH_TOKEN_INVALID(1007, "刷新令牌无效或已过期"),
+    NICKNAME_INVALID(1008, "昵称长度须为 1～32 个字符"),
+    AVATAR_URL_INVALID(1009, "头像地址须为有效的 https 链接"),
+    AVATAR_FILE_INVALID(1010, "仅支持 JPG / PNG / WebP 图片，且不超过 2MB"),
+    OSS_NOT_CONFIGURED(1011, "图片上传服务未配置，请联系管理员或在本地 application-local.yml 填写 OSS 密钥"),
 
     // --- 院校 2xxx ---
     SCHOOL_NOT_FOUND(2001, "院校不存在"),

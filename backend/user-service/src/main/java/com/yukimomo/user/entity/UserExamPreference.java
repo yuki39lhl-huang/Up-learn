@@ -46,6 +46,14 @@ public class UserExamPreference {
     @TableField("daily_subject_mode")
     private String dailySubjectMode;
 
+    /** 随机刷题模式：all / single。 */
+    @TableField("random_subject_mode")
+    private String randomSubjectMode;
+
+    /** single 时的题库科目。 */
+    @TableField("random_subject")
+    private String randomSubject;
+
     /** 创建时间。 */
     @TableField("created_at")
     private LocalDateTime createdAt;

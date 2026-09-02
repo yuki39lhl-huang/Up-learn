@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import SchoolQueryPanel from '../components/stitch/SchoolQueryPanel.vue'
 import DashboardPanel from '../components/stitch/DashboardPanel.vue'
 import PracticePanel from '../components/stitch/PracticePanel.vue'
 import AgentChatPanel from '../components/stitch/AgentChatPanel.vue'
+import AccountSettingsPanel from '../components/stitch/AccountSettingsPanel.vue'
 import BrandLogo from '../components/stitch/BrandLogo.vue'
 import StitchIcon from '../components/stitch/StitchIcon.vue'
 import { useAuthStore } from '../stores/auth'
 import { useExamPrefsStore } from '../stores/examPrefs'
 import { logout } from '../api/user'
+import { consumeConsoleDashboardEntry, consoleLocation, pushConsole } from '../utils/consoleNav'
 import '../styles/console-workbench.css'
-
-const CONSOLE_HOME = '#dashboard'
 
 type ModuleKey = 'dashboard' | 'school' | 'random' | 'papers' | 'community' | 'agent'
 type SystemKey = 'ui-settings' | 'notifications' | 'account'
@@ -33,7 +33,6 @@ function toggleSidebar() {
 }
 
 const uiSettingsTab = ref('appearance')
-const accountTab = ref('profile')
 
 const navItems: { key: ModuleKey; label: string; icon: 'home' | 'school' | 'practice' | 'paper' | 'community' | 'agent' }[] = [
   { key: 'dashboard', label: '主页', icon: 'home' },
@@ -48,11 +47,6 @@ const uiSettingsNav = [
   { key: 'appearance', label: '外观' },
   { key: 'layout', label: '布局' },
   { key: 'locale', label: '语言与地区' },
-]
-
-const accountNav = [
-  { key: 'profile', label: '个人信息' },
-  { key: 'security', label: '账号安全' },
 ]
 
 const mockNotifications = [
@@ -98,7 +92,7 @@ function viewHash(key: ViewKey) {
 
 function selectModule(key: ModuleKey) {
   activeView.value = key
-  router.replace({ path: '/console', hash: viewHash(key) })
+  pushConsole(router, key)
 }
 
 function selectSystem(key: SystemKey) {
@@ -113,14 +107,25 @@ const seasonMeta = computed(() => {
 })
 
 function syncFromRoute() {
+  if (consumeConsoleDashboardEntry()) {
+    activeView.value = 'dashboard'
+    router.replace(consoleLocation('dashboard'))
+    return
+  }
   const hash = route.hash
   if (!hash || hash === '#') {
     activeView.value = 'dashboard'
-    router.replace({ path: '/console', hash: CONSOLE_HOME })
+    router.replace(consoleLocation('dashboard'))
     return
   }
   activeView.value = hashToView(hash)
 }
+
+watch(
+  () => route.fullPath,
+  () => syncFromRoute(),
+  { immediate: true },
+)
 
 async function handleLogout() {
   try {
@@ -133,9 +138,6 @@ async function handleLogout() {
     router.push('/home')
   }
 }
-
-onMounted(syncFromRoute)
-watch(() => route.hash, syncFromRoute)
 </script>
 
 <template>
@@ -271,63 +273,25 @@ watch(() => route.hash, syncFromRoute)
             </div>
 
             <!-- 账号 -->
-            <div v-else-if="activeView === 'account'" class="gmail-panel__split">
-              <nav class="gmail-panel__aside" aria-label="账号分类">
-                <p class="gmail-panel__aside-title">账号</p>
-                <button
-                  v-for="item in accountNav"
-                  :key="item.key"
-                  type="button"
-                  class="gmail-panel__link"
-                  :class="{ 'gmail-panel__link--active': accountTab === item.key }"
-                  @click="accountTab = item.key"
-                >
-                  {{ item.label }}
-                </button>
-              </nav>
-              <div class="gmail-panel__content">
-                <template v-if="accountTab === 'profile'">
-                  <div class="account-head">
-                    <el-avatar :size="56" :src="auth.user?.avatarUrl">
-                      {{ auth.user?.nickname?.slice(0, 1) ?? 'U' }}
-                    </el-avatar>
-                    <div>
-                      <h2>{{ auth.user?.nickname ?? '用户' }}</h2>
-                      <p>{{ auth.user?.email ?? '—' }}</p>
-                    </div>
-                  </div>
-                  <dl class="account-dl">
-                    <dt>用户 ID</dt>
-                    <dd>{{ auth.user?.userId ?? '—' }}</dd>
-                  </dl>
-                </template>
-                <template v-else>
-                  <div class="gmail-panel__empty gmail-panel__empty--left">
-                    <h2>账号安全</h2>
-                    <p>密码、登录设备管理 · 后续版本开放</p>
-                  </div>
-                </template>
-                <div class="account-actions">
-                  <el-button type="danger" plain @click="handleLogout">退出登录</el-button>
-                </div>
-              </div>
-            </div>
+            <AccountSettingsPanel v-else-if="activeView === 'account'" @logout="handleLogout" />
 
-            <!-- 业务模块 -->
+            <!-- 业务模块：v-show 保留各面板状态，避免切回主页丢失每日一练作答/解析 -->
             <div v-else class="gmail-panel__content gmail-panel__content--flush">
-              <DashboardPanel v-if="activeView === 'dashboard'" />
+              <DashboardPanel v-show="activeView === 'dashboard'" />
 
-              <template v-else-if="activeView === 'school'">
-                <div style="padding: 16px">
-                  <SchoolQueryPanel />
-                </div>
-              </template>
+              <div v-show="activeView === 'school'" style="padding: 16px">
+                <SchoolQueryPanel />
+              </div>
 
-              <div v-else-if="activeView === 'random'" style="padding: 16px">
+              <div v-show="activeView === 'random'" style="padding: 16px">
                 <PracticePanel key="random" default-mode="random" />
               </div>
 
-              <section v-else-if="activeView === 'papers'" class="st-card" style="margin: 16px">
+              <section
+                v-show="activeView === 'papers'"
+                class="st-card"
+                style="margin: 16px"
+              >
                 <header class="st-card-header">历年试卷与在线作答</header>
                 <div class="st-card-body workbench-placeholder">
                   <StitchIcon name="paper" />
@@ -336,7 +300,11 @@ watch(() => route.hash, syncFromRoute)
                 </div>
               </section>
 
-              <section v-else-if="activeView === 'community'" class="st-card" style="margin: 16px">
+              <section
+                v-show="activeView === 'community'"
+                class="st-card"
+                style="margin: 16px"
+              >
                 <header class="st-card-header">升学社区</header>
                 <div class="st-card-body workbench-placeholder">
                   <StitchIcon name="community" />
@@ -345,7 +313,7 @@ watch(() => route.hash, syncFromRoute)
                 </div>
               </section>
 
-              <AgentChatPanel v-else-if="activeView === 'agent'" />
+              <AgentChatPanel v-show="activeView === 'agent'" />
             </div>
           </div>
         </section>

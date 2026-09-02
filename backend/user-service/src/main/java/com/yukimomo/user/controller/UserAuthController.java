@@ -5,7 +5,9 @@ import com.yukimomo.common.utils.UserContext;
 import com.yukimomo.user.dto.LoginDTO;
 import com.yukimomo.user.dto.LoginSendCodeDTO;
 import com.yukimomo.user.dto.RefreshTokenDTO;
+import com.yukimomo.user.dto.UserProfileUpdateDTO;
 import com.yukimomo.user.service.UserAuthService;
+import com.yukimomo.user.vo.AvatarUploadVO;
 import com.yukimomo.user.vo.LoginVO;
 import com.yukimomo.user.vo.UserInfoVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,9 +16,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "用户认证")
 @RestController
@@ -57,5 +62,19 @@ public class UserAuthController {
     public Result<UserInfoVO> info() {
         Long userId = UserContext.requireUserId();
         return Result.ok(userAuthService.getCurrentUserInfo(userId));
+    }
+
+    @Operation(summary = "修改资料", description = "修改昵称或头像 URL（至少填一项）")
+    @PutMapping("/info")
+    public Result<UserInfoVO> updateInfo(@Valid @RequestBody UserProfileUpdateDTO dto) {
+        Long userId = UserContext.requireUserId();
+        return Result.ok(userAuthService.updateProfile(userId, dto));
+    }
+
+    @Operation(summary = "上传头像", description = "上传图片到阿里云 OSS 并更新 avatar_url；需配置 ul.oss")
+    @PostMapping("/avatar")
+    public Result<AvatarUploadVO> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        Long userId = UserContext.requireUserId();
+        return Result.ok(userAuthService.uploadAvatar(userId, file));
     }
 }

@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth'
 import LoginModal from '../components/stitch/LoginModal.vue'
 import BrandLogo from '../components/stitch/BrandLogo.vue'
 import StitchIcon from '../components/stitch/StitchIcon.vue'
+import { consoleFullPath, isDashboardConsoleHref, markConsoleDashboardEntry, pushConsole, pushConsoleHref, type ConsoleModule } from '../utils/consoleNav'
 import type { SchoolVO } from '../types/api'
 
 const route = useRoute()
@@ -13,7 +14,7 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const showLoginModal = ref(false)
-const loginRedirect = ref('/console#dashboard')
+const loginRedirect = ref(consoleFullPath('dashboard'))
 
 const schools = ref<SchoolVO[]>([])
 const loadingSchools = ref(false)
@@ -84,14 +85,17 @@ const papers = [
 
 const subjects = ['政治', '大学英语', '高等数学', '计算机基础']
 
-function goConsole(hash?: string) {
-  const target = hash ? `/console${hash}` : '/console#dashboard'
+function goConsole(module: ConsoleModule = 'dashboard') {
+  const target = consoleFullPath(module)
   if (!auth.isLoggedIn) {
     loginRedirect.value = target
     showLoginModal.value = true
     return
   }
-  router.push(target)
+  if (module === 'dashboard') {
+    markConsoleDashboardEntry()
+  }
+  pushConsole(router, module)
 }
 
 function closeLoginModal() {
@@ -100,13 +104,16 @@ function closeLoginModal() {
 
 function onLoginSuccess() {
   showLoginModal.value = false
-  router.push(loginRedirect.value)
+  if (isDashboardConsoleHref(loginRedirect.value)) {
+    markConsoleDashboardEntry()
+  }
+  pushConsoleHref(router, loginRedirect.value)
 }
 
 function openLoginFromQuery() {
   if (route.query.login !== '1') return
   const redirect = route.query.redirect
-  loginRedirect.value = typeof redirect === 'string' ? redirect : '/console#dashboard'
+  loginRedirect.value = typeof redirect === 'string' ? redirect : consoleFullPath('dashboard')
   showLoginModal.value = true
   router.replace({ path: '/home' })
 }
@@ -167,8 +174,8 @@ onMounted(() => {
         <h1 class="hero-title">查院校，刷真题，一站完成。</h1>
         <p class="hero-sub">面向专升本备考的招生数据与在线练习平台，让升学之路更有确定性。</p>
         <div class="hero-btns">
-          <button class="btn btn-primary" @click="goConsole('#school')">开始查询</button>
-          <button class="btn btn-outline" @click="goConsole('#practice')">体验刷题</button>
+          <button class="btn btn-primary" @click="goConsole('school')">开始查询</button>
+          <button class="btn btn-outline" @click="goConsole('random')">体验刷题</button>
         </div>
         <ul class="trust-strip" aria-label="平台数据概览">
           <li v-for="t in trustItems" :key="t.label">
@@ -354,7 +361,7 @@ onMounted(() => {
               <label>C. 进程管理是操作系统的核心功能</label>
               <label>D. Windows 支持多任务处理</label>
             </div>
-            <button class="btn btn-primary" @click="goConsole('#practice')">提交并解析</button>
+            <button class="btn btn-primary" @click="goConsole('random')">提交并解析</button>
           </div>
         </div>
       </div>
@@ -371,7 +378,7 @@ onMounted(() => {
             <div><small>准确率</small><strong>92%</strong></div>
             <div><small>连续打卡</small><strong><span class="streak-val"><StitchIcon name="flame" />14 天</span></strong></div>
           </div>
-          <button class="btn btn-primary" @click="goConsole('#practice')">开始今日练习</button>
+          <button class="btn btn-primary" @click="goConsole('dashboard')">开始今日练习</button>
         </div>
         <div class="daily-quiz">
           <div class="tags"><span>时态</span><span>固定搭配</span></div>

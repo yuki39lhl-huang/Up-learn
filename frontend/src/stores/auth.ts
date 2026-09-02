@@ -49,5 +49,11 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem(USER_KEY)
   }
 
-  return { accessToken, refreshToken, user, isLoggedIn, setSession, clearSession }
+  function patchUser(patch: Partial<Pick<LoginVO, 'nickname' | 'avatarUrl'>>) {
+    if (!user.value) return
+    user.value = { ...user.value, ...patch }
+    localStorage.setItem(USER_KEY, JSON.stringify(user.value))
+  }
+
+  return { accessToken, refreshToken, user, isLoggedIn, setSession, clearSession, patchUser }
 })

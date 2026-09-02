@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { fetchDaily, fetchDailyStatus } from '../../api/practice'
+import { fetchUserTargets } from '../../api/user'
 import { usePracticeQuiz } from '../../composables/usePracticeQuiz'
+import { useAuthStore } from '../../stores/auth'
 import { useExamPrefsStore } from '../../stores/examPrefs'
+import type { UserTargetVO } from '../../types/api'
 import { calcExamCountdown } from '../../utils/examCountdown'
 import { isSelfExamComprehensive } from '../../utils/examSubjects'
 import { parseOption } from '../../utils/option'
@@ -11,8 +15,19 @@ import ExamSettingsDialog from './ExamSettingsDialog.vue'
 import StitchIcon from './StitchIcon.vue'
 
 const examPrefs = useExamPrefsStore()
+const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 const settingsOpen = ref(false)
 const completedToday = ref(false)
+const dailyQuote = ref('')
+const primaryTarget = ref<UserTargetVO | null>(null)
+
+const primaryTargetLabel = computed(() => {
+  if (!auth.isLoggedIn || !primaryTarget.value) return '未设置'
+  const t = primaryTarget.value
+  return t.majorName ? `${t.schoolName} · ${t.majorName}` : t.schoolName
+})
 
 const {
   loading,
@@ -38,18 +53,48 @@ const dailySubjectLabel = computed(() => {
   return examPrefs.prefs.dailySubject || '未设置'
 })
 
-async function loadDaily() {
+const showQuizAnalysis = computed(
+  () => !!(result.value?.analysis || (completedToday.value && result.value?.answer)),
+)
+
+const quizAnalysisText = computed(() => {
+  if (result.value?.analysis) return result.value.analysis
+  if (result.value?.answer) {
+    const yours = result.value.userAnswer || '—'
+    const correct = result.value.answer
+    return result.value.correct
+      ? `回答正确。参考答案：${correct}`
+      : `你的作答：${yours}；参考答案：${correct}`
+  }
+  return ''
+})
+
+async function loadDaily(force = false) {
   if (!examPrefs.isConfigured) {
     question.value = null
+    completedToday.value = false
     return
   }
+  if (!force && completedToday.value && result.value) return
+
   loading.value = true
-  resetAnswer()
+  if (!result.value) resetAnswer()
   try {
     const status = await fetchDailyStatus()
     completedToday.value = status.completedToday
+    dailyQuote.value = status.completedToday ? (status.encouragement ?? '') : ''
     const subject = status.subject ?? examPrefs.pickDailyPracticeSubject()
     question.value = await fetchDaily(subject)
+    if (status.completedToday && status.questionId) {
+      selected.value = status.userAnswer ?? ''
+      result.value = {
+        questionId: status.questionId,
+        userAnswer: status.userAnswer ?? '',
+        correct: status.correct ?? false,
+        answer: status.answer ?? '',
+        analysis: status.analysis ?? undefined,
+      }
+    }
   } catch (e) {
     question.value = null
     ElMessage.error(e instanceof Error ? e.message : '加载每日一练失败')
@@ -62,22 +107,82 @@ async function handleSubmit() {
   if (!question.value || !selected.value || completedToday.value) return
   await submit('daily', {
     skipSelectCheck: true,
-    onSuccess: () => {
+    onSuccess: async () => {
       completedToday.value = true
       ElMessage.success('今日签到 +1')
+      try {
+        const status = await fetchDailyStatus()
+        dailyQuote.value = status.encouragement ?? ''
+      } catch {
+        /* 寄语非阻断 */
+      }
     },
   })
+}
+
+function onSettingsSaved() {
+  void loadDaily(true)
 }
 
 function onSettingsReset() {
   question.value = null
   completedToday.value = false
+  dailyQuote.value = ''
+  resetAnswer()
+  void loadStats()
+  void loadDaily(true)
+}
+
+async function loadPrimaryTarget() {
+  if (!auth.isLoggedIn) {
+    primaryTarget.value = null
+    return
+  }
+  try {
+    const list = await fetchUserTargets()
+    primaryTarget.value = list[0] ?? null
+  } catch {
+    primaryTarget.value = null
+  }
 }
 
 onMounted(async () => {
+  await examPrefs.loadRemote()
   await loadStats()
-  await loadDaily()
+  await loadPrimaryTarget()
+  await loadDaily(true)
+  openSettingsFromQuery()
 })
+
+watch(
+  () => route.hash,
+  (hash) => {
+    const view = hash.replace('#', '')
+    const onDashboard =
+      view === 'dashboard' || view === 'home' || view === 'daily' || view === ''
+    if (!onDashboard) settingsOpen.value = false
+    else void loadPrimaryTarget()
+  },
+)
+
+watch(
+  () => auth.isLoggedIn,
+  () => {
+    void loadPrimaryTarget()
+  },
+)
+
+watch(
+  () => route.query.setup,
+  () => openSettingsFromQuery(),
+)
+
+function openSettingsFromQuery() {
+  if (route.query.setup === '1') {
+    settingsOpen.value = true
+    router.replace({ path: '/console', hash: '#dashboard' })
+  }
+}
 </script>
 
 <template>
@@ -89,7 +194,10 @@ onMounted(async () => {
             <p class="dash-card__eyebrow">升学通 · 备考中心</p>
             <h2>考试倒计时</h2>
           </div>
-          <el-button type="primary" plain size="small" @click="settingsOpen = true">备考设置</el-button>
+          <button type="button" class="dash-settings-btn" @click="settingsOpen = true">
+            <StitchIcon name="settings" class="dash-settings-btn__icon" />
+            备考设置
+          </button>
         </header>
 
         <div v-if="countdown" class="countdown-block">
@@ -126,10 +234,16 @@ onMounted(async () => {
             <dt>届别</dt>
             <dd>{{ examPrefs.prefs.cohortYear ? `${examPrefs.prefs.cohortYear} 届` : '待选择' }}</dd>
           </div>
-          <div class="profile-list__item profile-list__item--full">
+          <div class="profile-list__item">
             <dt>专业类型</dt>
             <dd :class="{ 'is-muted': !examPrefs.hasMajorCategory }">
               {{ examPrefs.prefs.majorCategory || '待选择' }}
+            </dd>
+          </div>
+          <div class="profile-list__item">
+            <dt>目标院校</dt>
+            <dd :class="{ 'is-muted': primaryTargetLabel === '未设置' }">
+              {{ primaryTargetLabel }}
             </dd>
           </div>
           <div class="profile-list__item profile-list__item--full">
@@ -181,6 +295,11 @@ onMounted(async () => {
             </dd>
           </div>
         </dl>
+
+        <div v-if="completedToday && examPrefs.isConfigured" class="dash-encourage">
+          <span class="dash-encourage__label">今日寄语</span>
+          <p>{{ dailyQuote }}</p>
+        </div>
       </section>
 
       <section class="dash-card dash-card--daily" v-loading="loading">
@@ -239,9 +358,9 @@ onMounted(async () => {
                   <span class="quiz__text">{{ parseOption(opt).text }}</span>
                 </button>
               </div>
-              <div v-if="result?.analysis" class="quiz__analysis">
+              <div v-if="showQuizAnalysis" class="quiz__analysis">
                 <span class="st-label-caps">解析</span>
-                <p>{{ result.analysis }}</p>
+                <p>{{ quizAnalysisText }}</p>
               </div>
               <footer class="quiz__foot">
                 <el-button
@@ -262,7 +381,7 @@ onMounted(async () => {
       </section>
     </div>
 
-    <ExamSettingsDialog v-model="settingsOpen" @saved="loadDaily" @reset="onSettingsReset" />
+    <ExamSettingsDialog v-model="settingsOpen" @saved="onSettingsSaved" @reset="onSettingsReset" />
   </div>
 </template>
 
@@ -287,11 +406,21 @@ onMounted(async () => {
 }
 
 .dash-card {
-  background: var(--st-surface);
-  border: 1px solid var(--st-outline-variant);
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+  box-shadow:
+    0 8px 32px rgb(15 23 42 / 6%),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.dash-card--exam {
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
 }
 
 .dash-card--daily {
@@ -322,12 +451,83 @@ onMounted(async () => {
   font-weight: 700;
 }
 
+.dash-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(34 197 94 / 38%);
+  background: linear-gradient(135deg, rgb(34 197 94 / 14%), rgb(59 130 246 / 10%));
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+  flex-shrink: 0;
+}
+
+.dash-settings-btn__icon {
+  width: 15px;
+  height: 15px;
+  opacity: 0.85;
+}
+
+.dash-settings-btn:hover {
+  border-color: rgb(34 197 94 / 55%);
+  box-shadow: 0 4px 14px rgb(34 197 94 / 18%);
+}
+
+.dash-settings-btn:active {
+  transform: scale(0.98);
+}
+
+.profile-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+.dash-encourage {
+  margin-top: auto;
+  padding: 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgb(34 197 94 / 8%), rgb(59 130 246 / 6%));
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--st-on-surface-variant);
+}
+
+.dash-encourage__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--st-secondary);
+}
+
+.dash-encourage p {
+  margin: 0;
+  color: var(--st-on-surface);
+  font-weight: 500;
+}
+
 .countdown-block {
   text-align: center;
   padding: 20px 12px 24px;
   margin-bottom: 20px;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgb(34 197 94 / 8%), rgb(59 130 246 / 6%));
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .countdown-block__nums {
@@ -369,13 +569,6 @@ onMounted(async () => {
   margin: 12px 0 0;
   font-size: 13px;
   color: var(--st-on-surface-variant);
-}
-
-.profile-list {
-  margin: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
 }
 
 .profile-list__item {

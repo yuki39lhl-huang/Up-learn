@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { sendLoginCode, loginByCode } from '../api/user'
 import { useAuthStore } from '../stores/auth'
+import { consoleFullPath, isDashboardConsoleHref, markConsoleDashboardEntry, pushConsoleHref } from '../utils/consoleNav'
 
 const route = useRoute()
 const router = useRouter()
@@ -51,8 +52,11 @@ async function handleLogin() {
     const vo = await loginByCode(email.value.trim(), code.value.trim())
     auth.setSession(vo)
     ElMessage.success('登录成功')
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/console#dashboard'
-    router.push(redirect)
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : consoleFullPath('dashboard')
+    if (isDashboardConsoleHref(redirect)) {
+      markConsoleDashboardEntry()
+    }
+    pushConsoleHref(router, redirect)
   } catch (e) {
     ElMessage.error(e instanceof Error ? e.message : '登录失败')
   } finally {

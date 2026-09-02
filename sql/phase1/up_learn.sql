@@ -13,31 +13,31 @@ USE `up_learn`;
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS `user` (
-  `id`            BIGINT       NOT NULL AUTO_INCREMENT,
-  `email`         VARCHAR(128) NOT NULL COMMENT '登录账号（邮箱）',
+  `id`            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `email`         VARCHAR(128) NOT NULL COMMENT '登录邮箱（唯一）',
   `password_hash` VARCHAR(255) NOT NULL COMMENT '密码哈希，不存明文',
-  `nickname`      VARCHAR(64)  NOT NULL COMMENT '昵称；注册时服务端默认「前缀+随机」，用户可改',
-  `avatar_url`    VARCHAR(512) NOT NULL COMMENT '头像 URL；注册时默认生成，用户可改',
-  `deleted`       TINYINT      NOT NULL DEFAULT 0 COMMENT '0正常 1软删',
-  `created_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updated_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  `nickname`      VARCHAR(64)  NOT NULL COMMENT '昵称，注册时可默认生成',
+  `avatar_url`    VARCHAR(512) NOT NULL COMMENT '头像 URL',
+  `deleted`       TINYINT      NOT NULL DEFAULT 0 COMMENT '软删除：0 正常，1 已删除',
+  `created_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='user-service · 用户账号（邮箱验证码登录；password_hash 为占位哈希）';
+  COMMENT='用户服务·用户账号表（邮箱验证码登录）';
 
 CREATE TABLE IF NOT EXISTS `user_target` (
-  `id`         BIGINT      NOT NULL AUTO_INCREMENT,
-  `user_id`    BIGINT      NOT NULL COMMENT 'user.id',
-  `school_id`  BIGINT      NOT NULL COMMENT 'school.id（跨服务只存ID，无外键）',
-  `major_id`   BIGINT               DEFAULT NULL COMMENT 'school_major.id，可选（某校开设）',
-  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  `id`         BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id`    BIGINT      NOT NULL COMMENT '用户 ID，关联 user.id',
+  `school_id`  BIGINT      NOT NULL COMMENT '院校 ID，关联 school.id',
+  `major_id`   BIGINT               DEFAULT NULL COMMENT '院校专业 ID，关联 school_major.id，可选',
+  `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_target` (`user_id`, `school_id`, `major_id`),
   KEY `idx_user_target_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='user-service · 目标院校';
+  COMMENT='用户服务·目标院校表（用户意向报考学校/专业）';
 
 CREATE TABLE IF NOT EXISTS `user_exam_preference` (
   `id`                    BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
@@ -48,12 +48,14 @@ CREATE TABLE IF NOT EXISTS `user_exam_preference` (
   `subject_selection_json` JSON         NOT NULL COMMENT '公共课/专业基础课/专业综合课选择',
   `daily_subject`         VARCHAR(128) NOT NULL COMMENT '每日一练科目',
   `daily_subject_mode`    VARCHAR(16)  NOT NULL DEFAULT 'fixed' COMMENT 'fixed固定科目、random随机科目',
+  `random_subject_mode`   VARCHAR(16)  NOT NULL DEFAULT 'all' COMMENT 'all全随机、single指定题库科目',
+  `random_subject`        VARCHAR(128)          DEFAULT NULL COMMENT 'single时的题库科目名',
   `created_at`             DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
   `updated_at`             DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_exam_preference_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='user-service · 用户备考设置';
+  COMMENT='用户服务·备考设置表（省份、届别、科目与刷题偏好）';
 
 -- ---------------------------------------------------------------------------
 -- school-service
@@ -61,24 +63,24 @@ CREATE TABLE IF NOT EXISTS `user_exam_preference` (
 
 CREATE TABLE IF NOT EXISTS `school` (
   `id`             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `name`           VARCHAR(128) NOT NULL,
-  `province`       VARCHAR(32)           DEFAULT NULL,
-  `city`           VARCHAR(64)           DEFAULT NULL,
-  `type`           VARCHAR(16)           DEFAULT NULL COMMENT '公办/民办等',
-  `type_tag`       VARCHAR(32)           DEFAULT NULL COMMENT '展示标签',
-  `prefer_public`  TINYINT      NOT NULL DEFAULT 0 COMMENT '是否公办标记，便于 preferPublic 筛选',
-  `major_count`    INT                   DEFAULT NULL,
+  `name`           VARCHAR(128) NOT NULL COMMENT '院校名称',
+  `province`       VARCHAR(32)           DEFAULT NULL COMMENT '所在省份',
+  `city`           VARCHAR(64)           DEFAULT NULL COMMENT '所在城市',
+  `type`           VARCHAR(16)           DEFAULT NULL COMMENT '院校类型：公办/民办等',
+  `type_tag`       VARCHAR(32)           DEFAULT NULL COMMENT '展示用类型标签',
+  `prefer_public`  TINYINT      NOT NULL DEFAULT 0 COMMENT '是否公办：1 是，0 否',
+  `major_count`    INT                   DEFAULT NULL COMMENT '开设专业数量（展示用）',
   `enrollment`     INT                   DEFAULT NULL COMMENT '招生人数（汇总或最新）',
   `tuition`        INT                   DEFAULT NULL COMMENT '学费（元/年，展示用）',
-  `min_score`      INT                   DEFAULT NULL COMMENT '最低分（最新或默认年）',
-  `deleted`        TINYINT      NOT NULL DEFAULT 0,
-  `created_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updated_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  `min_score`      INT                   DEFAULT NULL COMMENT '最低录取分（最新或默认年）',
+  `deleted`        TINYINT      NOT NULL DEFAULT 0 COMMENT '软删除：0 正常，1 已删除',
+  `created_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `idx_school_province_type` (`province`, `type`),
   KEY `idx_school_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='school-service · 院校';
+  COMMENT='院校服务·院校基础信息表';
 
 CREATE TABLE IF NOT EXISTS `major_dict` (
   `id`             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
@@ -91,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `major_dict` (
   UNIQUE KEY `uk_major_dict_name` (`name`),
   KEY `idx_major_dict_category` (`major_category`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='school-service · 专业词典（Combobox / 筛选用）';
+  COMMENT='院校服务·专业词典表（全局专业名称）';
 
 CREATE TABLE IF NOT EXISTS `exam_subject` (
   `id`           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
@@ -106,7 +108,7 @@ CREATE TABLE IF NOT EXISTS `exam_subject` (
   UNIQUE KEY `uk_exam_subject_type_name` (`subject_type`, `name`),
   KEY `idx_exam_subject_type_enabled` (`subject_type`, `enabled`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='school-service · 考试科目字典';
+  COMMENT='院校服务·考试科目字典表';
 
 CREATE TABLE IF NOT EXISTS `exam_subject_rule` (
   `id`             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
@@ -124,108 +126,156 @@ CREATE TABLE IF NOT EXISTS `exam_subject_rule` (
   KEY `idx_exam_subject_rule_query` (`province`, `major_category`, `enabled`),
   KEY `idx_exam_subject_rule_subject` (`subject_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='school-service · 省份专业考试科目规则';
+  COMMENT='院校服务·省份专业考试科目规则表';
 
 CREATE TABLE IF NOT EXISTS `school_major` (
-  `id`             BIGINT       NOT NULL AUTO_INCREMENT,
-  `school_id`      BIGINT       NOT NULL COMMENT 'school.id',
-  `major_dict_id`  BIGINT       NOT NULL COMMENT 'major_dict.id',
+  `id`             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `school_id`      BIGINT       NOT NULL COMMENT '院校 ID，关联 school.id',
+  `major_dict_id`  BIGINT       NOT NULL COMMENT '专业词典 ID，关联 major_dict.id',
   `exam_subjects`  VARCHAR(255)          DEFAULT NULL COMMENT '考试科目，逗号分隔',
-  `avg_score`      INT                   DEFAULT NULL COMMENT '均分',
+  `avg_score`      INT                   DEFAULT NULL COMMENT '平均分',
   `enrollment`     INT                   DEFAULT NULL COMMENT '招生人数',
   `tuition`        INT                   DEFAULT NULL COMMENT '学费（元/年）',
-  `min_score`      INT                   DEFAULT NULL,
+  `min_score`      INT                   DEFAULT NULL COMMENT '最低录取分',
   `year`           INT                   DEFAULT NULL COMMENT '招生年份',
-  `deleted`        TINYINT      NOT NULL DEFAULT 0,
-  `created_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updated_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  `deleted`        TINYINT      NOT NULL DEFAULT 0 COMMENT '软删除：0 正常，1 已删除',
+  `created_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_school_major_year` (`school_id`, `major_dict_id`, `year`),
   KEY `idx_school_major_school` (`school_id`),
   KEY `idx_school_major_dict` (`major_dict_id`),
   KEY `idx_school_major_year` (`year`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='school-service · 院校开设专业（招生信息）';
+  COMMENT='院校服务·院校开设专业表（招生信息）';
 
 -- 旧表 major 已废弃，新库勿再建；已有库执行 sql/phase1/migrate_major_dict.sql
 
 CREATE TABLE IF NOT EXISTS `school_year_stat` (
-  `id`          BIGINT      NOT NULL AUTO_INCREMENT,
-  `school_id`   BIGINT      NOT NULL COMMENT 'school.id',
-  `year`        INT         NOT NULL,
-  `min_score`   INT                  DEFAULT NULL,
-  `enrollment`  INT                  DEFAULT NULL,
-  `tuition`     INT                  DEFAULT NULL,
-  `extra_json`  JSON                 DEFAULT NULL COMMENT '扩展指标',
-  `created_at`  DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updated_at`  DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  `id`          BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `school_id`   BIGINT      NOT NULL COMMENT '院校 ID，关联 school.id',
+  `year`        INT         NOT NULL COMMENT '统计年份',
+  `min_score`   INT                  DEFAULT NULL COMMENT '最低录取分',
+  `enrollment`  INT                  DEFAULT NULL COMMENT '招生人数',
+  `tuition`     INT                  DEFAULT NULL COMMENT '学费（元/年）',
+  `extra_json`  JSON                 DEFAULT NULL COMMENT '扩展指标 JSON',
+  `created_at`  DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at`  DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_school_year` (`school_id`, `year`),
   KEY `idx_stat_year` (`year`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='school-service · 院校按年招生/分数线';
+  COMMENT='院校服务·院校按年招生统计表';
 
 -- ---------------------------------------------------------------------------
 -- practice-service
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS `question` (
-  `id`          BIGINT       NOT NULL AUTO_INCREMENT,
-  `subject`     VARCHAR(32)  NOT NULL COMMENT '科目：英语/数学等',
-  `stem`        TEXT         NOT NULL COMMENT '题干',
-  `options_json` JSON                 DEFAULT NULL COMMENT '选项 JSON',
-  `answer`      VARCHAR(64)           DEFAULT NULL COMMENT '标准答案',
-  `analysis`    TEXT                  DEFAULT NULL COMMENT '解析',
-  `difficulty`  TINYINT               DEFAULT NULL,
-  `deleted`     TINYINT      NOT NULL DEFAULT 0,
-  `created_at`  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updated_at`  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `subject`     VARCHAR(32)  NOT NULL COMMENT '题库科目：政治/大学英语/高等数学/计算机基础',
+  `stem`        TEXT         NOT NULL COMMENT '题干正文',
+  `options_json` JSON                 DEFAULT NULL COMMENT '选项列表 JSON',
+  `answer`      VARCHAR(64)           DEFAULT NULL COMMENT '标准答案（如 A/B/C/D）',
+  `analysis`    TEXT                  DEFAULT NULL COMMENT '题目解析',
+  `difficulty`  TINYINT               DEFAULT NULL COMMENT '难度等级（一期可选）',
+  `deleted`     TINYINT      NOT NULL DEFAULT 0 COMMENT '软删除：0 正常，1 已删除',
+  `created_at`  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at`  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `idx_question_subject` (`subject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='practice-service · 题库';
+  COMMENT='刷题服务·题库题目表';
 
 CREATE TABLE IF NOT EXISTS `answer_record` (
-  `id`            BIGINT       NOT NULL AUTO_INCREMENT,
-  `user_id`       BIGINT       NOT NULL COMMENT 'user.id（跨服务只存ID）',
-  `question_id`   BIGINT       NOT NULL COMMENT 'question.id',
-  `user_answer`   VARCHAR(255)          DEFAULT NULL,
-  `correct`       TINYINT      NOT NULL DEFAULT 0 COMMENT '1正确 0错误',
-  `source`        VARCHAR(32)           DEFAULT NULL COMMENT 'daily/random/submit 来源',
-  `created_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id`            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id`       BIGINT       NOT NULL COMMENT '用户 ID，关联 user.id',
+  `question_id`   BIGINT       NOT NULL COMMENT '题目 ID，关联 question.id',
+  `user_answer`   VARCHAR(255)          DEFAULT NULL COMMENT '用户提交的答案',
+  `correct`       TINYINT      NOT NULL DEFAULT 0 COMMENT '是否正确：1 正确，0 错误',
+  `source`        VARCHAR(32)           DEFAULT NULL COMMENT '答题来源：daily 每日一练，random 随机刷题',
+  `created_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '作答时间',
   PRIMARY KEY (`id`),
   KEY `idx_answer_user_time` (`user_id`, `created_at`),
   KEY `idx_answer_question` (`question_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='practice-service · 作答历史';
+  COMMENT='刷题服务·用户作答历史表';
 
 CREATE TABLE IF NOT EXISTS `wrong_question` (
-  `id`           BIGINT      NOT NULL AUTO_INCREMENT,
-  `user_id`      BIGINT      NOT NULL,
-  `question_id`  BIGINT      NOT NULL,
-  `wrong_count`  INT         NOT NULL DEFAULT 1,
-  `last_wrong_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `created_at`   DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updated_at`   DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  `id`                BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id`           BIGINT       NOT NULL COMMENT '用户 ID',
+  `question_id`       BIGINT       NOT NULL COMMENT '题目 ID，关联 question.id',
+  `user_answer`       VARCHAR(255)          DEFAULT NULL COMMENT '加入错题本时的错选快照，如 A/B/C/D',
+  `analysis_snapshot` TEXT                  DEFAULT NULL COMMENT '加入时的解析快照',
+  `wrong_count`       INT          NOT NULL DEFAULT 1 COMMENT '累计加入次数（重复加入前业务已拦截，一般为 1）',
+  `last_wrong_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '最近一次加入时间，列表按此倒序',
+  `created_at`        DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '首次加入时间',
+  `updated_at`        DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_wrong_user_question` (`user_id`, `question_id`),
   KEY `idx_wrong_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='practice-service · 错题本';
+  COMMENT='刷题服务·手动错题本表（用户主动收藏，与复习调度独立）';
 
 CREATE TABLE IF NOT EXISTS `study_stats` (
-  `id`            BIGINT       NOT NULL AUTO_INCREMENT,
-  `user_id`       BIGINT       NOT NULL,
-  `total_answered` INT         NOT NULL DEFAULT 0,
-  `correct_count` INT          NOT NULL DEFAULT 0,
+  `id`            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id`       BIGINT       NOT NULL COMMENT '用户 ID，关联 user.id',
+  `total_answered` INT         NOT NULL DEFAULT 0 COMMENT '累计答题数',
+  `correct_count` INT          NOT NULL DEFAULT 0 COMMENT '累计答对数',
   `accuracy`      DECIMAL(5,2)          DEFAULT NULL COMMENT '正确率百分比',
-  `streak`        INT          NOT NULL DEFAULT 0 COMMENT '连续打卡天数（一期可先维护）',
-  `updated_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-  `created_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `streak`        INT          NOT NULL DEFAULT 0 COMMENT '连续打卡天数',
+  `updated_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '统计更新时间',
+  `created_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_study_stats_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='practice-service · 学习统计汇总';
+  COMMENT='刷题服务·用户学习统计汇总表（每日一练打卡等）';
+
+CREATE TABLE IF NOT EXISTS `user_question_record` (
+  `id`                   BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id`              BIGINT       NOT NULL COMMENT '用户 ID，关联 user.id',
+  `question_id`          BIGINT       NOT NULL COMMENT '题目 ID，关联 question.id',
+  `status`               VARCHAR(16)  NOT NULL DEFAULT 'NEW' COMMENT '调度状态：NEW/WRONG/RIGHT',
+  `last_answer_time`     DATETIME(3)           DEFAULT NULL COMMENT '上次作答时间',
+  `next_review_time`     DATETIME(3)           DEFAULT NULL COMMENT '允许下次复习的最早时间',
+  `wrong_count`          INT          NOT NULL DEFAULT 0 COMMENT '累计做错次数',
+  `right_count`          INT          NOT NULL DEFAULT 0 COMMENT '累计做对次数（连续做对计间隔）',
+  `review_interval_days` INT          NOT NULL DEFAULT 0 COMMENT '当前复习间隔天数',
+  `created_at`           DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at`           DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_uqr_user_question` (`user_id`, `question_id`),
+  KEY `idx_uqr_user_status` (`user_id`, `status`),
+  KEY `idx_uqr_user_review` (`user_id`, `next_review_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='刷题服务·题目间隔复习调度表（驱动随机刷题出题池）';
+
+CREATE TABLE IF NOT EXISTS `practice_note` (
+  `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id`     BIGINT       NOT NULL COMMENT '用户 ID',
+  `question_id` BIGINT       NOT NULL COMMENT '题目 ID，同一用户不可重复收藏',
+  `stem`        TEXT                  DEFAULT NULL COMMENT '题干快照',
+  `analysis`    TEXT                  DEFAULT NULL COMMENT '解析快照',
+  `user_note`   VARCHAR(2000)         DEFAULT NULL COMMENT '用户自定义备注',
+  `created_at`  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_note_user_question` (`user_id`, `question_id`),
+  KEY `idx_note_user_time` (`user_id`, `created_at`),
+  KEY `idx_note_question` (`question_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='刷题服务·随机刷题备忘录表（答对后手动收藏）';
+
+CREATE TABLE IF NOT EXISTS `daily_encouragement` (
+  `id`         BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `content`    VARCHAR(512) NOT NULL COMMENT '寄语正文',
+  `enabled`    TINYINT      NOT NULL DEFAULT 1 COMMENT '是否启用：1 启用，0 停用',
+  `sort_order` INT          NOT NULL DEFAULT 0 COMMENT '排序权重',
+  `created_at` DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_daily_encouragement_enabled` (`enabled`, `sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='刷题服务·每日一练签到寄语表';
 
 -- 二期预留（本期不建）：paper / paper_question；agent 会话可走 Redis
 

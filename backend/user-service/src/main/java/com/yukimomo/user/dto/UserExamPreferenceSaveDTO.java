@@ -35,4 +35,10 @@ public class UserExamPreferenceSaveDTO {
     /** 每日一练模式：fixed 或 random。 */
     @NotBlank
     private String dailySubjectMode;
+
+    /** 随机刷题模式：all 或 single。 */
+    private String randomSubjectMode;
+
+    /** single 时的题库科目名。 */
+    private String randomSubject;
 }

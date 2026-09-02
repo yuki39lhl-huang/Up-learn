@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, onMounted, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import {
   fetchExamSubjectOptions,
   fetchMajorCategories,
   type ExamSubjectOptions,
 } from '../../api/school'
+import { resetDailyCheckIn, resetRandomProgress } from '../../api/practice'
 import { useExamPrefsStore } from '../../stores/examPrefs'
 import { getCohortOptions, isCohortInRange } from '../../utils/examCountdown'
 import {
@@ -17,6 +18,9 @@ import {
   type ExamSubjectSelection,
   type SubjectSlot,
 } from '../../utils/examSubjects'
+import StitchDialog from './StitchDialog.vue'
+
+const STITCH_POPPER = 'stitch-popper'
 
 const SUBJECT_NONE = '暂不选择'
 const SETTINGS_MAIN_W = 500 // 主内容区宽度
@@ -53,15 +57,23 @@ const subjectPanelOpen = ref(false)
 const subjectPanelSlot = ref<SubjectSlot>('public')
 const panelDraft = ref<string[]>([])
 const settingsFrameExpanded = ref(false)
-const settingsFrameRef = ref<HTMLElement | null>(null)
-const settingsFrameHeight = ref<string>()
+const subjectSectionVisible = ref(false)
+const revealAnimate = ref(true)
+
+const resetConfirmOpen = ref(false)
+const resetLoading = ref(false)
 
 const cohortOptions = computed(() => getCohortOptions())
 const formSelectedSubjects = computed(() => selectionToAllSubjects(formSubjectSelection.value))
 const formPracticeSubjects = computed(() => toPracticeSubjects(formSubjectSelection.value))
 const formPracticeNote = computed(() => practiceNoteForSelection(formSubjectSelection.value))
-const showSubjectSection = computed(() => !!(formProvince.value && formMajorCategory.value))
-const showDailySection = computed(() => showSubjectSection.value && formSelectedSubjects.value.length > 0)
+const showDailySection = computed(
+  () => subjectSectionVisible.value && formSelectedSubjects.value.length > 0,
+)
+
+function setSubjectSectionVisible(visible: boolean) {
+  subjectSectionVisible.value = visible
+}
 
 const settingsDialogWidth = computed(() => {
   const contentW = settingsFrameExpanded.value
@@ -95,34 +107,7 @@ function resetPanelUi() {
   subjectPanelOpen.value = false
   settingsFrameExpanded.value = false
   panelDraft.value = []
-  settingsFrameHeight.value = undefined
-}
-
-function animateSettingsFrame(expanding: boolean) {
-  const frame = settingsFrameRef.value
-  if (!frame) return
-
-  const currentHeight = frame.getBoundingClientRect().height
-  settingsFrameHeight.value = `${currentHeight}px`
-
-  requestAnimationFrame(() => {
-    if (expanding) {
-      settingsFrameHeight.value = `${Math.min(900, window.innerHeight - 150)}px`
-      return
-    }
-
-    nextTick(() => {
-      if (settingsFrameRef.value) {
-        settingsFrameHeight.value = `${settingsFrameRef.value.scrollHeight}px`
-      }
-    })
-  })
-}
-
-function onSettingsFrameTransitionEnd(event: TransitionEvent) {
-  if (event.propertyName === 'height') {
-    settingsFrameHeight.value = undefined
-  }
+  setSubjectSectionVisible(false)
 }
 
 function syncFormFromPrefs() {
@@ -243,7 +228,7 @@ function onFormProvinceChange(value: string | undefined) {
   subjectOptions.value = null
   subjectsLoading.value = false
   resetPanelUi()
-  animateSettingsFrame(false)
+  revealAnimate.value = true
 }
 
 async function onFormCategoryChange() {
@@ -254,13 +239,15 @@ async function onFormCategoryChange() {
     subjectOptions.value = null
     subjectsLoading.value = false
     resetPanelUi()
-    animateSettingsFrame(false)
+    revealAnimate.value = true
     return
   }
+  revealAnimate.value = true
+  setSubjectSectionVisible(false)
   formSubjectSelection.value = { public: [], foundation: [], comprehensive: [] }
   subjectOptions.value = null
-  animateSettingsFrame(true)
   await loadSubjectOptions(true)
+  if (subjectOptions.value) setSubjectSectionVisible(true)
 }
 
 async function saveSettings() {
@@ -312,24 +299,37 @@ async function saveSettings() {
 }
 
 async function resetSettings() {
+  resetConfirmOpen.value = true
+}
+
+async function confirmResetSettings() {
+  resetLoading.value = true
   try {
-    await ElMessageBox.confirm('将清空届别、专业类型与科目设置，是否继续？', '重置备考设置', {
-      confirmButtonText: '重置',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
     examPrefs.reset()
     try {
       await examPrefs.deleteRemote()
     } catch {
       ElMessage.warning('已清除本地设置，云端设置删除失败')
     }
+    try {
+      await resetDailyCheckIn()
+    } catch {
+      ElMessage.warning('备考已重置，签到记录清除失败')
+    }
+    try {
+      await resetRandomProgress()
+    } catch {
+      ElMessage.warning('备考已重置，随机刷题记录清除失败')
+    }
     syncFormFromPrefs()
+    resetConfirmOpen.value = false
     open.value = false
     emit('reset')
     ElMessage.success('已重置')
-  } catch {
-    /* cancelled */
+  } catch (e) {
+    ElMessage.error(e instanceof Error ? e.message : '重置失败')
+  } finally {
+    resetLoading.value = false
   }
 }
 
@@ -344,10 +344,18 @@ async function loadMajorCategories() {
   }
 }
 
-watch(open, (visible) => {
+watch(open, async (visible) => {
   if (visible) {
     syncFormFromPrefs()
-    void loadSubjectOptions(false)
+    revealAnimate.value = false
+    if (formMajorCategory.value) {
+      await loadSubjectOptions(false)
+      setSubjectSectionVisible(!!subjectOptions.value)
+    } else {
+      setSubjectSectionVisible(false)
+    }
+  } else {
+    setSubjectSectionVisible(false)
   }
 })
 
@@ -360,22 +368,14 @@ onMounted(loadMajorCategories)
     title="备考设置"
     :width="settingsDialogWidth"
     class="exam-settings-dialog"
+    modal-class="exam-settings-overlay"
     destroy-on-close
     @closed="resetPanelUi()"
   >
-    <div
-      ref="settingsFrameRef"
-      class="settings-dialog-frame"
-      :class="{
-        'settings-dialog-frame--full': showSubjectSection,
-        'settings-dialog-frame--panel': settingsFrameExpanded,
-      }"
-      :style="{ height: settingsFrameHeight }"
-      @transitionend="onSettingsFrameTransitionEnd"
-    >
+    <div class="settings-dialog-frame">
       <div class="settings-shell">
         <div class="settings-main">
-          <el-form label-position="top" class="settings-form">
+          <el-form label-position="top" class="settings-form stitch-form">
             <div class="settings-form__row">
               <el-form-item label="省份">
                 <el-select
@@ -383,6 +383,7 @@ onMounted(loadMajorCategories)
                   clearable
                   placeholder="请选择省份"
                   style="width: 100%"
+                  :popper-class="STITCH_POPPER"
                   @update:model-value="onFormProvinceChange"
                 >
                   <el-option label="广东" value="广东" />
@@ -390,7 +391,13 @@ onMounted(loadMajorCategories)
                 </el-select>
               </el-form-item>
               <el-form-item label="届别">
-                <el-select v-model="formCohort" clearable placeholder="选择届别" style="width: 100%">
+                <el-select
+                  v-model="formCohort"
+                  clearable
+                  placeholder="选择届别"
+                  style="width: 100%"
+                  :popper-class="STITCH_POPPER"
+                >
                   <el-option v-for="c in cohortOptions" :key="c" :label="`${c} 届`" :value="c" />
                 </el-select>
               </el-form-item>
@@ -404,23 +411,33 @@ onMounted(loadMajorCategories)
                 :loading="categoriesLoading"
                 placeholder="如：计算机类、土木类"
                 style="width: 100%"
+                :popper-class="STITCH_POPPER"
                 @change="onFormCategoryChange"
               >
                 <el-option v-for="c in majorCategories" :key="c" :label="c" :value="c" />
               </el-select>
             </el-form-item>
 
-            <div v-if="formProvince && !formMajorCategory" class="settings-guide settings-guide--compact">
-              <p class="settings-guide__desc">选择专业类型后，将从{{ formProvince }}考试科目规则加载默认科目</p>
+            <div class="settings-expand-slot">
+            <Transition name="settings-guide-fade">
+              <div v-if="formProvince && !formMajorCategory" class="settings-guide settings-guide--compact">
+                <p class="settings-guide__desc">选择专业类型后，将从{{ formProvince }}考试科目规则加载默认科目</p>
+              </div>
+            </Transition>
+
+            <div
+              v-if="formMajorCategory && subjectsLoading && !subjectSectionVisible"
+              class="settings-subjects-loading"
+            >
+              正在加载考试科目规则…
             </div>
 
-            <Transition name="settings-reveal">
-              <div v-if="showSubjectSection" class="settings-reveal">
+            <Transition :name="revealAnimate ? 'settings-reveal' : ''">
+              <div v-if="subjectSectionVisible" class="settings-reveal-clip" :key="formMajorCategory">
+                <div class="settings-reveal">
                 <el-form-item label="考试科目" class="settings-form__subjects">
                   <div class="subject-plan">
-                    <p class="subject-plan__hint">
-                      {{ subjectsLoading ? '正在加载考试科目规则…' : '已加载考试科目规则；点击行展开自定义，再次点击保存并收回' }}
-                    </p>
+                    <p class="subject-plan__hint">点击行展开自定义，再次点击保存并收回</p>
                     <button
                       type="button"
                       class="subject-plan__section subject-plan__section--clickable"
@@ -502,36 +519,49 @@ onMounted(loadMajorCategories)
                   </div>
                 </el-form-item>
 
-                <template v-if="showDailySection">
-                  <el-form-item label="每日一练科目" class="settings-form__daily">
-                    <el-select
-                      v-model="formDailySubject"
-                      :disabled="formDailyMode === 'random'"
-                      placeholder="从已选考试科目中选择"
-                      style="width: 100%"
-                    >
-                      <el-option v-for="s in formSelectedSubjects" :key="s" :label="s" :value="s" />
-                    </el-select>
-                  </el-form-item>
-                  <el-form-item label="刷题模式" class="settings-form__mode">
-                    <el-radio-group v-model="formDailyMode">
-                      <el-radio value="fixed">固定科目（每天刷新该科一题）</el-radio>
-                      <el-radio value="random">随机科目（在所选科目中随机）</el-radio>
-                    </el-radio-group>
-                  </el-form-item>
-                </template>
+                <Transition name="settings-reveal-daily">
+                  <div v-if="showDailySection" class="settings-daily-clip">
+                      <div class="settings-daily-block">
+                      <el-form-item label="每日一练科目" class="settings-form__daily">
+                        <el-select
+                          v-model="formDailySubject"
+                          :disabled="formDailyMode === 'random'"
+                          placeholder="从已选考试科目中选择"
+                          style="width: 100%"
+                          :popper-class="STITCH_POPPER"
+                        >
+                          <el-option v-for="s in formSelectedSubjects" :key="s" :label="s" :value="s" />
+                        </el-select>
+                      </el-form-item>
+                      <el-form-item label="刷题模式" class="settings-form__mode">
+                        <el-radio-group v-model="formDailyMode">
+                          <el-radio value="fixed">固定科目（每天刷新该科一题）</el-radio>
+                          <el-radio value="random">随机科目（在所选科目中随机）</el-radio>
+                        </el-radio-group>
+                      </el-form-item>
+                    </div>
+                    </div>
+                  </Transition>
+                </div>
               </div>
             </Transition>
+            </div>
 
             <div v-if="!formProvince" class="settings-guide settings-guide--compact">
               <p class="settings-guide__desc">先选择省份与届别，再选专业类型即可加载考试科目</p>
             </div>
 
             <footer class="settings-panel-foot">
-              <el-button text type="danger" @click="resetSettings">重置</el-button>
+              <button type="button" class="stitch-foot-btn stitch-foot-btn--danger-text" @click="resetSettings">
+                重置
+              </button>
               <div class="settings-panel-foot__right">
-                <el-button @click="open = false">取消</el-button>
-                <el-button type="primary" @click="saveSettings">保存</el-button>
+                <button type="button" class="stitch-foot-btn stitch-foot-btn--ghost" @click="open = false">
+                  取消
+                </button>
+                <button type="button" class="stitch-foot-btn stitch-foot-btn--primary" @click="saveSettings">
+                  保存
+                </button>
               </div>
             </footer>
           </el-form>
@@ -567,6 +597,18 @@ onMounted(loadMajorCategories)
       </div>
     </div>
   </el-dialog>
+
+  <StitchDialog
+    v-model="resetConfirmOpen"
+    title="重置备考设置"
+    subtitle="将清空届别、专业类型与科目设置，并重置每日一练签到记录（累计/连续天数）。"
+    confirm-text="确认重置"
+    cancel-text="取消"
+    :loading="resetLoading"
+    nested
+    danger
+    @confirm="confirmResetSettings"
+  />
 </template>
 
 <style scoped>
@@ -582,7 +624,7 @@ onMounted(loadMajorCategories)
   justify-content: space-between;
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px solid var(--st-outline-variant);
+  border-top: 1px solid rgba(15 23 42 / 8%);
 }
 
 .settings-panel-foot__right {
@@ -593,44 +635,27 @@ onMounted(loadMajorCategories)
 .settings-dialog-frame {
   width: 100%;
   max-width: 100%;
-  height: auto;
-  overflow: visible;
   box-sizing: border-box;
-  transition:
-    width 0.32s cubic-bezier(0.4, 0, 0.2, 1),
-    height 0.42s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.settings-dialog-frame--full {
-  height: min(900px, calc(100vh - 150px));
+  transition: width 0.42s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .settings-shell {
-  position: relative;
-  width: 100%;
-  height: 100%;
   display: flex;
   align-items: flex-start;
-  overflow: visible;
+  width: 100%;
 }
 
 .settings-main {
-  flex: 0 0 500px;
   width: 500px;
   max-width: 100%;
-  height: 100%;
+  flex-shrink: 0;
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
 .settings-form {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.settings-dialog-frame:not(.settings-dialog-frame--full) .settings-shell,
-.settings-dialog-frame:not(.settings-dialog-frame--full) .settings-main {
-  height: auto;
+  display: block;
 }
 
 .settings-form :deep(.el-form-item) {
@@ -669,8 +694,9 @@ onMounted(loadMajorCategories)
   margin-top: 2px;
   padding: 8px 12px;
   border-radius: 10px;
-  background: var(--st-surface-container-low);
+  background: rgba(255, 255, 255, 0.45);
   text-align: center;
+  min-height: 0;
 }
 
 .settings-guide--compact {
@@ -684,24 +710,91 @@ onMounted(loadMajorCategories)
   color: var(--st-on-surface-variant);
 }
 
-.settings-reveal-enter-active,
-.settings-reveal-leave-active {
-  transition: opacity 0.26s ease, transform 0.26s ease;
+.settings-expand-slot {
+  position: relative;
 }
 
-.settings-reveal-enter-from,
-.settings-reveal-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
+/* 仅裁剪高度展开，文字不做位移/淡入，避免展开时字形抖动 */
+.settings-reveal-enter-active.settings-reveal-clip,
+.settings-reveal-leave-active.settings-reveal-clip {
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  interpolate-size: allow-keywords;
 }
 
-.settings-dialog-frame--full .settings-reveal {
-  flex: 1;
+.settings-reveal-enter-active.settings-reveal-clip {
+  transition: grid-template-rows 0.48s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-reveal-leave-active.settings-reveal-clip {
+  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-reveal-enter-from.settings-reveal-clip,
+.settings-reveal-leave-to.settings-reveal-clip {
+  grid-template-rows: 0fr;
+}
+
+.settings-reveal-clip > .settings-reveal {
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(100 116 139 / 55%) transparent;
+  overflow: hidden;
+}
+
+.settings-reveal-daily-enter-active.settings-daily-clip,
+.settings-reveal-daily-leave-active.settings-daily-clip {
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  interpolate-size: allow-keywords;
+}
+
+.settings-reveal-daily-enter-active.settings-daily-clip {
+  transition: grid-template-rows 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-reveal-daily-leave-active.settings-daily-clip {
+  transition: grid-template-rows 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-reveal-daily-enter-from.settings-daily-clip,
+.settings-reveal-daily-leave-to.settings-daily-clip {
+  grid-template-rows: 0fr;
+}
+
+.settings-daily-clip > .settings-daily-block {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.settings-guide-fade-enter-active,
+.settings-guide-fade-leave-active {
+  transition: opacity 0.48s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-guide-fade-leave-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.settings-guide-fade-enter-from,
+.settings-guide-fade-leave-to {
+  opacity: 0;
+}
+
+.settings-subjects-loading {
+  margin: 2px 0 4px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--st-on-surface-variant);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .settings-form__subjects :deep(.el-form-item__content) {
@@ -751,7 +844,7 @@ onMounted(loadMajorCategories)
   width: 100%;
   padding: 12px;
   border-radius: 12px;
-  background: var(--st-surface-container-low);
+  background: rgba(255, 255, 255, 0.42);
   box-sizing: border-box;
 }
 
@@ -769,9 +862,9 @@ onMounted(loadMajorCategories)
   width: 100%;
   margin: 0;
   padding: 10px 12px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(15 23 42 / 6%);
   border-radius: 10px;
-  background: var(--st-surface);
+  background: rgba(255, 255, 255, 0.62);
   text-align: left;
   font: inherit;
   box-sizing: border-box;
@@ -845,21 +938,21 @@ onMounted(loadMajorCategories)
   min-width: 290px;
   min-height: 0;
   box-sizing: border-box;
-  border-left: 1px solid var(--st-outline-variant);
+  border-left: 1px solid rgba(15 23 42 / 8%);
   padding-left: 20px;
   padding-right: 20px;
   margin-left: 20px;
-  background: var(--st-surface);
+  background: transparent;
   overflow: visible;
   position: relative;
-  z-index: 1;
+  z-index: 12;
 }
 
 .subject-panel-enter-active,
 .subject-panel-leave-active {
   transition:
-    transform 0.32s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.28s ease;
+    transform 0.42s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.32s ease;
 }
 
 .subject-panel-enter-from,
@@ -938,8 +1031,8 @@ onMounted(loadMajorCategories)
   width: 100%;
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid var(--st-outline-variant);
-  background: var(--st-surface);
+  border: 1px solid rgba(15 23 42 / 8%);
+  background: rgba(255, 255, 255, 0.55);
   font-size: 13px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
@@ -967,40 +1060,5 @@ onMounted(loadMajorCategories)
 
 .subject-panel__option input {
   flex-shrink: 0;
-}
-</style>
-
-<style>
-.exam-settings-dialog {
-  max-width: min(860px, 96vw);
-}
-
-.exam-settings-dialog.el-dialog {
-  height: auto !important;
-  max-height: calc(100vh - 48px);
-  margin: 24px auto !important;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.exam-settings-dialog .el-dialog__body {
-  padding: 8px 18px 14px;
-  min-height: 0 !important;
-  flex: 0 0 auto;
-  overflow: visible;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.exam-settings-dialog .el-dialog__header {
-  padding: 14px 18px 8px;
-  margin-right: 0;
-  flex-shrink: 0;
-}
-
-.exam-settings-dialog .el-dialog__footer {
-  display: none;
 }
 </style>

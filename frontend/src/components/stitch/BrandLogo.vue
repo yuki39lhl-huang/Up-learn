@@ -16,7 +16,7 @@ withDefaults(
 </script>
 
 <template>
-  <span class="brand-logo" :class="[`brand-logo--${variant}`]">
+  <span class="brand-logo" :class="[`brand-logo--${variant}`]" role="img" aria-label="升学通">
     <svg
       class="brand-logo__mark"
       :width="size"
@@ -26,31 +26,31 @@ withDefaults(
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <!-- 三级阶梯：象征升学进阶 -->
-      <rect x="3" y="21" width="9" height="8" rx="2.5" fill="#22C55E" />
-      <rect x="11.5" y="13" width="9" height="16" rx="2.5" fill="#0071E3" />
-      <rect x="20" y="5" width="9" height="24" rx="2.5" fill="#0058BE" />
-      <!-- 上升轨迹 -->
+      <rect width="32" height="32" rx="9" fill="currentColor" />
+      <!-- 上升箭头：单色、线型，呼应「升」 -->
       <path
-        d="M7.5 19.5 16 11 24.5 7"
+        d="M16 9.5v13"
         stroke="#fff"
-        stroke-width="1.75"
+        stroke-width="2"
         stroke-linecap="round"
-        stroke-linejoin="round"
-        opacity="0.9"
       />
       <path
-        d="M21.5 7 24.5 7 24.5 10"
+        d="M10.5 15 16 9.5 21.5 15"
         stroke="#fff"
-        stroke-width="1.75"
+        stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"
-        opacity="0.9"
+      />
+      <!-- 底部轻基线，稳住构图 -->
+      <path
+        d="M11 23.5h10"
+        stroke="#fff"
+        stroke-width="2"
+        stroke-linecap="round"
+        opacity="0.4"
       />
     </svg>
-    <span v-if="showText" class="brand-logo__text">
-      <span class="brand-logo__name">升学</span><span class="brand-logo__accent">通</span>
-    </span>
+    <span v-if="showText" class="brand-logo__text">升学通</span>
   </span>
 </template>
 
@@ -58,38 +58,31 @@ withDefaults(
 .brand-logo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  color: #3b82f6;
   user-select: none;
 }
 
 .brand-logo__mark {
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 6px rgb(0 88 190 / 22%));
+  display: block;
 }
 
 .brand-logo__text {
-  display: inline-flex;
-  align-items: baseline;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   line-height: 1;
+  color: #334155;
 }
 
-.brand-logo--default .brand-logo__text {
-  font-size: 20px;
-  color: var(--st-on-surface, #1d1d1f);
+.brand-logo--landing {
+  color: #2563eb;
 }
 
 .brand-logo--landing .brand-logo__text {
-  font-size: 17px;
+  font-size: 16px;
+  letter-spacing: 0.14em;
   color: var(--apple-text, #1d1d1f);
-}
-
-.brand-logo__name {
-  color: inherit;
-}
-
-.brand-logo__accent {
-  color: #0058be;
 }
 </style>

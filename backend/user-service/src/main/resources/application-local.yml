@@ -1,4 +1,14 @@
 # profile=local：IDEA 本机启动，连 Docker 映射端口
+spring:
+  cloud:
+    nacos:
+      discovery:
+        ip: 127.0.0.1
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
 ul:
   db:
     host: localhost
@@ -8,3 +18,8 @@ ul:
     # ul-redis 主库映射：6380 → 容器 6379（不要用旧单例 6379）
     host: localhost
     port: 6380
+  oss:
+    # 本机填写密钥后改为 true；切勿把真实 AccessKey 提交到 Git
+    enabled: false
+    access-key-id: ''
+    access-key-secret: ''

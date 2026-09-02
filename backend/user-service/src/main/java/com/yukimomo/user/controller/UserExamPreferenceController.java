@@ -2,6 +2,7 @@ package com.yukimomo.user.controller;
 
 import com.yukimomo.common.domain.Result;
 import com.yukimomo.common.utils.UserContext;
+import com.yukimomo.user.dto.RandomSubjectFilterSaveDTO;
 import com.yukimomo.user.dto.UserExamPreferenceSaveDTO;
 import com.yukimomo.user.service.UserExamPreferenceService;
 import com.yukimomo.user.vo.UserExamPreferenceVO;
@@ -37,6 +38,13 @@ public class UserExamPreferenceController {
     @PutMapping
     public Result<UserExamPreferenceVO> save(@Valid @RequestBody UserExamPreferenceSaveDTO dto) {
         return Result.ok(preferenceService.save(UserContext.requireUserId(), dto));
+    }
+
+    /** 随机刷题科目筛选（与每日一练模式独立）；供刷题面板 Drawer 单独保存。 */
+    @Operation(summary = "仅更新随机刷题科目筛选")
+    @PutMapping("/random-filter")
+    public Result<UserExamPreferenceVO> saveRandomFilter(@Valid @RequestBody RandomSubjectFilterSaveDTO dto) {
+        return Result.ok(preferenceService.saveRandomFilter(UserContext.requireUserId(), dto));
     }
 
     @Operation(summary = "删除当前用户备考设置")

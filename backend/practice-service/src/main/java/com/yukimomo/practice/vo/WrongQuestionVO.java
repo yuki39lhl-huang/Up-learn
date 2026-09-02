@@ -20,8 +20,15 @@ public class WrongQuestionVO {
     private String stem;
     private List<String> options;
     private Integer difficulty;
-    /** 累计错误次数 */
+    /** 用户错选快照 */
+    private String userAnswer;
+    /** 正确答案 */
+    private String answer;
+    /** 解析（优先快照） */
+    private String analysis;
+    /** 累计加入次数 */
     private Integer wrongCount;
-    /** 最近答错时间 */
+    /** 最近加入时间 */
     private LocalDateTime lastWrongAt;
+    private LocalDateTime createdAt;
 }

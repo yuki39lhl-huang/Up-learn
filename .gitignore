@@ -20,6 +20,8 @@ markdown/apikey
 **/.env
 **/.env.*
 !**/.env.example
+# 若本地填写了 OSS AccessKey，可用本机未跟踪副本；仓库内 application-local.yml 仅保留占位
+# **/application-local.secrets.yml
 
 # Logs
 *.log

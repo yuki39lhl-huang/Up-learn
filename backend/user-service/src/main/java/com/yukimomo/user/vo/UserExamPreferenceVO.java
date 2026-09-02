@@ -32,4 +32,10 @@ public class UserExamPreferenceVO {
 
     /** 每日一练模式。 */
     private String dailySubjectMode;
+
+    /** 随机刷题模式：all / single。 */
+    private String randomSubjectMode;
+
+    /** single 时的题库科目。 */
+    private String randomSubject;
 }

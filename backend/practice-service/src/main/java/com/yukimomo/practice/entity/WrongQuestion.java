@@ -11,9 +11,7 @@ import java.time.LocalDateTime;
 /**
  * 错题本表 {@code wrong_question}。
  * <p>
- * 唯一键 {@code (user_id, question_id)}：同一用户同一题只一行，
- * 再次答错则 {@link #wrongCount}+1 并刷新 {@link #lastWrongAt}。
- * 一期答对不自动从错题本移除。
+ * 仅用户手动「加入错题本」时写入；与间隔复习调度表 {@code user_question_record} 独立。
  */
 @Data
 @TableName("wrong_question")
@@ -25,10 +23,16 @@ public class WrongQuestion {
     private Long userId;
     @TableField("question_id")
     private Long questionId;
-    /** 累计错误次数 */
+    /** 加入错题本时用户的错选快照。 */
+    @TableField("user_answer")
+    private String userAnswer;
+    /** 加入时的解析快照。 */
+    @TableField("analysis_snapshot")
+    private String analysisSnapshot;
+    /** 累计加入/答错次数（重复加入时 +1）。 */
     @TableField("wrong_count")
     private Integer wrongCount;
-    /** 最近一次答错时间，列表按此倒序 */
+    /** 最近一次加入时间，列表按此倒序。 */
     @TableField("last_wrong_at")
     private LocalDateTime lastWrongAt;
     @TableField("created_at")

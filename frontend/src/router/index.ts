@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { consoleLocation, markConsoleDashboardEntry } from '../utils/consoleNav'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -25,7 +26,6 @@ const router = createRouter({
         }
       },
     },
-    // 兼容旧路径
     { path: '/practice', redirect: { path: '/console', hash: '#dashboard' } },
   ],
 })
@@ -36,7 +36,8 @@ router.beforeEach((to) => {
     return { path: '/home', query: { login: '1', redirect: to.fullPath } }
   }
   if (to.meta.guest && auth.isLoggedIn && to.path === '/login') {
-    return { path: '/console', hash: '#dashboard' }
+    markConsoleDashboardEntry()
+    return consoleLocation('dashboard')
   }
   return true
 })

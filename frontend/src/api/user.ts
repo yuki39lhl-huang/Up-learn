@@ -9,6 +9,11 @@ export function loginByCode(email: string, code: string) {
   return getData<LoginVO>(request.post('/user/login', { email, code }))
 }
 
+/** 密码登录（需已设密 password_set=1） */
+export function loginByPassword(email: string, password: string) {
+  return getData<LoginVO>(request.post('/user/login/password', { email, password }))
+}
+
 export function refreshAccessToken(refreshToken: string) {
   return getData<LoginVO>(request.post('/user/token/refresh', { refreshToken }))
 }
@@ -33,6 +38,21 @@ export function uploadUserAvatar(file: File) {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   )
+}
+
+/** 设置或修改登录密码；首次设密可不传 oldPassword */
+export function changePassword(payload: { oldPassword?: string; newPassword: string }) {
+  return getData(request.put('/user/password', payload))
+}
+
+/** 账号安全：发送忘记密码邮箱验证码（登录页不调用） */
+export function sendForgotPasswordCode(email: string) {
+  return getData(request.post('/user/forgot-password/send', { email }))
+}
+
+/** 校验验证码后覆盖写入新密码哈希 */
+export function resetPassword(payload: { email: string; code: string; newPassword: string }) {
+  return getData(request.post('/user/forgot-password/reset', payload))
 }
 
 export function fetchExamPreference() {

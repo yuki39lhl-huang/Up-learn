@@ -1,18 +1,19 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { LoginVO } from '../types/api'
+import type { LoginVO, UserInfoVO } from '../types/api'
+import { fetchUserInfo } from '../api/user'
 
 const ACCESS_KEY = 'ul_access_token'
 const REFRESH_KEY = 'ul_refresh_token'
 const USER_KEY = 'ul_user'
 
+type UserSummary = Pick<LoginVO, 'userId' | 'email' | 'nickname' | 'avatarUrl' | 'hasPassword'>
+
 /** 登录态：Access Token + 用户摘要，持久化到 localStorage */
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref(localStorage.getItem(ACCESS_KEY) ?? '')
   const refreshToken = ref(localStorage.getItem(REFRESH_KEY) ?? '')
-  const user = ref<Pick<LoginVO, 'userId' | 'email' | 'nickname' | 'avatarUrl'> | null>(
-    readUser()
-  )
+  const user = ref<UserSummary | null>(readUser())
 
   const isLoggedIn = computed(() => !!accessToken.value)
 
@@ -20,9 +21,15 @@ export const useAuthStore = defineStore('auth', () => {
     const raw = localStorage.getItem(USER_KEY)
     if (!raw) return null
     try {
-      return JSON.parse(raw) as Pick<LoginVO, 'userId' | 'email' | 'nickname' | 'avatarUrl'>
+      return JSON.parse(raw) as UserSummary
     } catch {
       return null
+    }
+  }
+
+  function persistUser() {
+    if (user.value) {
+      localStorage.setItem(USER_KEY, JSON.stringify(user.value))
     }
   }
 
@@ -34,10 +41,11 @@ export const useAuthStore = defineStore('auth', () => {
       email: vo.email,
       nickname: vo.nickname,
       avatarUrl: vo.avatarUrl,
+      hasPassword: vo.hasPassword,
     }
     localStorage.setItem(ACCESS_KEY, vo.accessToken)
     localStorage.setItem(REFRESH_KEY, vo.refreshToken)
-    localStorage.setItem(USER_KEY, JSON.stringify(user.value))
+    persistUser()
   }
 
   function clearSession() {
@@ -49,11 +57,36 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem(USER_KEY)
   }
 
-  function patchUser(patch: Partial<Pick<LoginVO, 'nickname' | 'avatarUrl'>>) {
+  function patchUser(patch: Partial<Pick<UserSummary, 'nickname' | 'avatarUrl' | 'hasPassword'>>) {
     if (!user.value) return
     user.value = { ...user.value, ...patch }
-    localStorage.setItem(USER_KEY, JSON.stringify(user.value))
+    persistUser()
   }
 
-  return { accessToken, refreshToken, user, isLoggedIn, setSession, clearSession, patchUser }
+  /** 刷新资料与头像签名 URL（私有 OSS 签名约 2h 过期） */
+  async function refreshProfile(): Promise<UserInfoVO | null> {
+    if (!accessToken.value) return null
+    try {
+      const info = await fetchUserInfo()
+      patchUser({
+        nickname: info.nickname,
+        avatarUrl: info.avatarUrl,
+        hasPassword: info.hasPassword,
+      })
+      return info
+    } catch {
+      return null
+    }
+  }
+
+  return {
+    accessToken,
+    refreshToken,
+    user,
+    isLoggedIn,
+    setSession,
+    clearSession,
+    patchUser,
+    refreshProfile,
+  }
 })

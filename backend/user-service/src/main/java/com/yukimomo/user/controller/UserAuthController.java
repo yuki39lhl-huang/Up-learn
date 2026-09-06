@@ -2,9 +2,13 @@ package com.yukimomo.user.controller;
 
 import com.yukimomo.common.domain.Result;
 import com.yukimomo.common.utils.UserContext;
+import com.yukimomo.user.dto.ChangePasswordDTO;
+import com.yukimomo.user.dto.ForgotPasswordSendDTO;
 import com.yukimomo.user.dto.LoginDTO;
 import com.yukimomo.user.dto.LoginSendCodeDTO;
+import com.yukimomo.user.dto.PasswordLoginDTO;
 import com.yukimomo.user.dto.RefreshTokenDTO;
+import com.yukimomo.user.dto.ResetPasswordDTO;
 import com.yukimomo.user.dto.UserProfileUpdateDTO;
 import com.yukimomo.user.service.UserAuthService;
 import com.yukimomo.user.vo.AvatarUploadVO;
@@ -23,6 +27,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * 认证与账号：验证码/密码登录、Token、资料、头像、设密与忘记密码重置。
+ */
 @Tag(name = "用户认证")
 @RestController
 @RequestMapping("/api/user")
@@ -32,7 +39,7 @@ public class UserAuthController {
     private final UserAuthService userAuthService;
 
     @Operation(summary = "发送登录验证码", description = "邮箱验证码登录；未注册邮箱验证通过后自动注册")
-    @PostMapping("/login/send-code")//valid是检测dto是否符合要求,如果不符合要求,则返回400错误
+    @PostMapping("/login/send-code")
     public Result<Void> sendLoginCode(@Valid @RequestBody LoginSendCodeDTO dto) {
         userAuthService.sendLoginCode(dto.getEmail());
         return Result.ok();
@@ -42,6 +49,12 @@ public class UserAuthController {
     @PostMapping("/login")
     public Result<LoginVO> login(@Valid @RequestBody LoginDTO dto) {
         return Result.ok(userAuthService.loginByCode(dto));
+    }
+
+    @Operation(summary = "密码登录", description = "需已设置登录密码；未设密请用验证码登录或先在账号安全中设置")
+    @PostMapping("/login/password")
+    public Result<LoginVO> loginByPassword(@Valid @RequestBody PasswordLoginDTO dto) {
+        return Result.ok(userAuthService.loginByPassword(dto));
     }
 
     @Operation(summary = "刷新 Access Token", description = "使用 Refresh Token 换取新的 Access + Refresh（轮换）")
@@ -76,5 +89,27 @@ public class UserAuthController {
     public Result<AvatarUploadVO> uploadAvatar(@RequestParam("file") MultipartFile file) {
         Long userId = UserContext.requireUserId();
         return Result.ok(userAuthService.uploadAvatar(userId, file));
+    }
+
+    @Operation(summary = "设置或修改登录密码", description = "首次设置无需旧密码；已设密须校验旧密码")
+    @PutMapping("/password")
+    public Result<Void> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
+        Long userId = UserContext.requireUserId();
+        userAuthService.changePassword(userId, dto);
+        return Result.ok();
+    }
+
+    @Operation(summary = "发送忘记密码验证码")
+    @PostMapping("/forgot-password/send")
+    public Result<Void> sendForgotPasswordCode(@Valid @RequestBody ForgotPasswordSendDTO dto) {
+        userAuthService.sendForgotPasswordCode(dto.getEmail());
+        return Result.ok();
+    }
+
+    @Operation(summary = "重置密码", description = "校验邮箱验证码后设置新密码")
+    @PostMapping("/forgot-password/reset")
+    public Result<Void> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
+        userAuthService.resetPassword(dto);
+        return Result.ok();
     }
 }

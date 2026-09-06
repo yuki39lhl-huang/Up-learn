@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 /**
  * 用户表 {@code user}。
- * 验证码登录用户 {@code password_hash} 存随机不可知哈希，仅满足非空约束。
+ * 验证码登录且未设密时 {@code password_set=0}，{@code password_hash} 存随机占位哈希。
  */
 @Data
 @TableName("user")
@@ -22,6 +22,9 @@ public class User {
     private String email;
     @TableField("password_hash")
     private String passwordHash;
+    /** 0 未设置登录密码；1 已设置，可用密码登录 */
+    @TableField("password_set")
+    private Integer passwordSet;
     private String nickname;
     @TableField("avatar_url")
     private String avatarUrl;

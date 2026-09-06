@@ -4,6 +4,59 @@
       "name": "ul.login",
       "type": "com.yukimomo.user.config.UlLoginProperties",
       "description": "邮箱验证码登录配置。"
+    },
+    {
+      "name": "ul.oss",
+      "type": "com.yukimomo.user.config.OssProperties",
+      "description": "阿里云 OSS 配置（头像等用户图片）。"
+    }
+  ],
+  "properties": [
+    {
+      "name": "ul.oss.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 OSS 上传（需同时配置 AccessKey）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ul.oss.endpoint",
+      "type": "java.lang.String",
+      "description": "OSS Endpoint，如 oss-cn-beijing.aliyuncs.com。",
+      "defaultValue": "oss-cn-beijing.aliyuncs.com"
+    },
+    {
+      "name": "ul.oss.bucket",
+      "type": "java.lang.String",
+      "description": "Bucket 名称。",
+      "defaultValue": "up-learn"
+    },
+    {
+      "name": "ul.oss.access-key-id",
+      "type": "java.lang.String",
+      "description": "阿里云 AccessKeyId（仅写在 local / 环境变量，勿提交）。"
+    },
+    {
+      "name": "ul.oss.access-key-secret",
+      "type": "java.lang.String",
+      "description": "阿里云 AccessKeySecret（仅写在 local / 环境变量，勿提交）。"
+    },
+    {
+      "name": "ul.oss.public-base-url",
+      "type": "java.lang.String",
+      "description": "对外访问根 URL（自定义域名或 Bucket 域名）。",
+      "defaultValue": "https://up-learn.cn-beijing.taihangrda.cn"
+    },
+    {
+      "name": "ul.oss.avatar-dir",
+      "type": "java.lang.String",
+      "description": "头像对象前缀目录。",
+      "defaultValue": "avatar"
+    },
+    {
+      "name": "ul.oss.presign-ttl-seconds",
+      "type": "java.lang.Long",
+      "description": "签名 URL 有效期（秒）。",
+      "defaultValue": 7200
     }
   ]
 }

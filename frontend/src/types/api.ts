@@ -21,6 +21,7 @@ export interface LoginVO {
   email: string
   nickname: string
   avatarUrl: string
+  hasPassword?: boolean
 }
 
 export interface UserInfoVO {
@@ -28,6 +29,7 @@ export interface UserInfoVO {
   email: string
   nickname: string
   avatarUrl: string
+  hasPassword?: boolean
 }
 
 export interface ExamSubjectSelectionVO {

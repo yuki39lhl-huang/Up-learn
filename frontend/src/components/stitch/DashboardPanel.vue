@@ -319,7 +319,6 @@ function openSettingsFromQuery() {
             </span>
             <span class="checkin-stats__sep" />
             <span class="checkin-stats__item checkin-stats__item--streak">
-              <StitchIcon name="flame" class="checkin-stats__icon" />
               连续 <strong>{{ stats?.streak ?? 0 }}</strong> 天
             </span>
           </div>
@@ -697,13 +696,6 @@ function openSettingsFromQuery() {
 
 .checkin-stats__item--streak strong {
   color: #c2410c;
-}
-
-.checkin-stats__icon {
-  width: 14px;
-  height: 14px;
-  vertical-align: -2px;
-  margin-right: 2px;
 }
 
 .checkin-stats__sep {

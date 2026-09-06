@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import SchoolQueryPanel from '../components/stitch/SchoolQueryPanel.vue'
@@ -133,6 +133,12 @@ watch(
   () => syncFromRoute(),
   { immediate: true },
 )
+
+onMounted(() => {
+  if (auth.isLoggedIn) {
+    void auth.refreshProfile()
+  }
+})
 
 async function handleLogout() {
   try {
@@ -280,7 +286,9 @@ async function handleLogout() {
             </div>
 
             <!-- 账号 -->
-            <AccountSettingsPanel v-else-if="activeView === 'account'" @logout="handleLogout" />
+            <div v-else-if="activeView === 'account'" class="account-panel-host">
+              <AccountSettingsPanel @logout="handleLogout" />
+            </div>
 
             <!-- 业务模块：v-show 保留各面板状态，避免切回主页丢失每日一练作答/解析 -->
             <div v-else class="gmail-panel__content gmail-panel__content--flush">
@@ -339,50 +347,6 @@ async function handleLogout() {
 </template>
 
 <style scoped>
-.account-head {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.gmail-panel__empty--left {
-  align-items: flex-start;
-  text-align: left;
-  min-height: 120px;
-}
-
-.account-head h2 {
-  margin: 0 0 4px;
-  font-size: 20px;
-}
-
-.account-head p {
-  margin: 0;
-  font-size: 14px;
-  color: var(--st-on-surface-variant);
-}
-
-.account-dl {
-  margin: 0;
-}
-
-.account-dl dt {
-  font-size: 12px;
-  color: var(--st-on-surface-variant);
-}
-
-.account-dl dd {
-  margin: 4px 0 0;
-  font-weight: 600;
-}
-
-.account-actions {
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid var(--st-outline-variant);
-}
-
 .workbench-placeholder :deep(svg) {
   width: 40px;
   height: 40px;

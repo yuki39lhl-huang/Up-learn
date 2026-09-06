@@ -24,7 +24,7 @@ public class OssService {
      * 上传头像到 OSS，返回写入数据库的 canonical URL（自定义域名 + object key）。
      */
     public String uploadAvatar(Long userId, String extension, InputStream input, long contentLength) {
-        if (!ossProperties.isEnabled()) {
+        if (!ossProperties.isEnabled() || !hasCredentials()) {
             throw new BizException(ErrorCode.OSS_NOT_CONFIGURED);
         }
         String key = ossProperties.getAvatarDir() + "/" + userId + "/"
@@ -42,9 +42,10 @@ public class OssService {
 
     /**
      * 私有 Bucket 下，将库内 canonical URL 转为短期可访问的签名 URL；非 OSS 地址原样返回。
+     * 只要配置了 AccessKey 即可签名（与 enabled 解耦，避免仅关上传开关导致头像裂图）。
      */
     public String toDisplayUrl(String storedUrl) {
-        if (!ossProperties.isEnabled() || StrUtil.isBlank(storedUrl)) {
+        if (StrUtil.isBlank(storedUrl) || !hasCredentials()) {
             return storedUrl;
         }
         String key = extractObjectKey(storedUrl);
@@ -64,6 +65,11 @@ public class OssService {
         }
     }
 
+    private boolean hasCredentials() {
+        return StrUtil.isNotBlank(ossProperties.getAccessKeyId())
+                && StrUtil.isNotBlank(ossProperties.getAccessKeySecret());
+    }
+
     private OSS createClient() {
         return new OSSClientBuilder().build(
                 ossProperties.getEndpoint(),
@@ -73,6 +79,10 @@ public class OssService {
 
     private String extractObjectKey(String url) {
         String normalized = url.trim();
+        int query = normalized.indexOf('?');
+        if (query >= 0) {
+            normalized = normalized.substring(0, query);
+        }
         String base = ossProperties.getPublicBaseUrl();
         if (base.endsWith("/")) {
             base = base.substring(0, base.length() - 1);
@@ -84,6 +94,7 @@ public class OssService {
         if (normalized.startsWith(bucketHost)) {
             return normalized.substring(bucketHost.length());
         }
+        // 兼容 endpoint 风格：bucket.oss-cn-xxx.aliyuncs.com
         String marker = "/" + ossProperties.getAvatarDir() + "/";
         int idx = normalized.indexOf(marker);
         if (idx >= 0) {

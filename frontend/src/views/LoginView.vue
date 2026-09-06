@@ -1,91 +1,100 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+/**
+ * 独立登录页 `/login`：与 LoginModal 共用 useLoginForm；
+ * 成功后按 redirect 或默认进入控制台。
+ */
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { sendLoginCode, loginByCode } from '../api/user'
-import { useAuthStore } from '../stores/auth'
-import { consoleFullPath, isDashboardConsoleHref, markConsoleDashboardEntry, pushConsoleHref } from '../utils/consoleNav'
+import { useLoginForm } from '../composables/useLoginForm'
+import {
+  consoleFullPath,
+  isDashboardConsoleHref,
+  markConsoleDashboardEntry,
+  pushConsoleHref,
+} from '../utils/consoleNav'
 
 const route = useRoute()
 const router = useRouter()
-const auth = useAuthStore()
 
-const email = ref('')
-const code = ref('')
-const sending = ref(false)
-const logging = ref(false)
-const countdown = ref(0)
-
-let timer: ReturnType<typeof setInterval> | null = null
-
-function startCountdown() {
-  countdown.value = 60
-  timer = setInterval(() => {
-    countdown.value -= 1
-    if (countdown.value <= 0 && timer) {
-      clearInterval(timer)
-      timer = null
-    }
-  }, 1000)
-}
-
-async function handleSendCode() {
-  if (!email.value.trim()) {
-    ElMessage.warning('请输入邮箱')
-    return
-  }
-  sending.value = true
-  try {
-    await sendLoginCode(email.value.trim())
-    ElMessage.success('验证码已发送')
-    startCountdown()
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '发送失败')
-  } finally {
-    sending.value = false
-  }
-}
-
-async function handleLogin() {
-  logging.value = true
-  try {
-    const vo = await loginByCode(email.value.trim(), code.value.trim())
-    auth.setSession(vo)
-    ElMessage.success('登录成功')
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : consoleFullPath('dashboard')
+const {
+  mode,
+  email,
+  code,
+  password,
+  sending,
+  logging,
+  countdown,
+  switchMode,
+  setCodeFromInput,
+  handleSendCode,
+  handleLogin,
+} = useLoginForm({
+  onSuccess: async () => {
+    const redirect =
+      typeof route.query.redirect === 'string' ? route.query.redirect : consoleFullPath('dashboard')
     if (isDashboardConsoleHref(redirect)) {
       markConsoleDashboardEntry()
     }
     pushConsoleHref(router, redirect)
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '登录失败')
-  } finally {
-    logging.value = false
-  }
-}
+  },
+})
 </script>
 
 <template>
   <div class="login-page">
     <div class="login-card st-card">
       <p class="st-label-caps">升学通</p>
-      <h1 class="st-headline">邮箱验证码登录</h1>
-      <p class="hint">登录后进入 Stitch 定稿「工作台首屏」</p>
+      <h1 class="st-headline">登录</h1>
+      <p class="hint">验证码可自动注册；密码登录需先在账号安全中设置密码</p>
+
+      <div class="login-tabs">
+        <button
+          type="button"
+          class="login-tabs__item"
+          :class="{ 'login-tabs__item--active': mode === 'code' }"
+          @click="switchMode('code')"
+        >
+          验证码
+        </button>
+        <button
+          type="button"
+          class="login-tabs__item"
+          :class="{ 'login-tabs__item--active': mode === 'password' }"
+          @click="switchMode('password')"
+        >
+          密码
+        </button>
+      </div>
 
       <el-form label-position="top" @submit.prevent="handleLogin">
         <el-form-item label="邮箱">
           <el-input v-model="email" placeholder="your@email.com" size="large" />
         </el-form-item>
-        <el-form-item label="验证码">
+        <el-form-item v-if="mode === 'code'" label="验证码">
           <div class="code-row">
-            <el-input v-model="code" maxlength="6" placeholder="6 位数字" size="large" />
+            <el-input
+              :model-value="code"
+              placeholder="6 位数字"
+              size="large"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              @update:model-value="setCodeFromInput"
+            />
             <el-button size="large" :disabled="countdown > 0" :loading="sending" @click="handleSendCode">
               {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
             </el-button>
           </div>
         </el-form-item>
+        <el-form-item v-else label="密码">
+          <el-input
+            v-model="password"
+            type="password"
+            show-password
+            placeholder="请输入密码"
+            size="large"
+          />
+        </el-form-item>
         <el-button type="primary" size="large" class="submit" :loading="logging" @click="handleLogin">
-          登录 / 注册
+          {{ mode === 'code' ? '登录 / 注册' : '登录' }}
         </el-button>
       </el-form>
 
@@ -112,9 +121,36 @@ async function handleLogin() {
 }
 
 .hint {
-  margin: 0 0 20px;
+  margin: 0 0 16px;
   font-size: 13px;
   color: var(--st-on-surface-variant);
+}
+
+.login-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--st-surface-container-low, #f0f3ff);
+}
+
+.login-tabs__item {
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  color: var(--st-on-surface-variant);
+  cursor: pointer;
+}
+
+.login-tabs__item--active {
+  background: #fff;
+  color: var(--st-on-surface);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(21 28 39 / 8%);
 }
 
 .code-row {

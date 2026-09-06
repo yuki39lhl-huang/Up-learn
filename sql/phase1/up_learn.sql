@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `id`            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
   `email`         VARCHAR(128) NOT NULL COMMENT '登录邮箱（唯一）',
   `password_hash` VARCHAR(255) NOT NULL COMMENT '密码哈希，不存明文',
+  `password_set`  TINYINT      NOT NULL DEFAULT 0 COMMENT '是否已设置登录密码：0 否（仅验证码），1 是',
   `nickname`      VARCHAR(64)  NOT NULL COMMENT '昵称，注册时可默认生成',
   `avatar_url`    VARCHAR(512) NOT NULL COMMENT '头像 URL',
   `deleted`       TINYINT      NOT NULL DEFAULT 0 COMMENT '软删除：0 正常，1 已删除',
@@ -24,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  COMMENT='用户服务·用户账号表（邮箱验证码登录）';
+  COMMENT='用户服务·用户账号表（邮箱验证码 / 密码登录）';
 
 CREATE TABLE IF NOT EXISTS `user_target` (
   `id`         BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',

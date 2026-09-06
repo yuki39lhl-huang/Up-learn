@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import { sendLoginCode, loginByCode } from '../../api/user'
-import { useAuthStore } from '../../stores/auth'
+/**
+ * 落地页登录弹窗：验证码 / 密码 Tab，逻辑见 useLoginForm。
+ * 不提供忘记密码入口。
+ */
+import { onUnmounted, watch } from 'vue'
+import { useLoginForm } from '../../composables/useLoginForm'
 
 const props = defineProps<{
   visible: boolean
@@ -13,15 +15,25 @@ const emit = defineEmits<{
   success: []
 }>()
 
-const auth = useAuthStore()
-
-const email = ref('')
-const code = ref('')
-const sending = ref(false)
-const logging = ref(false)
-const countdown = ref(0)
-
-let timer: ReturnType<typeof setInterval> | null = null
+const {
+  mode,
+  email,
+  code,
+  password,
+  sending,
+  logging,
+  countdown,
+  switchMode,
+  resetForm,
+  setCodeFromInput,
+  onCodePaste,
+  handleSendCode,
+  handleLogin,
+} = useLoginForm({
+  onSuccess: async () => {
+    emit('success')
+  },
+})
 
 function lockScroll(lock: boolean) {
   document.body.style.overflow = lock ? 'hidden' : ''
@@ -31,67 +43,21 @@ watch(
   () => props.visible,
   (open) => {
     lockScroll(open)
-    if (!open) {
-      code.value = ''
-    }
+    if (!open) resetForm()
   },
   { immediate: true },
 )
 
 onUnmounted(() => {
   lockScroll(false)
-  if (timer) clearInterval(timer)
 })
-
-function startCountdown() {
-  countdown.value = 60
-  if (timer) clearInterval(timer)
-  timer = setInterval(() => {
-    countdown.value -= 1
-    if (countdown.value <= 0 && timer) {
-      clearInterval(timer)
-      timer = null
-    }
-  }, 1000)
-}
-
-async function handleSendCode() {
-  if (!email.value.trim()) {
-    ElMessage.warning('请输入邮箱')
-    return
-  }
-  sending.value = true
-  try {
-    await sendLoginCode(email.value.trim())
-    ElMessage.success('验证码已发送')
-    startCountdown()
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '发送失败')
-  } finally {
-    sending.value = false
-  }
-}
-
-async function handleLogin() {
-  if (!email.value.trim() || !code.value.trim()) {
-    ElMessage.warning('请输入邮箱和验证码')
-    return
-  }
-  logging.value = true
-  try {
-    const vo = await loginByCode(email.value.trim(), code.value.trim())
-    auth.setSession(vo)
-    ElMessage.success('登录成功')
-    emit('success')
-  } catch (e) {
-    ElMessage.error(e instanceof Error ? e.message : '登录失败')
-  } finally {
-    logging.value = false
-  }
-}
 
 function handleBackdropClick(e: MouseEvent) {
   if (e.target === e.currentTarget) emit('close')
+}
+
+function onCodeInput(e: Event) {
+  setCodeFromInput((e.target as HTMLInputElement).value)
 }
 </script>
 
@@ -115,6 +81,29 @@ function handleBackdropClick(e: MouseEvent) {
           <h2 id="login-modal-title" class="login-modal__title">登录 / 注册</h2>
           <p class="login-modal__subtitle">欢迎使用升学通，登录以继续</p>
 
+          <div class="login-tabs" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              class="login-tabs__item"
+              :class="{ 'login-tabs__item--active': mode === 'code' }"
+              :aria-selected="mode === 'code'"
+              @click="switchMode('code')"
+            >
+              验证码登录
+            </button>
+            <button
+              type="button"
+              role="tab"
+              class="login-tabs__item"
+              :class="{ 'login-tabs__item--active': mode === 'password' }"
+              :aria-selected="mode === 'password'"
+              @click="switchMode('password')"
+            >
+              密码登录
+            </button>
+          </div>
+
           <form class="login-form" @submit.prevent="handleLogin">
             <label class="login-field">
               <span class="login-field__label">邮箱</span>
@@ -127,16 +116,18 @@ function handleBackdropClick(e: MouseEvent) {
               />
             </label>
 
-            <label class="login-field">
+            <label v-if="mode === 'code'" class="login-field">
               <span class="login-field__label">验证码</span>
               <div class="login-code-row">
                 <input
-                  v-model="code"
+                  :value="code"
                   type="text"
                   class="login-field__input"
-                  maxlength="6"
-                  placeholder="6 位数字"
+                  inputmode="numeric"
                   autocomplete="one-time-code"
+                  placeholder="6 位数字"
+                  @input="onCodeInput"
+                  @paste="onCodePaste"
                 />
                 <button
                   type="button"
@@ -149,8 +140,20 @@ function handleBackdropClick(e: MouseEvent) {
               </div>
             </label>
 
+            <label v-else class="login-field">
+              <span class="login-field__label">密码</span>
+              <input
+                v-model="password"
+                type="password"
+                class="login-field__input"
+                placeholder="请输入密码"
+                autocomplete="current-password"
+              />
+              <span class="login-field__hint">未设置密码请先用验证码登录，再在账号安全中设置</span>
+            </label>
+
             <button type="submit" class="login-submit" :disabled="logging">
-              {{ logging ? '登录中…' : '继续' }}
+              {{ logging ? '登录中…' : mode === 'code' ? '继续' : '登录' }}
             </button>
           </form>
         </div>
@@ -236,10 +239,38 @@ function handleBackdropClick(e: MouseEvent) {
 
 .login-modal__subtitle {
   position: relative;
-  margin: 0 0 24px;
+  margin: 0 0 18px;
   font-size: 14px;
   color: #64748b;
   text-align: center;
+}
+
+.login-tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #f1f5f9;
+}
+
+.login-tabs__item {
+  height: 36px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.login-tabs__item--active {
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 8%);
 }
 
 .login-form {
@@ -259,6 +290,12 @@ function handleBackdropClick(e: MouseEvent) {
   font-size: 13px;
   font-weight: 500;
   color: #334155;
+}
+
+.login-field__hint {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
 }
 
 .login-field__input {

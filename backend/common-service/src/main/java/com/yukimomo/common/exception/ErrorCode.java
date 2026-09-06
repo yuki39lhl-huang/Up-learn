@@ -43,6 +43,9 @@ public enum ErrorCode {
     AVATAR_URL_INVALID(1009, "头像地址须为有效的 https 链接"),
     AVATAR_FILE_INVALID(1010, "仅支持 JPG / PNG / WebP 图片，且不超过 2MB"),
     OSS_NOT_CONFIGURED(1011, "图片上传服务未配置，请联系管理员或在本地 application-local.yml 填写 OSS 密钥"),
+    PASSWORD_NOT_SET(1012, "尚未设置登录密码，请先设置或使用验证码登录"),
+    PASSWORD_WEAK(1013, "密码须为 8～32 位，且同时包含字母与数字"),
+    OLD_PASSWORD_REQUIRED(1014, "请输入当前密码"),
 
     // --- 院校 2xxx ---
     SCHOOL_NOT_FOUND(2001, "院校不存在"),

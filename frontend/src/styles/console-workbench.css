@@ -299,12 +299,22 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.account-panel-host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 面板内：设置/账号 子侧栏 */
 .gmail-panel__split {
   display: flex;
-  min-height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .gmail-panel__aside {

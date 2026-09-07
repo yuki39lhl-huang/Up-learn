@@ -195,3 +195,53 @@ export interface ChatReplyVO {
   reply: string
   sessionId: string
 }
+
+/** 考纲范围块 */
+export interface SyllabusScopeBlock {
+  heading?: string | null
+  paragraphs?: string[]
+  items?: string[]
+  children?: SyllabusScopeBlock[]
+  highlight?: boolean
+}
+
+export interface SyllabusScope {
+  blocks?: SyllabusScopeBlock[]
+}
+
+export interface SyllabusReference {
+  title: string
+  editors?: string | null
+  edition?: string | null
+  publisher?: string | null
+  publishedAt?: string | null
+  note?: string | null
+}
+
+export interface SyllabusDesignatedWork {
+  seq: number
+  title: string
+  authorOrSource?: string | null
+}
+
+export interface SyllabusOptionItem {
+  province: string
+  year: number
+  subject: string
+}
+
+export interface SyllabusOptionsVO {
+  provinces: string[]
+  items: SyllabusOptionItem[]
+}
+
+export interface SyllabusVO {
+  id: number
+  province: string
+  year: number
+  subject: string
+  sourceTitle?: string | null
+  scope: SyllabusScope
+  references: SyllabusReference[]
+  designatedWorks: SyllabusDesignatedWork[]
+}

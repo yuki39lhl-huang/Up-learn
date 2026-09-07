@@ -30,7 +30,7 @@ spring:
             - id: school-service
               uri: lb://school-service
               predicates:
-                - Path=/api/school/**,/api/major/**,/api/exam-subjects/**
+                - Path=/api/school/**,/api/major/**,/api/exam-subjects/**,/api/syllabus/**
             # 刷题（需 Access Token，不进白名单）
             - id: practice-service
               uri: lb://practice-service

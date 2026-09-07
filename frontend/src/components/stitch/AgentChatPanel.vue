@@ -101,82 +101,70 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="agent-chat">
-    <header class="agent-chat__toolbar">
-      <div class="agent-chat__brand">
+  <!-- 顶栏已有「一点通」，内容区不再重复同名标题 -->
+  <div class="module-shell module-shell--fill">
+    <section class="module-card module-card--fill">
+      <header class="module-card__head">
+        <div>
+          <p class="module-card__eyebrow">升学通 · AI 助手</p>
+          <h2>对话答疑</h2>
+        </div>
+        <el-button size="small" plain @click="startNewChat">新对话</el-button>
+      </header>
+
+      <p class="agent-card__hint">
         <StitchIcon name="agent" />
         <span>基于 RAG 知识库检索 · 会话记忆已启用</span>
-      </div>
-      <el-button size="small" plain @click="startNewChat">新对话</el-button>
-    </header>
+      </p>
 
-    <div ref="listRef" class="agent-chat__list">
-      <div
-        v-for="(msg, i) in messages"
-        :key="i"
-        class="agent-chat__row"
-        :class="`agent-chat__row--${msg.role}`"
-      >
-        <div class="agent-chat__bubble">
-          <p v-if="msg.loading && !msg.content" class="agent-chat__typing">
-            <span /><span /><span />
-          </p>
-          <p v-else class="agent-chat__text" v-html="msg.content.replace(/\n/g, '<br>')" />
+      <div ref="listRef" class="agent-chat__list">
+        <div
+          v-for="(msg, i) in messages"
+          :key="i"
+          class="agent-chat__row"
+          :class="`agent-chat__row--${msg.role}`"
+        >
+          <div class="agent-chat__bubble">
+            <p v-if="msg.loading && !msg.content" class="agent-chat__typing">
+              <span /><span /><span />
+            </p>
+            <p v-else class="agent-chat__text" v-html="msg.content.replace(/\n/g, '<br>')" />
+          </div>
         </div>
       </div>
-    </div>
 
-    <footer class="agent-chat__composer">
-      <textarea
-        v-model="input"
-        class="agent-chat__input"
-        rows="2"
-        placeholder="输入你的问题，Enter 发送，Shift+Enter 换行"
-        :disabled="sending"
-        @keydown="onKeydown"
-      />
-      <div class="agent-chat__actions">
-        <el-button v-if="sending" size="small" plain @click="stopGenerating">停止</el-button>
-        <el-button type="primary" size="small" :loading="sending" :disabled="!input.trim()" @click="sendMessage">
-          发送
-        </el-button>
-      </div>
-    </footer>
+      <footer class="agent-chat__composer">
+        <textarea
+          v-model="input"
+          class="agent-chat__input"
+          rows="2"
+          placeholder="输入你的问题，Enter 发送，Shift+Enter 换行"
+          :disabled="sending"
+          @keydown="onKeydown"
+        />
+        <div class="agent-chat__actions">
+          <el-button v-if="sending" size="small" plain @click="stopGenerating">停止</el-button>
+          <el-button type="primary" size="small" :loading="sending" :disabled="!input.trim()" @click="sendMessage">
+            发送
+          </el-button>
+        </div>
+      </footer>
+    </section>
   </div>
 </template>
 
 <style scoped>
-.agent-chat {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - var(--gmail-topbar-h) - 56px - 32px);
-  min-height: 420px;
-  margin: 16px;
-  border: 1px solid var(--st-outline-variant);
-  border-radius: 12px;
-  background: #fff;
-  overflow: hidden;
-}
-
-.agent-chat__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--st-outline-variant);
-  background: var(--st-surface-container-low, #f8fafc);
-}
-
-.agent-chat__brand {
+.agent-card__hint {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  margin: 0 0 12px;
   font-size: 13px;
   color: var(--st-on-surface-variant);
+  flex-shrink: 0;
 }
 
-.agent-chat__brand :deep(svg) {
+.agent-card__hint :deep(svg) {
   width: 18px;
   height: 18px;
   color: var(--st-primary, #0058be);
@@ -185,10 +173,11 @@ onMounted(() => {
 .agent-chat__list {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 4px 0 12px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
 }
 
 .agent-chat__row {
@@ -268,9 +257,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px 16px 16px;
-  border-top: 1px solid var(--st-outline-variant);
-  background: #fff;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  flex-shrink: 0;
 }
 
 .agent-chat__input {
@@ -282,7 +271,9 @@ onMounted(() => {
   font: inherit;
   line-height: 1.5;
   outline: none;
+  background: rgba(255, 255, 255, 0.85);
   transition: border-color 0.15s ease;
+  box-sizing: border-box;
 }
 
 .agent-chat__input:focus {

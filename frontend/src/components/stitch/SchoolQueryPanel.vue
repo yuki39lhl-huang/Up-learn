@@ -31,6 +31,7 @@ const schoolMajors = ref<MajorVO[]>([])
 const targetsExpanded = ref(false)
 const highlightedMajorId = ref<number | null>(null)
 const activeTargetId = ref<number | null>(null)
+const majorsPanelRef = ref<HTMLElement | null>(null)
 
 const TARGET_HOME_HINT = '主页仅展示第一目标志愿'
 
@@ -65,18 +66,52 @@ function isTargetItemActive(item: UserTargetVO) {
   return activeTargetId.value === item.id
 }
 
+/** 最近可滚动祖先（控制台面板），找不到则用 window */
+function findScrollParent(el: HTMLElement | null): HTMLElement | null {
+  let node: HTMLElement | null = el?.parentElement ?? null
+  while (node) {
+    const style = getComputedStyle(node)
+    const oy = style.overflowY
+    if ((oy === 'auto' || oy === 'scroll' || oy === 'overlay') && node.scrollHeight > node.clientHeight) {
+      return node
+    }
+    node = node.parentElement
+  }
+  return null
+}
+
+/** 将开设专业面板滚到可视区顶部；可选再滚到高亮专业 */
+async function scrollToMajorsPanel(majorId?: number | null) {
+  await nextTick()
+  // 等专业面板挂载并完成布局后再量取位置
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+
+  const panel = majorsPanelRef.value
+  if (!panel) return
+
+  const scroller = findScrollParent(panel)
+  if (scroller) {
+    const panelTop = panel.getBoundingClientRect().top
+    const scrollerTop = scroller.getBoundingClientRect().top
+    const nextTop = scroller.scrollTop + (panelTop - scrollerTop) - 12
+    scroller.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' })
+  } else {
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  if (majorId == null) return
+  await nextTick()
+  const majorEl = panel.querySelector(`.majors-item[data-major-id="${majorId}"]`) as HTMLElement | null
+  majorEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+}
+
 async function openTargetDetail(item: UserTargetVO) {
   targetsExpanded.value = false
-  await showMajors(schoolFromTarget(item))
-  activeTargetId.value = item.id
-  highlightedMajorId.value = item.majorId ?? null
-  await nextTick()
-  document.querySelector('.majors-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  if (item.majorId) {
-    document
-      .querySelector(`.majors-item[data-major-id="${item.majorId}"]`)
-      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }
+  await showMajors(schoolFromTarget(item), {
+    scroll: true,
+    majorId: item.majorId ?? null,
+    targetId: item.id,
+  })
 }
 
 const targetKeySet = computed(() => {
@@ -253,22 +288,56 @@ async function onMajorDictChange() {
   await reloadWithSelection()
 }
 
-async function showMajors(row: SchoolVO) {
-  highlightedMajorId.value = null
-  activeTargetId.value = null
+/** 防止连点切换院校时旧请求覆盖新结果 */
+let majorsRequestSeq = 0
+
+async function showMajors(
+  row: SchoolVO,
+  opts?: { scroll?: boolean; majorId?: number | null; targetId?: number | null },
+) {
+  const shouldScroll = opts?.scroll !== false
+  const alreadyOpen = selectedSchool.value != null
+
+  highlightedMajorId.value = opts?.majorId ?? null
+  activeTargetId.value = opts?.targetId ?? null
   selectedSchool.value = row
-  schoolMajors.value = []
+  // 切换院校时保留旧列表，避免先清空再加载造成闪屏
+  if (!alreadyOpen) {
+    schoolMajors.value = []
+  }
+
+  const seq = ++majorsRequestSeq
   majorsLoading.value = true
   try {
-    schoolMajors.value = await fetchSchoolMajors(row.id, {
+    const list = await fetchSchoolMajors(row.id, {
       majorDictId: majorDictId.value,
       majorCategory: majorCategory.value || undefined,
     })
+    if (seq !== majorsRequestSeq) return
+    schoolMajors.value = list
   } catch (e) {
+    if (seq !== majorsRequestSeq) return
+    schoolMajors.value = []
     ElMessage.error(e instanceof Error ? e.message : '专业列表加载失败')
   } finally {
+    if (seq !== majorsRequestSeq) return
     majorsLoading.value = false
+    // 首次打开或目标跳转要定位；面板内换校且专业区已在视口内则不滚动，避免画面跳动
+    const jumpFromTarget = opts?.majorId != null || opts?.targetId != null
+    if (shouldScroll && (!alreadyOpen || jumpFromTarget || !isMajorsPanelMostlyVisible())) {
+      await scrollToMajorsPanel(opts?.majorId)
+    }
   }
+}
+
+function isMajorsPanelMostlyVisible(): boolean {
+  const panel = majorsPanelRef.value
+  if (!panel) return false
+  const rect = panel.getBoundingClientRect()
+  const scroller = findScrollParent(panel)
+  const topBound = scroller ? scroller.getBoundingClientRect().top : 0
+  const bottomBound = scroller ? scroller.getBoundingClientRect().bottom : window.innerHeight
+  return rect.top < bottomBound - 80 && rect.bottom > topBound + 80
 }
 
 function typeChip(row: SchoolVO) {
@@ -302,9 +371,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="school-panel st-card">
-    <header class="st-card-header">按省份查询在招院校</header>
-    <div class="st-card-body school-panel__body">
+  <!-- 顶栏已有「院校查询」，内容区不再重复同名标题 -->
+  <div class="module-shell">
+    <section class="module-card">
+      <header class="module-card__head">
+        <div>
+          <p class="module-card__eyebrow">升学通 · 院校中心</p>
+          <h2>在招院校</h2>
+        </div>
+      </header>
+      <div class="school-panel__body">
       <div v-if="auth.isLoggedIn" class="targets-anchor">
         <button
           type="button"
@@ -488,9 +564,9 @@ onMounted(async () => {
         />
       </div>
 
-      <section v-if="selectedSchool" class="majors-panel st-card">
-        <header class="st-card-header">
-          {{ selectedSchool.name }} · 开设专业（{{ schoolMajors.length }}）
+      <section v-if="selectedSchool" ref="majorsPanelRef" class="majors-panel">
+        <header class="majors-panel__head">
+          {{ selectedSchool.name }} · 开设专业（{{ majorsLoading ? '…' : schoolMajors.length }}）
         </header>
         <div v-loading="majorsLoading" class="majors-panel__body">
           <p v-if="!majorsLoading && schoolMajors.length === 0" class="majors-empty">暂无开设专业数据</p>
@@ -534,12 +610,29 @@ onMounted(async () => {
       </section>
       </div>
     </div>
-  </section>
+    </section>
+  </div>
 </template>
 
 <style scoped>
 .school-panel__body {
   position: relative;
+}
+
+.majors-panel {
+  margin-top: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.majors-panel__head {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 650;
+  color: #0f172a;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 /* —— 目标院校：可收缩悬浮层 —— */

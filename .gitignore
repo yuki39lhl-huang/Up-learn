@@ -23,6 +23,9 @@ markdown/apikey
 # 若本地填写了 OSS AccessKey，可用本机未跟踪副本；仓库内 application-local.yml 仅保留占位
 # **/application-local.secrets.yml
 
+# 考纲扫描底稿（体积大；入库用 sql/phase1/syllabus_seed*.sql）
+kaogang/
+
 # Logs
 *.log
 npm-debug.log*

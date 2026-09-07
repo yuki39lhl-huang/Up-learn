@@ -114,7 +114,6 @@ const {
   submit,
 } = usePracticeQuiz()
 
-const panelTitle = computed(() => (mode.value === 'daily' ? '每日一练' : '随机刷题'))
 const practiceSubjects = computed(() => examPrefs.practiceSubjects())
 const subjectFilterLabel = computed(() => examPrefs.randomFilterLabel())
 const showOtherPendingHint = computed(
@@ -618,9 +617,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="practice-panel st-card" v-loading="loading">
-    <header class="st-card-header panel-title">{{ panelTitle }}</header>
-    <div class="st-card-body">
+  <!-- 顶栏已有「随机刷题」，内容区不再重复同名标题 -->
+  <div class="module-shell practice-panel" v-loading="loading">
+    <section class="module-card">
+      <header class="module-card__head">
+        <div>
+          <p class="module-card__eyebrow">升学通 · 刷题中心</p>
+          <h2>{{ mode === 'daily' ? '每日一练' : '练习台' }}</h2>
+        </div>
+      </header>
+      <div class="practice-card__body">
       <div v-if="mode === 'random'" class="panel-meta panel-meta--random">
         <button type="button" class="side-entry" @click="openWrongDrawer">错题本</button>
         <div class="panel-meta-center">
@@ -1093,7 +1099,8 @@ onMounted(async () => {
         placeholder="例如：考点、易错点…"
       />
     </StitchDialog>
-  </section>
+    </section>
+  </div>
 </template>
 
 <style scoped>
@@ -1101,10 +1108,8 @@ onMounted(async () => {
   height: 100%;
 }
 
-.panel-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.practice-card__body {
+  min-height: 360px;
 }
 
 .panel-meta {

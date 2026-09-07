@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import SchoolQueryPanel from '../components/stitch/SchoolQueryPanel.vue'
+import SyllabusPanel from '../components/stitch/SyllabusPanel.vue'
 import DashboardPanel from '../components/stitch/DashboardPanel.vue'
 import PracticePanel from '../components/stitch/PracticePanel.vue'
 import AgentChatPanel from '../components/stitch/AgentChatPanel.vue'
@@ -294,48 +295,43 @@ async function handleLogout() {
             <div v-else class="gmail-panel__content gmail-panel__content--flush">
               <DashboardPanel v-show="activeView === 'dashboard'" />
 
-              <div v-show="activeView === 'school'" style="padding: 16px">
-                <SchoolQueryPanel />
+              <SchoolQueryPanel v-show="activeView === 'school'" />
+
+              <SyllabusPanel v-show="activeView === 'syllabus'" />
+
+              <PracticePanel v-show="activeView === 'random'" key="random" default-mode="random" />
+
+              <div v-show="activeView === 'papers'" class="module-shell">
+                <section class="module-card">
+                  <header class="module-card__head">
+                    <div>
+                      <p class="module-card__eyebrow">升学通 · 真题中心</p>
+                      <h2>试卷作答</h2>
+                    </div>
+                  </header>
+                  <div class="workbench-placeholder">
+                    <StitchIcon name="paper" />
+                    <h3>历年真题 · 即将上线</h3>
+                    <p>按科目筛选试卷、在线作答与 AI 判分，二期开发。</p>
+                  </div>
+                </section>
               </div>
 
-              <section
-                v-show="activeView === 'syllabus'"
-                class="st-card"
-                style="margin: 16px"
-              >
-                <header class="st-card-header">考纲查询</header>
-                <div class="st-card-body" />
-              </section>
-
-              <div v-show="activeView === 'random'" style="padding: 16px">
-                <PracticePanel key="random" default-mode="random" />
+              <div v-show="activeView === 'community'" class="module-shell">
+                <section class="module-card">
+                  <header class="module-card__head">
+                    <div>
+                      <p class="module-card__eyebrow">升学通 · 交流中心</p>
+                      <h2>院校经验</h2>
+                    </div>
+                  </header>
+                  <div class="workbench-placeholder">
+                    <StitchIcon name="community" />
+                    <h3>社区交流 · 规划中</h3>
+                    <p>院校经验分享、备考答疑，后续版本开放。</p>
+                  </div>
+                </section>
               </div>
-
-              <section
-                v-show="activeView === 'papers'"
-                class="st-card"
-                style="margin: 16px"
-              >
-                <header class="st-card-header">历年试卷与在线作答</header>
-                <div class="st-card-body workbench-placeholder">
-                  <StitchIcon name="paper" />
-                  <h3>历年真题 · 即将上线</h3>
-                  <p>按科目筛选试卷、在线作答与 AI 判分，二期开发。</p>
-                </div>
-              </section>
-
-              <section
-                v-show="activeView === 'community'"
-                class="st-card"
-                style="margin: 16px"
-              >
-                <header class="st-card-header">升学社区</header>
-                <div class="st-card-body workbench-placeholder">
-                  <StitchIcon name="community" />
-                  <h3>社区交流 · 规划中</h3>
-                  <p>院校经验分享、备考答疑，后续版本开放。</p>
-                </div>
-              </section>
 
               <AgentChatPanel v-show="activeView === 'agent'" />
             </div>

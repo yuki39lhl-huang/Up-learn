@@ -13,3 +13,13 @@ ul:
   redis:
     host: localhost
     port: 6380
+  papers:
+    local-dir: E:/GrammarPractice/IdeaProject/up-learn/shijuan
+  oss:
+    enabled: false
+    endpoint: oss-cn-beijing.aliyuncs.com
+    bucket: up-learn
+    public-base-url: https://up-learn.cn-beijing.taihangrda.cn
+    paper-dir: papers
+    # access-key-id / access-key-secret：本地填写，勿提交真实密钥
+

@@ -26,6 +26,15 @@ markdown/apikey
 # 考纲扫描底稿（体积大；入库用 sql/phase1/syllabus_seed*.sql）
 kaogang/
 
+# 历年真题 PDF（体积大；元数据见 sql/phase1/paper_seed.sql，运行时读 ul.papers.local-dir 或 OSS）
+shijuan/**/*.pdf
+
+# PDF 文本抽取临时产物
+sql/phase1/_pdf_extract/
+sql/phase1/_sample_*.txt
+sql/phase1/_extract_*.txt
+sql/phase1/_extract_one.py
+
 # Logs
 *.log
 npm-debug.log*

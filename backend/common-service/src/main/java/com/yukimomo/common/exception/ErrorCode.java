@@ -52,7 +52,10 @@ public enum ErrorCode {
     MAJOR_NOT_FOUND(2002, "专业不存在"),
 
     // --- 刷题 3xxx ---
-    QUESTION_NOT_FOUND(3001, "题目不存在");
+    QUESTION_NOT_FOUND(3001, "题目不存在"),
+    PAPER_NOT_FOUND(3002, "试卷不存在"),
+    PAPER_ATTEMPT_NOT_FOUND(3003, "作答会话不存在"),
+    PAPER_ALREADY_SUBMITTED(3004, "试卷已提交，不可再修改");
 
     /** 返回给前端的业务码（放在 Result.code） */
     private final int code;

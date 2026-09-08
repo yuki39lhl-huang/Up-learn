@@ -26,6 +26,18 @@ const router = createRouter({
         }
       },
     },
+    {
+      path: '/paper/:id',
+      name: 'paper-exam',
+      component: () => import('../views/PaperExamView.vue'),
+      meta: { title: '试卷作答', requiresAuth: true },
+    },
+    {
+      path: '/paper/:id/print',
+      name: 'paper-print',
+      component: () => import('../views/PaperPrintView.vue'),
+      meta: { title: '试卷下载', requiresAuth: true },
+    },
     { path: '/practice', redirect: { path: '/console', hash: '#dashboard' } },
   ],
 })

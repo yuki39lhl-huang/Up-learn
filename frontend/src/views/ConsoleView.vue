@@ -6,6 +6,7 @@ import SchoolQueryPanel from '../components/stitch/SchoolQueryPanel.vue'
 import SyllabusPanel from '../components/stitch/SyllabusPanel.vue'
 import DashboardPanel from '../components/stitch/DashboardPanel.vue'
 import PracticePanel from '../components/stitch/PracticePanel.vue'
+import PapersPanel from '../components/stitch/PapersPanel.vue'
 import AgentChatPanel from '../components/stitch/AgentChatPanel.vue'
 import AccountSettingsPanel from '../components/stitch/AccountSettingsPanel.vue'
 import BrandLogo from '../components/stitch/BrandLogo.vue'
@@ -301,21 +302,7 @@ async function handleLogout() {
 
               <PracticePanel v-show="activeView === 'random'" key="random" default-mode="random" />
 
-              <div v-show="activeView === 'papers'" class="module-shell">
-                <section class="module-card">
-                  <header class="module-card__head">
-                    <div>
-                      <p class="module-card__eyebrow">升学通 · 真题中心</p>
-                      <h2>试卷作答</h2>
-                    </div>
-                  </header>
-                  <div class="workbench-placeholder">
-                    <StitchIcon name="paper" />
-                    <h3>历年真题 · 即将上线</h3>
-                    <p>按科目筛选试卷、在线作答与 AI 判分，二期开发。</p>
-                  </div>
-                </section>
-              </div>
+              <PapersPanel v-show="activeView === 'papers'" />
 
               <div v-show="activeView === 'community'" class="module-shell">
                 <section class="module-card">

@@ -245,3 +245,75 @@ export interface SyllabusVO {
   references: SyllabusReference[]
   designatedWorks: SyllabusDesignatedWork[]
 }
+
+/** 历年真题 */
+export interface PaperOptionItem {
+  province: string
+  subject: string
+}
+
+export interface PaperOptionsVO {
+  provinces: string[]
+  items: PaperOptionItem[]
+}
+
+export interface PaperListItemVO {
+  id: number
+  province: string
+  subject: string
+  year: number
+  title: string
+  hasAnswer: boolean
+  pdfAvailable: boolean
+  questionCount: number
+}
+
+export interface PaperQuestionVO {
+  id: number
+  seq: number
+  qType: string
+  stem: string
+  options?: string[] | null
+  score: number
+  inputMode: 'answerable' | 'reveal_only' | string
+  answer?: string | null
+  analysis?: string | null
+  userAnswer?: string | null
+  correct?: boolean | null
+}
+
+export interface PaperDetailVO {
+  id: number
+  province: string
+  subject: string
+  year: number
+  title: string
+  hasAnswer: boolean
+  pdfAvailable: boolean
+  attemptId?: number | null
+  attemptStatus?: string | null
+  questions: PaperQuestionVO[]
+}
+
+export interface PaperPdfVO {
+  url: string
+  fileName: string
+}
+
+export interface PaperStartVO {
+  attemptId: number
+  paperId: number
+  status: string
+}
+
+export interface PaperSaveAnswersDTO {
+  answers: { questionId: number; userAnswer?: string }[]
+}
+
+export interface PaperSubmitResultVO {
+  attemptId: number
+  paperId: number
+  objectiveScore: number
+  objectiveTotal: number
+  questions: PaperQuestionVO[]
+}

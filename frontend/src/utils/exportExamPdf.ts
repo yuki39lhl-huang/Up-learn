@@ -223,24 +223,3 @@ export async function downloadPaperAsPdf(paperId: number) {
     host.remove()
   }
 }
-
-/** @deprecated 保留兼容；请用 downloadPaperAsPdf */
-export async function exportExamSheetToPdf(_sheetEl: HTMLElement, fileName: string) {
-  // 无法从 DOM 反推 paperId 时，仅对传入节点截图（尽量少用）
-  const host = document.createElement('div')
-  host.style.cssText =
-    'position:fixed;left:-14000px;top:0;width:794px;background:#fff;z-index:-1;pointer-events:none;'
-  const style = document.createElement('style')
-  style.textContent = SHEET_CSS
-  const root = document.createElement('div')
-  root.className = 'ul-pdf-root'
-  root.appendChild(_sheetEl.cloneNode(true))
-  host.appendChild(style)
-  host.appendChild(root)
-  document.body.appendChild(host)
-  try {
-    await renderElementToPdf(root, fileName)
-  } finally {
-    host.remove()
-  }
-}

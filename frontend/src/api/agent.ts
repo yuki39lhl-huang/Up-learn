@@ -1,6 +1,5 @@
-import request, { getData } from './request'
 import { useAuthStore } from '../stores/auth'
-import type { ChatReplyVO, Result } from '../types/api'
+import type { Result } from '../types/api'
 
 const SESSION_KEY = 'ul_agent_session'
 
@@ -17,13 +16,6 @@ export function resetAgentSession(): string {
   const id = crypto.randomUUID().replace(/-/g, '')
   localStorage.setItem(SESSION_KEY, id)
   return id
-}
-
-/** 同步对话（备用） */
-export function chatSync(message: string, sessionId?: string) {
-  return getData<ChatReplyVO>(
-    request.post('/agent/chat', { message, sessionId: sessionId ?? getAgentSessionId() })
-  )
 }
 
 /** 流式对话：onChunk 收到当前累积全文 */

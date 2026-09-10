@@ -13,10 +13,8 @@ const auth = useAuthStore()
 
 const isLanding = computed(() => route.path === '/home' || route.path === '/')
 const isConsole = computed(() => route.path.startsWith('/console'))
-const isPaperExam = computed(
-  () => route.path.startsWith('/paper/') || route.name === 'paper-print',
-)
-/** 落地页 / 控制台 / 试卷作答与打印页：隐藏全局顶栏 */
+const isPaperExam = computed(() => route.path.startsWith('/paper/'))
+/** 落地页 / 控制台 / 试卷作答页：隐藏全局顶栏 */
 const hideAppChrome = computed(() => isLanding.value || isConsole.value || isPaperExam.value)
 const showWorkbenchLink = computed(() => auth.isLoggedIn && !isConsole.value && !isPaperExam.value)
 

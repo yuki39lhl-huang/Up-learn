@@ -3,7 +3,6 @@ import type {
   PaperDetailVO,
   PaperListItemVO,
   PaperOptionsVO,
-  PaperPdfVO,
   PaperStartVO,
   PaperSubmitResultVO,
   PaperSaveAnswersDTO,
@@ -19,10 +18,6 @@ export function fetchPaperList(params: { province: string; subject: string }) {
 
 export function fetchPaperDetail(id: number) {
   return getData<PaperDetailVO>(request.get(`/practice/papers/${id}`))
-}
-
-export function fetchPaperPdf(id: number) {
-  return getData<PaperPdfVO>(request.get(`/practice/papers/${id}/pdf`))
 }
 
 export function startPaper(id: number) {

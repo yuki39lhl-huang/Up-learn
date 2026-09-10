@@ -28,6 +28,14 @@ try:
 except ImportError:
     from sql.phase1.english_gd_parse import parse_english_paper  # type: ignore
 
+try:
+    from gd_chinese_subject_parse import parse_gd_chinese_paper, quality_chinese_paper
+except ImportError:
+    from sql.phase1.gd_chinese_subject_parse import (  # type: ignore
+        parse_gd_chinese_paper,
+        quality_chinese_paper,
+    )
+
 EXTRACT = Path(__file__).resolve().parent / "_pdf_extract"
 OUT = Path(__file__).resolve().parent / "paper_questions_guangdong.sql"
 REPORT = Path(__file__).resolve().parent / "_reseed_report.txt"
@@ -48,16 +56,26 @@ CURATED_BY_SUBJECT = {
     "高等数学": gaoshu_questions_for_year,
 }
 
-# 至少要有这么多「完整四选项」选择题，才视为可上架
+# 走中文卷专用解析的科目（材料分析 / 名词解释 / 多选等）
+CHINESE_SUBJECTS = {
+    "政治理论",
+    "管理学",
+    "经济学",
+    "大学语文",
+    "教育理论",
+    "生理学",
+}
+
+# 中文卷：完整四选项选择题门槛（达不到仍可能因「材料+主观」上架）
 MIN_FULL_CHOICE = {
     "高等数学": 5,
     "英语": 10,
-    "大学语文": 8,
-    "政治理论": 15,
-    "管理学": 15,
-    "经济学": 15,
-    "教育理论": 8,
-    "生理学": 12,
+    "大学语文": 6,
+    "政治理论": 12,
+    "管理学": 10,
+    "经济学": 10,
+    "教育理论": 6,
+    "生理学": 8,
 }
 
 SUBJECTS_YEARS = {
@@ -266,6 +284,14 @@ def questions_for(subject: str, year: int) -> tuple[list[dict], str, bool]:
             return [], "英语卷残缺或解析失败（已清空）", False
         return [], f"英语未达门槛·材料{mats}·选择{ch}（已清空）", False
 
+    # 政治/管理/经济/语文/教育/生理：中文卷结构解析（含材料分析）
+    if subject in CHINESE_SUBJECTS:
+        parsed = parse_gd_chinese_paper(text)
+        ok, reason = quality_chinese_paper(parsed, min_choice=MIN_FULL_CHOICE.get(subject, 8))
+        if ok:
+            return parsed, f"中文卷解析·{reason}", True
+        return [], f"中文卷未达门槛·{reason}（已清空）", False
+
     parsed = parse_mcq_blocks(text, max_q=80)
     ok, reason = quality_ok(subject, parsed, text)
     if ok:
@@ -282,10 +308,27 @@ def sql_question_values(paper_id_expr: str, qs: list[dict]) -> str:
             opts = f"JSON_ARRAY({arr})"
         ans = f"'{esc(q['answer'])}'" if q.get("answer") else "NULL"
         ana = f"'{esc(q['analysis'])}'" if q.get("analysis") else "NULL"
+        paper_no = q.get("paper_no")
+        paper_no_sql = "NULL" if paper_no is None else str(int(paper_no))
+        sec = q.get("section_title")
+        sec_sql = "NULL" if not sec else f"'{esc(sec)}'"
         rows.append(
-            f"({paper_id_expr},{q['seq']},'{q['q_type']}','{esc(q['stem'])}',{opts},{ans},{ana},{q['score']},'{q['input_mode']}')"
+            f"({paper_id_expr},{q['seq']},{paper_no_sql},'{q['q_type']}',{sec_sql},"
+            f"'{esc(q['stem'])}',{opts},{ans},{ana},{q['score']},'{q['input_mode']}')"
         )
     return ",\n".join(rows)
+
+
+def normalize_question(q: dict) -> dict:
+    """补齐 paper_no / section_title，保证各解析路径字段一致。"""
+    row = dict(q)
+    if row.get("q_type") == "material":
+        row.setdefault("paper_no", None)
+    else:
+        row.setdefault("paper_no", row.get("seq"))
+    row.setdefault("section_title", None)
+    row.setdefault("input_mode", "reveal_only")
+    return row
 
 
 def main() -> None:
@@ -305,6 +348,7 @@ def main() -> None:
 
     for sub, year in papers:
         qs, note, publish = questions_for(sub, year)
+        qs = [normalize_question(q) for q in qs]
         has_ans = 1 if any(q.get("answer") for q in qs) else 0
         pub = 1 if publish and qs else 0
         report.append(f"{sub}\t{year}\t题量={len(qs)}\tpublished={pub}\t{note}")
@@ -316,7 +360,7 @@ def main() -> None:
         lines.append("DELETE FROM paper_question WHERE paper_id=@pid;")
         if qs:
             lines.append(
-                "INSERT INTO paper_question (paper_id, seq, q_type, stem, options_json, answer, analysis, score, input_mode) VALUES"
+                "INSERT INTO paper_question (paper_id, seq, paper_no, q_type, section_title, stem, options_json, answer, analysis, score, input_mode) VALUES"
             )
             lines.append(sql_question_values("@pid", qs) + ";")
         lines.append(f"UPDATE paper SET has_answer={has_ans}, published={pub} WHERE id=@pid;")

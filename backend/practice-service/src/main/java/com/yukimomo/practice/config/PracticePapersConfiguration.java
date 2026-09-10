@@ -4,6 +4,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({PracticeOssProperties.class, PapersLocalProperties.class})
+@EnableConfigurationProperties({PapersLocalProperties.class})
 public class PracticePapersConfiguration {
 }

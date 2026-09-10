@@ -15,7 +15,7 @@ import {
 import type { PaperDetailVO, PaperQuestionVO } from '../types/api'
 import { useAuthStore } from '../stores/auth'
 import { downloadPaperAsPdf } from '../utils/exportExamPdf'
-import { buildSheetSections, displayQuestionNo, sortBySeq } from '../utils/paperSheet'
+import { buildSheetSections, displayQuestionNo, isMissingQuestion, sortBySeq } from '../utils/paperSheet'
 import '../styles/console-workbench.css'
 
 const DEFAULT_EXAM_MINUTES = 120
@@ -73,6 +73,7 @@ const isMathPaper = computed(() => {
 })
 
 function allowTypedAnswer(q: PaperQuestionVO): boolean {
+  if (isMissingQuestion(q)) return false
   if (q.qType === 'material' || q.qType === 'choice') return false
   if (isMathPaper.value) return false
   return q.qType === 'fill' || q.qType === 'essay' || q.qType === 'calc'
@@ -348,17 +349,22 @@ async function exportCleanPdf() {
   }
 }
 
-function onRetake() {
+async function onRetake() {
   localStorage.removeItem(storageKey(paperId.value))
-  void router.replace({
+  // 加 ts：交卷后 URL 往往仍是 retake=1，仅 replace 同参不会触发 watch，界面不刷新
+  await router.replace({
     name: 'paper-exam',
     params: { id: String(paperId.value) },
-    query: { retake: '1', minutes: String(durationMinutes.value) },
+    query: {
+      retake: '1',
+      minutes: String(durationMinutes.value),
+      ts: String(Date.now()),
+    },
   })
 }
 
 watch(
-  () => [route.params.id, route.query.retake] as const,
+  () => [route.params.id, route.query.retake, route.query.ts] as const,
   () => void load(),
   { immediate: true },
 )
@@ -450,7 +456,10 @@ onMounted(() => {
             v-for="q in sec.items"
             :key="q.id"
             class="exam-q"
-            :class="{ 'exam-q--material': q.qType === 'material' }"
+            :class="{
+              'exam-q--material': q.qType === 'material',
+              'exam-q--missing': isMissingQuestion(q),
+            }"
           >
             <div class="exam-q__stem" :class="{ 'exam-q__stem--pre': q.qType === 'material' }">
               <span v-if="questionNo(q) != null" class="exam-q__no">{{ questionNo(q) }}.</span>
@@ -466,6 +475,11 @@ onMounted(() => {
 
             <!-- 阅读材料：只展示，不作答 -->
             <template v-if="q.qType === 'material'" />
+
+            <!-- 回忆版暂缺：占位提示，可继续作答其它题 -->
+            <p v-else-if="isMissingQuestion(q)" class="exam-blank__hint exam-blank__hint--missing">
+              原卷此题在考生回忆版中暂缺，已按卷面题号占位；不影响其它题目作答。
+            </p>
 
             <!-- 选择题：横向双列，贴近纸质卷 -->
             <div v-else-if="q.qType === 'choice' && q.options?.length" class="exam-opts">
@@ -870,6 +884,18 @@ onMounted(() => {
 .exam-blank__hint {
   margin: 0;
   color: #666;
+}
+
+.exam-blank__hint--missing {
+  color: #8a6d3b;
+  background: #fff8e8;
+  border: 1px dashed #e0c98a;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.exam-q--missing {
+  opacity: 0.92;
 }
 
 .exam-blank__label {

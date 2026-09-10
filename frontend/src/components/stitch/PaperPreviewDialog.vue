@@ -7,7 +7,7 @@ import { ElMessage } from 'element-plus'
 import MathText from './MathText.vue'
 import { fetchPaperDetail } from '../../api/papers'
 import type { PaperDetailVO, PaperQuestionVO } from '../../types/api'
-import { buildSheetSections, displayQuestionNo, sortBySeq } from '../../utils/paperSheet'
+import { buildSheetSections, displayQuestionNo, isMissingQuestion, sortBySeq } from '../../utils/paperSheet'
 
 const props = defineProps<{
   open: boolean
@@ -137,7 +137,10 @@ function onDownload() {
                   v-for="q in sec.items"
                   :key="q.id"
                   class="preview-q"
-                  :class="{ 'preview-q--material': q.qType === 'material' }"
+                  :class="{
+                    'preview-q--material': q.qType === 'material',
+                    'preview-q--missing': isMissingQuestion(q),
+                  }"
                 >
                   <div class="preview-q__stem" :class="{ 'preview-q__stem--pre': q.qType === 'material' }">
                     <span v-if="questionNo(q) != null" class="preview-q__no">{{ questionNo(q) }}.</span>
@@ -149,6 +152,9 @@ function onDownload() {
                       <MathText :text="optionBody(opt)" />
                     </div>
                   </div>
+                  <p v-else-if="isMissingQuestion(q)" class="preview-q__hint preview-q__hint--missing">
+                    原卷此题在考生回忆版中暂缺，已按卷面题号占位。
+                  </p>
                   <p v-else-if="q.qType !== 'material'" class="preview-q__hint">
                     {{
                       detail?.subject === '高等数学' || detail?.subject?.includes('高等数学')
@@ -385,6 +391,14 @@ function onDownload() {
   margin: 0 0 0 1.3em;
   font-size: 12px;
   color: #888;
+}
+
+.preview-q__hint--missing {
+  color: #8a6d3b;
+}
+
+.preview-q--missing .preview-q__stem {
+  color: #666;
 }
 
 .preview-sheet__foot {

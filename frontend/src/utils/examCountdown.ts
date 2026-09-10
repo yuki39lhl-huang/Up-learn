@@ -1,6 +1,3 @@
-/** 默认省份（推断规则兜底用） */
-export const DEFAULT_PROVINCE = '广东'
-
 /** 届别可选范围：当前年份 ±3（2 位届别，如 2027 年 → 24–30 届） */
 export function getCohortOptions(referenceDate = new Date()): number[] {
   const current = referenceDate.getFullYear() % 100

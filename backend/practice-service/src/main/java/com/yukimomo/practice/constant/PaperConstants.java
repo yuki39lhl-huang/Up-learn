@@ -17,6 +17,8 @@ public final class PaperConstants {
 
     public static final String INPUT_ANSWERABLE = "answerable";
     public static final String INPUT_REVEAL_ONLY = "reveal_only";
+    /** 回忆版暂缺占位，不可作答、不计入客观判分 */
+    public static final String INPUT_MISSING = "missing";
 
     public static final String ATTEMPT_IN_PROGRESS = "in_progress";
     public static final String ATTEMPT_SUBMITTED = "submitted";

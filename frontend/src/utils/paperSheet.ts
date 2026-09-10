@@ -1,6 +1,6 @@
 /**
- * 卷面排版：有阅读材料时按 seq 穿插（原文→紧随题目），贴近纸质 PDF；
- * 无材料时仍按题型分大题。
+ * 卷面排版：优先按卷面大题标题分组；有材料且无大题标题时按 seq 穿插；
+ * 否则按题型分大题。题号优先用 paperNo（对标 PDF）。
  */
 import type { PaperQuestionVO } from '../types/api'
 
@@ -23,9 +23,14 @@ export function sortBySeq(qs: PaperQuestionVO[]): PaperQuestionVO[] {
   return [...qs].sort((a, b) => a.seq - b.seq)
 }
 
-/** 卷面展示题号：材料不计号，其余按出现顺序 1、2、3…（与 PDF 一致） */
+export function isMissingQuestion(q: PaperQuestionVO): boolean {
+  return q.inputMode === 'missing' || (q.stem || '').includes('回忆版中暂缺')
+}
+
+/** 卷面展示题号：材料不计号；有 paperNo 则对标 PDF，否则按出现顺序 */
 export function displayQuestionNo(q: PaperQuestionVO, ordered: PaperQuestionVO[]): number | null {
   if (q.qType === 'material') return null
+  if (q.paperNo != null) return q.paperNo
   let n = 0
   for (const item of ordered) {
     if (item.qType === 'material') continue
@@ -38,6 +43,21 @@ export function displayQuestionNo(q: PaperQuestionVO, ordered: PaperQuestionVO[]
 export function buildSheetSections(qs: PaperQuestionVO[]): SheetSection[] {
   const ordered = sortBySeq(qs)
   if (!ordered.length) return []
+
+  // 中文卷：按卷面大题标题分组（含空大题占位）
+  if (ordered.some((q) => q.sectionTitle)) {
+    const groups: SheetSection[] = []
+    for (const q of ordered) {
+      const title = q.sectionTitle || '其它'
+      const last = groups[groups.length - 1]
+      if (last && last.title === title) {
+        last.items.push(q)
+      } else {
+        groups.push({ key: `sec-${groups.length}-${title.slice(0, 12)}`, title, items: [q] })
+      }
+    }
+    return groups
+  }
 
   // 英语等：材料与题目按卷面顺序穿插
   if (ordered.some((q) => q.qType === 'material')) {

@@ -271,11 +271,15 @@ export interface PaperListItemVO {
 export interface PaperQuestionVO {
   id: number
   seq: number
+  /** 卷面题号；材料为空 */
+  paperNo?: number | null
   qType: string
+  /** 卷面大题标题 */
+  sectionTitle?: string | null
   stem: string
   options?: string[] | null
   score: number
-  inputMode: 'answerable' | 'reveal_only' | string
+  inputMode: 'answerable' | 'reveal_only' | 'missing' | string
   answer?: string | null
   analysis?: string | null
   userAnswer?: string | null
@@ -289,15 +293,11 @@ export interface PaperDetailVO {
   year: number
   title: string
   hasAnswer: boolean
+  /** 原卷 PDF 是否在本地/OSS 可解析到（列表提示用；下载走客户端生成卷面） */
   pdfAvailable: boolean
   attemptId?: number | null
   attemptStatus?: string | null
   questions: PaperQuestionVO[]
-}
-
-export interface PaperPdfVO {
-  url: string
-  fileName: string
 }
 
 export interface PaperStartVO {

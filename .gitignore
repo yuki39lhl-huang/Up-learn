@@ -31,9 +31,11 @@ shijuan/**/*.pdf
 
 # PDF 文本抽取临时产物
 sql/phase1/_pdf_extract/
+sql/phase1/_pdf_extract_sd/
 sql/phase1/_sample_*.txt
 sql/phase1/_extract_*.txt
 sql/phase1/_extract_one.py
+sql/phase1/_reseed_report*.txt
 
 # Logs
 *.log

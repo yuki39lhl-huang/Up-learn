@@ -8,7 +8,11 @@ import java.util.List;
 public class PaperQuestionVO {
     private Long id;
     private Integer seq;
+    /** 卷面题号；材料为空 */
+    private Integer paperNo;
     private String qType;
+    /** 卷面大题标题 */
+    private String sectionTitle;
     private String stem;
     private List<String> options;
     private Integer score;

@@ -4,10 +4,8 @@ import com.yukimomo.practice.dto.PaperSaveAnswersDTO;
 import com.yukimomo.practice.vo.PaperDetailVO;
 import com.yukimomo.practice.vo.PaperListItemVO;
 import com.yukimomo.practice.vo.PaperOptionsVO;
-import com.yukimomo.practice.vo.PaperPdfVO;
 import com.yukimomo.practice.vo.PaperStartVO;
 import com.yukimomo.practice.vo.PaperSubmitResultVO;
-import org.springframework.core.io.Resource;
 
 import java.util.List;
 
@@ -18,12 +16,6 @@ public interface PaperService {
     List<PaperListItemVO> list(String province, String subject);
 
     PaperDetailVO detail(Long paperId);
-
-    PaperPdfVO pdfMeta(Long paperId);
-
-    Resource pdfContent(Long paperId);
-
-    String pdfFileName(Long paperId);
 
     PaperStartVO start(Long paperId);
 

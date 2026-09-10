@@ -14,10 +14,6 @@ export function loginByPassword(email: string, password: string) {
   return getData<LoginVO>(request.post('/user/login/password', { email, password }))
 }
 
-export function refreshAccessToken(refreshToken: string) {
-  return getData<LoginVO>(request.post('/user/token/refresh', { refreshToken }))
-}
-
 export function logout(refreshToken: string) {
   return getData(request.post('/user/logout', { refreshToken }))
 }

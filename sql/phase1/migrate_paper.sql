@@ -23,8 +23,10 @@ CREATE TABLE IF NOT EXISTS `paper` (
 CREATE TABLE IF NOT EXISTS `paper_question` (
   `id`           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
   `paper_id`     BIGINT       NOT NULL COMMENT '试卷 ID',
-  `seq`          INT          NOT NULL COMMENT '题序（从 1 起）',
-  `q_type`       VARCHAR(16)  NOT NULL COMMENT '题型：choice/fill/calc/essay',
+  `seq`          INT          NOT NULL COMMENT '题序（卷内排序，从 1 起）',
+  `paper_no`     INT          DEFAULT NULL COMMENT '卷面题号；材料为 NULL；暂缺题仍有题号',
+  `q_type`       VARCHAR(16)  NOT NULL COMMENT '题型：choice/fill/calc/essay/material',
+  `section_title` VARCHAR(256) DEFAULT NULL COMMENT '卷面大题标题',
   `stem`         TEXT         NOT NULL COMMENT '题干（支持 Markdown/KaTeX）',
   `options_json` JSON         DEFAULT NULL COMMENT '选择题选项 JSON',
   `answer`       TEXT         DEFAULT NULL COMMENT '标准答案（提交后揭晓）',

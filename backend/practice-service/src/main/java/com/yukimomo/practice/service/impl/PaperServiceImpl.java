@@ -18,18 +18,14 @@ import com.yukimomo.practice.mapper.PaperAttemptMapper;
 import com.yukimomo.practice.mapper.PaperMapper;
 import com.yukimomo.practice.mapper.PaperQuestionMapper;
 import com.yukimomo.practice.service.PaperService;
-import com.yukimomo.practice.service.PracticeOssService;
 import com.yukimomo.practice.vo.PaperDetailVO;
 import com.yukimomo.practice.vo.PaperListItemVO;
 import com.yukimomo.practice.vo.PaperOptionItemVO;
 import com.yukimomo.practice.vo.PaperOptionsVO;
-import com.yukimomo.practice.vo.PaperPdfVO;
 import com.yukimomo.practice.vo.PaperQuestionVO;
 import com.yukimomo.practice.vo.PaperStartVO;
 import com.yukimomo.practice.vo.PaperSubmitResultVO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,7 +50,6 @@ public class PaperServiceImpl implements PaperService {
     private final PaperQuestionMapper paperQuestionMapper;
     private final PaperAttemptMapper paperAttemptMapper;
     private final PaperAttemptAnswerMapper paperAttemptAnswerMapper;
-    private final PracticeOssService practiceOssService;
     private final PapersLocalProperties papersLocalProperties;
 
     @Override
@@ -155,39 +150,6 @@ public class PaperServiceImpl implements PaperService {
     }
 
     @Override
-    public PaperPdfVO pdfMeta(Long paperId) {
-        Paper paper = requirePublishedPaper(paperId);
-        if (StrUtil.isBlank(paper.getPdfUrl())) {
-            throw new BizException(ErrorCode.NOT_FOUND, "该试卷暂无 PDF");
-        }
-        PaperPdfVO vo = new PaperPdfVO();
-        vo.setFileName(buildFileName(paper));
-        String stored = paper.getPdfUrl();
-        if (stored.startsWith("http://") || stored.startsWith("https://")) {
-            vo.setUrl(practiceOssService.toDisplayUrl(stored));
-        } else {
-            // 前端走同源流式下载接口
-            vo.setUrl("/api/practice/papers/" + paperId + "/pdf/content");
-        }
-        return vo;
-    }
-
-    @Override
-    public Resource pdfContent(Long paperId) {
-        Paper paper = requirePublishedPaper(paperId);
-        Path path = resolveLocalPdf(paper);
-        if (path == null || !Files.isRegularFile(path)) {
-            throw new BizException(ErrorCode.NOT_FOUND, "PDF 文件不存在");
-        }
-        return new FileSystemResource(path);
-    }
-
-    @Override
-    public String pdfFileName(Long paperId) {
-        return buildFileName(requirePublishedPaper(paperId));
-    }
-
-    @Override
     @Transactional
     public PaperStartVO start(Long paperId) {
         Long userId = UserContext.requireUserId();
@@ -234,6 +196,10 @@ public class PaperServiceImpl implements PaperService {
             }
             // 材料题无作答；其余题型（含 reveal_only 主观题）均可保存机打草稿
             if (PaperConstants.Q_MATERIAL.equals(q.getQType())) {
+                continue;
+            }
+            // 回忆版暂缺题不可作答
+            if (PaperConstants.INPUT_MISSING.equals(q.getInputMode())) {
                 continue;
             }
             PaperAttemptAnswer row = paperAttemptAnswerMapper.selectOne(
@@ -346,7 +312,9 @@ public class PaperServiceImpl implements PaperService {
         PaperQuestionVO vo = new PaperQuestionVO();
         vo.setId(q.getId());
         vo.setSeq(q.getSeq());
+        vo.setPaperNo(q.getPaperNo());
         vo.setQType(q.getQType());
+        vo.setSectionTitle(q.getSectionTitle());
         vo.setStem(q.getStem());
         vo.setScore(q.getScore());
         vo.setInputMode(q.getInputMode());
@@ -399,10 +367,6 @@ public class PaperServiceImpl implements PaperService {
             return s.substring(0, 1);
         }
         return s;
-    }
-
-    private String buildFileName(Paper paper) {
-        return paper.getYear() + "年" + paper.getProvince() + "专升本" + paper.getSubject() + "真题.pdf";
     }
 
     private boolean resolvePdfExists(Paper paper) {

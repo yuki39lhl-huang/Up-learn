@@ -1,7 +1,14 @@
 import { useAuthStore } from '../stores/auth'
+import request, { getData } from './request'
 import type { Result } from '../types/api'
 
 const SESSION_KEY = 'ul_agent_session'
+
+export interface AgentStatusVO {
+  ragEnabled: boolean
+  ragIngestOnStartup: boolean
+  ragEmbedding: 'dashscope' | 'local' | 'off' | string
+}
 
 export function getAgentSessionId(): string {
   let id = localStorage.getItem(SESSION_KEY)
@@ -16,6 +23,11 @@ export function resetAgentSession(): string {
   const id = crypto.randomUUID().replace(/-/g, '')
   localStorage.setItem(SESSION_KEY, id)
   return id
+}
+
+/** 一点通能力状态（RAG 开关等） */
+export function fetchAgentStatus() {
+  return getData<AgentStatusVO>(request.get('/agent/status'))
 }
 
 /** 流式对话：onChunk 收到当前累积全文 */

@@ -72,13 +72,13 @@ public class PracticeController {
         return Result.ok(practiceService.randomPendingHint());
     }
 
-    @Operation(summary = "清空重刷", description = "清除复习调度与当日已做记录，可指定全部备考科目或单科")
+    @Operation(summary = "清空重刷", description = "清除复习调度、当日已做记录，并同步清除对应科目的随机刷题答题历史")
     @PostMapping("/random/reset")
     public Result<RandomResetVO> resetRandom(@Valid @RequestBody RandomResetDTO dto) {
         return Result.ok(practiceService.resetRandom(dto));
     }
 
-    @Operation(summary = "备考重置时清空随机刷题", description = "清除全部复习进度、当日已做与随机刷题答题统计")
+    @Operation(summary = "备考重置时清空随机刷题", description = "清除全部复习进度、当日已做与随机刷题答题历史/统计")
     @DeleteMapping("/random/progress")
     public Result<Void> clearRandomProgressOnExamReset() {
         practiceService.resetRandomProgress();

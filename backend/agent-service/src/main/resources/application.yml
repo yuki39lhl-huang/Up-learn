@@ -17,41 +17,34 @@ spring:
     redis:
       host: ${ul.redis.host}
       port: ${ul.redis.port}
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${ul.db.host}:${ul.db.port}/up_learn?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: ${ul.db.pw}
 
-mybatis-plus:
-  configuration:
-    map-underscore-to-camel-case: true
-
+# chat / score 用 DeepSeek；embedding（一点通 RAG）默认不启用，见 application-local 注释
 langchain4j:
   open-ai:
     chat-model:
       base-url: https://api.deepseek.com
-      api-key: ${ANTHROPIC_AUTH_TOKEN}
+      api-key: ${ANTHROPIC_AUTH_TOKEN:}
       model-name: deepseek-v4-flash
       log-requests: true
       log-responses: true
     streaming-chat-model:
       base-url: https://api.deepseek.com
-      api-key: ${ANTHROPIC_AUTH_TOKEN}
+      api-key: ${ANTHROPIC_AUTH_TOKEN:}
       model-name: deepseek-v4-flash
       log-requests: true
       log-responses: true
-    embedding-model:
-      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-      api-key: ${DASHSCOPE_API_KEY}
-      model-name: qwen3.7-text-embedding
-      log-requests: true
-      log-responses: true
-      max-segments-per-batch: 20
-  community:
-    redis:
-      host: ${ul.redis.host}
-      port: ${ul.redis.port}
+
+ul:
+  agent:
+    rag:
+      # 本地见 application-local；无 DashScope 时也可开 RAG（走本地 embedding）
+      enabled: false
+      ingest-on-startup: false
+      embedding: auto
+      segment-size: 500
+      segment-overlap: 80
+      min-score: 0.45
+      max-results: 5
 
 logging:
   level:

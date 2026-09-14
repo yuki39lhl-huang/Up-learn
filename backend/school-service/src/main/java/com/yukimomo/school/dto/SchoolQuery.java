@@ -25,6 +25,8 @@ public class SchoolQuery extends PageQuery {
     private Integer year;
     @Schema(description = "专业词典 ID（来自 /api/major/options 选中项）", example = "1")
     private Long majorDictId;
+    @Schema(description = "门类精确匹配（可选）", example = "工学")
+    private String discipline;
     @Schema(description = "专业类精确匹配（可选，一般有 majorDictId 可不传）", example = "计算机类")
     private String majorCategory;
     @Schema(description = "true 时公办院校排序靠前（不排除民办）", example = "true")

@@ -5,6 +5,7 @@
  */
 import { onUnmounted, watch } from 'vue'
 import { useLoginForm } from '../../composables/useLoginForm'
+import BrandLogo from './BrandLogo.vue'
 
 const props = defineProps<{
   visible: boolean
@@ -78,6 +79,9 @@ function onCodeInput(e: Event) {
             ×
           </button>
 
+          <div class="login-modal__brand">
+            <BrandLogo :size="44" />
+          </div>
           <h2 id="login-modal-title" class="login-modal__title">登录 / 注册</h2>
           <p class="login-modal__subtitle">欢迎使用升学通，登录以继续</p>
 
@@ -225,6 +229,12 @@ function onCodeInput(e: Event) {
 .login-modal__close:hover {
   background: rgb(241 245 249 / 95%);
   color: #334155;
+}
+
+.login-modal__brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
 }
 
 .login-modal__title {

@@ -221,6 +221,9 @@ function resetRandomPanelState() {
   otherPendingSubjects.value = []
   wrongQuestionIds.value = new Set()
   noteQuestionIds.value = new Set()
+  historyList.value = []
+  historyTotal.value = 0
+  historyDrawerOpen.value = false
   resetDialogOpen.value = false
   filterDrawerOpen.value = false
   setupGuideDialogOpen.value = false
@@ -557,8 +560,15 @@ async function applyReset() {
     )
     resetDialogOpen.value = false
     poolExhausted.value = false
-    ElMessage.success(`已清除 ${vo.clearedRecordCount} 条复习记录，统计已重置`)
+    ElMessage.success(`已清除 ${vo.clearedRecordCount} 条复习记录，答题历史与统计已重置`)
     await loadStats('random')
+    if (historyDrawerOpen.value) {
+      historyPageNo.value = 1
+      await loadHistoryList()
+    } else {
+      historyList.value = []
+      historyTotal.value = 0
+    }
     await loadQuestion('random')
     await refreshPendingHint()
   } catch (e) {

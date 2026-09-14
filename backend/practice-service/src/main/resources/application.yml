@@ -40,6 +40,10 @@ logging:
   file:
     path: logs/practice-service.log
 
+ul:
+  papers:
+    ai-score-enabled: true
+
 springdoc:
   api-docs:
     path: /v3/api-docs

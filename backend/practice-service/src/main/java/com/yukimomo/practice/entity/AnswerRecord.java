@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * 作答历史表 {@code answer_record}。
  * <p>
  * 每次提交答案插入一行；跨服务只存 {@link #userId}，不存用户详情。
- * 本表无逻辑删除字段，历史永久保留便于统计与回溯。
+ * 随机刷题清空重刷 / 备考重置时会删除对应 source=random 的记录。
  */
 @Data
 @TableName("answer_record")

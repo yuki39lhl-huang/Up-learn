@@ -56,7 +56,7 @@ public interface PracticeService {
     /** 重置每日一练签到：清除 daily 答题记录、study_stats 与当日 Redis 缓存 */
     void resetDailyCheckIn();
 
-    /** 备考重置：清除全部随机刷题复习进度、当日已做与答题统计 */
+    /** 备考重置：清除全部随机刷题复习进度、当日已做与答题历史 */
     void resetRandomProgress();
 
     PageDTO<AnswerHistoryVO> listHistory(PageQuery query);

@@ -39,7 +39,7 @@ public final class SchoolConvert {
     }
 
     /**
-     * 词典实体转 Combobox 选项（id / name / majorCategory）。
+     * 词典实体转 Combobox 选项（id / name / discipline / majorCategory）。
      */
     public static MajorOptionVO toMajorOptionVO(MajorDict dict) {
         if (dict == null) {
@@ -48,13 +48,15 @@ public final class SchoolConvert {
         MajorOptionVO vo = new MajorOptionVO();
         vo.setId(dict.getId());
         vo.setName(dict.getName());
+        vo.setDiscipline(dict.getDiscipline());
         vo.setMajorCategory(dict.getMajorCategory());
+        vo.setExamTrack(dict.getExamTrack());
         return vo;
     }
 
     /**
      * 开设 + 词典合并为 MajorVO。
-     * {@code id} 取 school_major.id；名称/类别取自 dict。
+     * {@code id} 取 school_major.id；名称/类别取自 dict；展示名优先用开设 display_name。
      */
     public static MajorVO toMajorVO(SchoolMajor offering, MajorDict dict) {
         if (offering == null) {
@@ -66,8 +68,20 @@ public final class SchoolConvert {
         vo.setMajorDictId(offering.getMajorDictId());
         if (dict != null) {
             vo.setName(dict.getName());
+            vo.setDiscipline(dict.getDiscipline());
             vo.setMajorCategory(dict.getMajorCategory());
         }
+        String display = offering.getDisplayName();
+        vo.setDisplayName(display != null && !display.isBlank() ? display : vo.getName());
+        vo.setMajorGroup(offering.getMajorGroup());
+        vo.setMajorCode(offering.getMajorCode());
+        vo.setBatchName(offering.getBatchName());
+        vo.setCampus(offering.getCampus());
+        vo.setExamType(offering.getExamType());
+        vo.setFoundationSubject(offering.getFoundationSubject());
+        vo.setComprehensiveSubject(offering.getComprehensiveSubject());
+        vo.setPrerequisite(offering.getPrerequisite());
+        vo.setPublicSubjects(resolvePublicSubjects(offering));
         vo.setExamSubjects(offering.getExamSubjects());
         vo.setAvgScore(offering.getAvgScore());
         vo.setEnrollment(offering.getEnrollment());
@@ -75,5 +89,34 @@ public final class SchoolConvert {
         vo.setMinScore(offering.getMinScore());
         vo.setYear(offering.getYear());
         return vo;
+    }
+
+    /**
+     * 公共课：优先从 exam_subjects 按「公共，基础，综课」三段拆出首段；
+     * 无法拆分时返回 null（前端可回退 examSubjects）。
+     */
+    private static String resolvePublicSubjects(SchoolMajor offering) {
+        String exam = offering.getExamSubjects();
+        if (exam == null || exam.isBlank()) {
+            return null;
+        }
+        String[] parts = exam.split("，");
+        if (parts.length >= 3) {
+            return parts[0].trim();
+        }
+        if (parts.length == 1) {
+            return parts[0].trim();
+        }
+        // 两段时：若第二段等于基础或综课，首段视为公共课
+        String second = parts[1].trim();
+        if (second.equals(nullToEmpty(offering.getFoundationSubject()))
+                || second.equals(nullToEmpty(offering.getComprehensiveSubject()))) {
+            return parts[0].trim();
+        }
+        return parts[0].trim();
+    }
+
+    private static String nullToEmpty(String s) {
+        return s == null ? "" : s;
     }
 }

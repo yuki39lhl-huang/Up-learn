@@ -1,6 +1,8 @@
 package com.yukimomo.practice.service;
 
+import com.yukimomo.practice.dto.PaperAiScoreDTO;
 import com.yukimomo.practice.dto.PaperSaveAnswersDTO;
+import com.yukimomo.practice.vo.PaperAiScoreResultVO;
 import com.yukimomo.practice.vo.PaperDetailVO;
 import com.yukimomo.practice.vo.PaperListItemVO;
 import com.yukimomo.practice.vo.PaperOptionsVO;
@@ -22,4 +24,7 @@ public interface PaperService {
     void saveAnswers(Long attemptId, PaperSaveAnswersDTO dto);
 
     PaperSubmitResultVO submit(Long attemptId);
+
+    /** 交卷后按需对主观题做 AI 评分（练习开 / 模考关） */
+    PaperAiScoreResultVO aiScore(Long attemptId, PaperAiScoreDTO dto);
 }

@@ -43,6 +43,11 @@ public interface SchoolService {
      */
     PageDTO<MajorOptionVO> listMajorOptions(MajorOptionQuery query);
 
-    /** 专业类列表（词典 distinct，供级联第一级） */
-    List<String> listMajorCategories();
+    /** 门类列表（词典 distinct） */
+    List<String> listDisciplines();
+
+    /**
+     * 专业类列表；{@code discipline} 非空时只返回该门类下的专业类。
+     */
+    List<String> listMajorCategories(String discipline);
 }

@@ -4,7 +4,7 @@ import com.yukimomo.common.domain.Result;
 import com.yukimomo.common.utils.UserContext;
 import com.yukimomo.user.dto.AddUserTargetDTO;
 import com.yukimomo.user.service.UserTargetService;
-import com.yukimomo.user.vo.UserTargetVO;
+import com.yukimomo.api.user.vo.UserTargetVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

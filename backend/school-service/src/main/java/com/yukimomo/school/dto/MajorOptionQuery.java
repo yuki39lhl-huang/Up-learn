@@ -15,6 +15,8 @@ public class MajorOptionQuery extends PageQuery {
 
     @Schema(description = "专业名模糊；不传则按分页滚动浏览", example = "计算机")
     private String kw;
+    @Schema(description = "门类精确匹配（级联：门类→专业类→专业）", example = "工学")
+    private String discipline;
     @Schema(description = "专业类精确匹配（级联：先选类型再选专业）", example = "计算机类")
     private String majorCategory;
 }

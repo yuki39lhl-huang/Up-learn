@@ -294,7 +294,7 @@ public class RandomPracticeService {
     /**
      * 清空重刷：清除指定科目范围内的 {@code user_question_record} 与当日 Redis 已做记录。
      * <p>
-     * 不影响错题本、备忘录与答题历史。
+     * 答题历史（{@code answer_record} source=random）由 {@code PracticeServiceImpl} 同步清除。
      */
     /**
      * 备考重置：清除该用户全部随机刷题复习调度与 Redis 当日已做（不依赖备考偏好）。

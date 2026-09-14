@@ -6,11 +6,13 @@ import com.yukimomo.school.dto.MajorOptionQuery;
 import com.yukimomo.school.service.SchoolService;
 import com.yukimomo.school.vo.MajorOptionVO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -31,16 +33,25 @@ public class MajorController {
      * 有 kw 按名称模糊；无 kw 分页滚动。选中后的 id → list.majorDictId。
      */
     @Operation(summary = "专业词典选项（筛选 Combobox）",
-            description = "查 major_dict。有 kw 模糊；无 kw 分页滚动。"
+            description = "查 major_dict。支持 discipline / majorCategory 级联；有 kw 模糊；无 kw 分页滚动。"
                     + "选中后把返回的 id 作为 /api/school/list 的 majorDictId")
     @GetMapping("/options")
     public Result<PageDTO<MajorOptionVO>> options(@ParameterObject MajorOptionQuery query) {
         return Result.ok(schoolService.listMajorOptions(query));
     }
 
-    @Operation(summary = "专业类列表", description = "词典 major_category 去重，供级联筛选第一级")
+    @Operation(summary = "门类列表", description = "词典 discipline 去重，供级联筛选第一级")
+    @GetMapping("/disciplines")
+    public Result<List<String>> disciplines() {
+        return Result.ok(schoolService.listDisciplines());
+    }
+
+    @Operation(summary = "专业类列表",
+            description = "词典 major_category 去重；可按 discipline 过滤，供级联第二级")
     @GetMapping("/categories")
-    public Result<List<String>> categories() {
-        return Result.ok(schoolService.listMajorCategories());
+    public Result<List<String>> categories(
+            @Parameter(description = "门类，可选", example = "工学")
+            @RequestParam(required = false) String discipline) {
+        return Result.ok(schoolService.listMajorCategories(discipline));
     }
 }

@@ -83,7 +83,9 @@ export interface SchoolVO {
 export interface MajorOptionVO {
   id: number
   name: string
+  discipline?: string
   majorCategory?: string
+  examTrack?: string
 }
 
 export interface MajorVO {
@@ -91,7 +93,18 @@ export interface MajorVO {
   schoolId: number
   majorDictId: number
   name: string
+  displayName?: string
+  discipline?: string
   majorCategory?: string
+  majorGroup?: string
+  majorCode?: string
+  batchName?: string
+  campus?: string
+  examType?: string
+  publicSubjects?: string
+  foundationSubject?: string
+  comprehensiveSubject?: string
+  prerequisite?: string
   examSubjects?: string
   avgScore?: number
   enrollment?: number
@@ -280,10 +293,16 @@ export interface PaperQuestionVO {
   options?: string[] | null
   score: number
   inputMode: 'answerable' | 'reveal_only' | 'missing' | string
+  /** 是否有标准答案（不泄露内容） */
+  hasStandardAnswer?: boolean | null
   answer?: string | null
   analysis?: string | null
   userAnswer?: string | null
   correct?: boolean | null
+  /** AI 建议分（仅供参考） */
+  aiScore?: number | null
+  /** AI 评语（仅供参考） */
+  aiFeedback?: string | null
 }
 
 export interface PaperDetailVO {
@@ -297,6 +316,14 @@ export interface PaperDetailVO {
   pdfAvailable: boolean
   attemptId?: number | null
   attemptStatus?: string | null
+  /** 选择题总数（answerable） */
+  choiceCount?: number | null
+  /** 有标准答案、可机判的选择题数 */
+  gradableChoiceCount?: number | null
+  /** 已交卷时的客观题得分 */
+  objectiveScore?: number | null
+  /** 已交卷时的客观题满分 */
+  objectiveTotal?: number | null
   questions: PaperQuestionVO[]
 }
 
@@ -315,5 +342,19 @@ export interface PaperSubmitResultVO {
   paperId: number
   objectiveScore: number
   objectiveTotal: number
+  questions: PaperQuestionVO[]
+}
+
+export interface PaperAiScoreDTO {
+  questionIds?: number[]
+  force?: boolean
+  mockExam?: boolean
+}
+
+export interface PaperAiScoreResultVO {
+  attemptId: number
+  paperId: number
+  scoredCount: number
+  skippedCount: number
   questions: PaperQuestionVO[]
 }

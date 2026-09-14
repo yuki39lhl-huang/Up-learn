@@ -11,6 +11,7 @@ import {
   savePaperAnswers,
   startPaper,
   submitPaper,
+  aiScorePaper,
 } from '../api/papers'
 import type { PaperDetailVO, PaperQuestionVO } from '../types/api'
 import { useAuthStore } from '../stores/auth'
@@ -27,6 +28,7 @@ const auth = useAuthStore()
 
 const loading = ref(true)
 const submitting = ref(false)
+const aiScoring = ref(false)
 const detail = ref<PaperDetailVO | null>(null)
 const questions = ref<PaperQuestionVO[]>([])
 const attemptId = ref<number | null>(null)
@@ -66,6 +68,24 @@ const totalScore = computed(() =>
   questions.value.reduce((s, q) => s + (q.score || 0), 0),
 )
 
+const choiceCount = computed(
+  () => detail.value?.choiceCount ?? questions.value.filter((q) => q.qType === 'choice' && !isMissingQuestion(q)).length,
+)
+
+const gradableChoiceCount = computed(
+  () =>
+    detail.value?.gradableChoiceCount ??
+    questions.value.filter((q) => q.qType === 'choice' && q.hasStandardAnswer).length,
+)
+
+const gradableHint = computed(() => {
+  if (!questions.value.length) return ''
+  const g = gradableChoiceCount.value
+  const c = choiceCount.value
+  if (c <= 0) return '本卷无可机判选择题'
+  return `本卷可机判 ${g}/${c} 道选择题`
+})
+
 /** 高等数学：公式难机打，填空/计算只提供卷面+草稿纸提示；其它科目提供输入框 */
 const isMathPaper = computed(() => {
   const s = detail.value?.subject ?? ''
@@ -76,7 +96,98 @@ function allowTypedAnswer(q: PaperQuestionVO): boolean {
   if (isMissingQuestion(q)) return false
   if (q.qType === 'material' || q.qType === 'choice') return false
   if (isMathPaper.value) return false
+  // reveal_only / answerable 均可机打；missing 已排除
   return q.qType === 'fill' || q.qType === 'essay' || q.qType === 'calc'
+}
+
+const canAiScore = computed(() => {
+  if (!submitted.value || isMathPaper.value) return false
+  return questions.value.some(
+    (q) =>
+      allowTypedAnswer(q) &&
+      String(answers.value[q.id] || q.userAnswer || '').trim().length > 0
+  )
+})
+
+/** 主观题 AI 得分合计（有任一题已评才计入） */
+const aiSubjectiveScore = computed(() => {
+  let sum = 0
+  let counted = 0
+  for (const q of questions.value) {
+    if (q.aiScore == null) continue
+    const n = Number(q.aiScore)
+    if (!Number.isFinite(n)) continue
+    sum += n
+    counted++
+  }
+  return counted > 0 ? Math.round(sum * 10) / 10 : null
+})
+
+/** 右上角展示：客观 + AI 主观（若有） */
+const totalScoreDisplay = computed(() => {
+  if (!submitted.value || objectiveScore.value == null) return null
+  const obj = objectiveScore.value
+  const ai = aiSubjectiveScore.value
+  if (ai == null) return obj
+  return Math.round((obj + ai) * 10) / 10
+})
+
+const scoreBarHint = computed(() => {
+  if (!submitted.value || objectiveScore.value == null) return ''
+  if (aiScoring.value) return 'AI 评分中…'
+  if (isMathPaper.value) {
+    return `客观 ${objectiveScore.value}/${objectiveTotal.value ?? '—'}`
+  }
+  if (aiSubjectiveScore.value != null) {
+    return `客观 ${objectiveScore.value} · AI ${aiSubjectiveScore.value}`
+  }
+  if (canAiScore.value) return `客观 ${objectiveScore.value}/${objectiveTotal.value ?? '—'}`
+  return `客观 ${objectiveScore.value}/${objectiveTotal.value ?? '—'}`
+})
+
+async function runAiScore(opts?: { silent?: boolean; force?: boolean }) {
+  if (!attemptId.value || aiScoring.value) return
+  if (isMathPaper.value) return
+  if (!canAiScore.value && !opts?.force) return
+  aiScoring.value = true
+  try {
+    const result = await aiScorePaper(attemptId.value, opts?.force ? { force: true } : undefined)
+    questions.value = sortBySeq(result.questions || [])
+    for (const q of questions.value) {
+      if (q.userAnswer) answers.value[q.id] = q.userAnswer
+    }
+    if (opts?.silent) {
+      if (result.scoredCount > 0) {
+        ElMessage.success(`AI 已评 ${result.scoredCount} 道主观题（仅供参考）`)
+      }
+      return
+    }
+    if (result.scoredCount > 0) {
+      ElMessage.success(
+        `已完成 ${result.scoredCount} 题 AI 评分（仅供参考${
+          result.skippedCount ? `，跳过 ${result.skippedCount} 题` : ''
+        }）`
+      )
+    } else {
+      ElMessage.info(
+        result.skippedCount
+          ? `没有新的可评题目（已跳过 ${result.skippedCount} 题）`
+          : '没有可评的主观作答'
+      )
+    }
+  } catch (e) {
+    if (!opts?.silent) {
+      ElMessage.error(e instanceof Error ? e.message : 'AI 评分失败')
+    } else {
+      ElMessage.warning(e instanceof Error ? e.message : '自动 AI 评分失败，可稍后重试')
+    }
+  } finally {
+    aiScoring.value = false
+  }
+}
+
+async function onAiScore() {
+  await runAiScore({ force: true })
 }
 
 const orderedQuestions = computed(() => sortBySeq(questions.value))
@@ -101,12 +212,27 @@ const clockText = computed(() => {
 const timerUrgent = computed(() => remainSeconds.value > 0 && remainSeconds.value <= 5 * 60)
 
 function optionLetter(opt: string): string {
-  const m = opt.trim().match(/^([A-Da-d])[.、．\s]/)
+  const m = opt.trim().match(/^([A-Ea-e])[.、．\s]/)
   return m ? m[1].toUpperCase() : opt.trim().charAt(0).toUpperCase()
 }
 
 function optionBody(opt: string): string {
-  return opt.replace(/^[A-Da-d][.、．\s]+/, '').trim()
+  return opt.replace(/^[A-Ea-e][.、．\s]+/, '').trim()
+}
+
+/** 规范多选串：提取 A–E 并按字母序去重 */
+function normalizeChoiceAnswer(raw: string | null | undefined): string {
+  if (!raw) return ''
+  const upper = raw.trim().toUpperCase()
+  let out = ''
+  for (const c of ['A', 'B', 'C', 'D', 'E'] as const) {
+    if (upper.includes(c)) out += c
+  }
+  return out || upper
+}
+
+function answerHasLetter(answer: string | null | undefined, letter: string): boolean {
+  return normalizeChoiceAnswer(answer).includes(letter.toUpperCase())
 }
 
 function storageKey(id: number) {
@@ -203,11 +329,15 @@ async function onTimeUp() {
   try {
     await persistDraft()
     const result = await submitPaper(attemptId.value)
-    questions.value = result.questions
+    questions.value = sortBySeq(result.questions || [])
+    for (const q of questions.value) {
+      if (q.userAnswer) answers.value[q.id] = q.userAnswer
+    }
     submitted.value = true
     objectiveScore.value = result.objectiveScore
     objectiveTotal.value = result.objectiveTotal
     localStorage.removeItem(storageKey(paperId.value))
+    void runAiScore({ silent: true })
   } catch (e) {
     ElMessage.error(e instanceof Error ? e.message : '自动交卷失败，请手动交卷')
   }
@@ -260,6 +390,13 @@ async function load() {
       if (q.userAnswer) map[q.id] = q.userAnswer
     }
     answers.value = map
+    if (submitted.value) {
+      objectiveScore.value = vo.objectiveScore ?? null
+      objectiveTotal.value = vo.objectiveTotal ?? null
+    } else {
+      objectiveScore.value = null
+      objectiveTotal.value = null
+    }
     durationMinutes.value = resolveInitialMinutes()
     if (!submitted.value && questions.value.length > 0) {
       const raw = localStorage.getItem(storageKey(paperId.value))
@@ -272,6 +409,20 @@ async function load() {
       }
     } else {
       remainSeconds.value = 0
+    }
+    // 已交卷且有主观作答但尚未 AI 评：自动补评一次
+    if (
+      submitted.value &&
+      !isMathPaper.value &&
+      canAiScore.value &&
+      questions.value.some(
+        (q) =>
+          allowTypedAnswer(q) &&
+          String(answers.value[q.id] || q.userAnswer || '').trim() &&
+          q.aiScore == null
+      )
+    ) {
+      void runAiScore({ silent: true })
     }
   } catch (e) {
     ElMessage.error(e instanceof Error ? e.message : '加载试卷失败')
@@ -302,7 +453,7 @@ async function onSubmit() {
     '交卷确认',
     isMathPaper.value
       ? '提交后将批改选择题，并在填空/计算题区域展示参考答案供自行对照。确定交卷？'
-      : '提交后将批改选择题；填空/写作等机打答案会保留，并展示参考答案供自行对照。确定交卷？',
+      : '提交后将自动批改选择题，并对已作答主观题进行 AI 评分（仅供参考）。确定交卷？',
     '交卷',
     '再检查一下',
   )
@@ -311,15 +462,23 @@ async function onSubmit() {
   try {
     await persistDraft()
     const result = await submitPaper(attemptId.value)
-    questions.value = result.questions
+    questions.value = sortBySeq(result.questions || [])
+    for (const q of questions.value) {
+      if (q.userAnswer) answers.value[q.id] = q.userAnswer
+    }
     submitted.value = true
     objectiveScore.value = result.objectiveScore
     objectiveTotal.value = result.objectiveTotal
     clearTimer()
     localStorage.removeItem(storageKey(paperId.value))
     ElMessage.success(
-      `已交卷：客观题 ${result.objectiveScore}/${result.objectiveTotal} 分（主观题请自行批改）`,
+      `已交卷：客观题 ${result.objectiveScore}/${result.objectiveTotal} 分${
+        isMathPaper.value ? `（${gradableHint.value}；主观题请自行批改）` : '，正在 AI 评分…'
+      }`,
     )
+    if (!isMathPaper.value) {
+      void runAiScore({ silent: true })
+    }
   } catch (e) {
     ElMessage.error(e instanceof Error ? e.message : '交卷失败')
   } finally {
@@ -391,6 +550,15 @@ onMounted(() => {
       </button>
 
       <div class="paper-exam__actions">
+        <div
+          v-if="submitted && totalScoreDisplay != null"
+          class="paper-exam__score-badge"
+          :title="aiScoring ? '正在对主观题进行 AI 评分' : '客观题机判 + 主观题 AI（仅供参考）'"
+        >
+          <span class="paper-exam__score-badge-label">{{ aiScoring ? '评分中' : '得分' }}</span>
+          <span class="paper-exam__score-badge-value">{{ totalScoreDisplay }}</span>
+          <span class="paper-exam__score-badge-sub">{{ scoreBarHint }}</span>
+        </div>
         <button
           type="button"
           class="paper-btn"
@@ -407,6 +575,16 @@ onMounted(() => {
           @click="onSubmit"
         >
           {{ submitting ? '提交中…' : '交卷' }}
+        </button>
+        <button
+          v-if="submitted && questions.length && !isMathPaper && canAiScore"
+          type="button"
+          class="paper-btn"
+          :disabled="aiScoring"
+          title="重新对已作答主观题进行 AI 评分（仅供参考）"
+          @click="onAiScore"
+        >
+          {{ aiScoring ? '评分中…' : '重新评分' }}
         </button>
         <button
           v-if="submitted && questions.length"
@@ -428,8 +606,24 @@ onMounted(() => {
         class="paper-exam__score"
       >
         客观题得分：{{ objectiveScore }} / {{ objectiveTotal }}
-        <span class="paper-exam__score-hint">填空与计算题请对照参考答案自行批改</span>
+        <template v-if="aiSubjectiveScore != null">
+          · 主观题 AI：{{ aiSubjectiveScore }}
+          · 合计约 {{ totalScoreDisplay }}
+        </template>
+        <span class="paper-exam__score-hint">
+          {{ gradableHint }}
+          <template v-if="isMathPaper">；填空与计算题请对照参考答案自行批改</template>
+          <template v-else-if="aiScoring">；主观题 AI 评分进行中…</template>
+          <template v-else-if="aiSubjectiveScore != null">；主观题 AI 分仅供参考</template>
+          <template v-else>；已作答主观题将自动 AI 评分</template>
+        </span>
       </div>
+      <p v-else-if="!loading && questions.length" class="paper-exam__gradable">
+        {{ gradableHint }}
+        <span v-if="gradableChoiceCount < choiceCount" class="paper-exam__gradable-warn">
+          · 无标准答案的选择题交卷后不计客观分
+        </span>
+      </p>
 
       <p v-if="!loading && !questions.length" class="paper-exam__empty">
         本题卷尚未录入结构化题目。录入后可在线作答并下载无水印卷面 PDF。
@@ -465,7 +659,7 @@ onMounted(() => {
               <span v-if="questionNo(q) != null" class="exam-q__no">{{ questionNo(q) }}.</span>
               <MathText :text="q.stem" />
               <span
-                v-if="submitted && q.inputMode === 'answerable' && q.correct != null"
+                v-if="submitted && q.inputMode === 'answerable' && q.hasStandardAnswer && q.correct != null"
                 class="exam-q__judge"
                 :class="q.correct ? 'is-ok' : 'is-bad'"
               >
@@ -483,6 +677,12 @@ onMounted(() => {
 
             <!-- 选择题：横向双列，贴近纸质卷 -->
             <div v-else-if="q.qType === 'choice' && q.options?.length" class="exam-opts">
+              <p
+                v-if="!q.hasStandardAnswer && !submitted"
+                class="exam-blank__hint exam-blank__hint--no-ans"
+              >
+                暂无标准答案，可作答但不计入客观机判
+              </p>
               <label
                 v-for="opt in q.options"
                 :key="opt"
@@ -490,12 +690,14 @@ onMounted(() => {
                 :class="{
                   'exam-opt--picked': answers[q.id] === optionLetter(opt),
                   'exam-opt--ok':
-                    submitted && q.answer && optionLetter(opt) === q.answer.toUpperCase(),
+                    submitted &&
+                    q.answer &&
+                    answerHasLetter(q.answer, optionLetter(opt)),
                   'exam-opt--bad':
                     submitted &&
                     answers[q.id] === optionLetter(opt) &&
                     q.answer &&
-                    optionLetter(opt) !== q.answer.toUpperCase(),
+                    !answerHasLetter(q.answer, optionLetter(opt)),
                 }"
               >
                 <input
@@ -553,6 +755,14 @@ onMounted(() => {
                 <div v-if="q.analysis" class="exam-blank__ana">
                   <p class="exam-blank__label">解析</p>
                   <MathText :text="q.analysis" />
+                </div>
+                <div v-if="q.aiScore != null" class="exam-blank__ai">
+                  <p class="exam-blank__label">AI 评分（仅供参考）</p>
+                  <p class="exam-blank__ai-score">
+                    {{ q.aiScore }}
+                    <template v-if="q.score != null"> / {{ q.score }}</template>
+                  </p>
+                  <p v-if="q.aiFeedback" class="exam-blank__ai-fb">{{ q.aiFeedback }}</p>
                 </div>
               </template>
             </div>
@@ -683,6 +893,39 @@ onMounted(() => {
   gap: 10px;
 }
 
+.paper-exam__score-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 72px;
+  margin-right: 4px;
+  padding: 4px 12px;
+  border-radius: 10px;
+  background: #e7efe9;
+  line-height: 1.15;
+}
+
+.paper-exam__score-badge-label {
+  font-size: 11px;
+  color: #4a6b55;
+  font-weight: 500;
+}
+
+.paper-exam__score-badge-value {
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #2f5a3f;
+  letter-spacing: 0.02em;
+}
+
+.paper-exam__score-badge-sub {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #5a6a5e;
+  white-space: nowrap;
+}
+
 .paper-btn {
   height: 36px;
   padding: 0 14px;
@@ -726,6 +969,37 @@ onMounted(() => {
   margin-top: 4px;
   font-size: 13px;
   font-weight: 400;
+}
+
+.paper-exam__gradable {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #5a6a5e;
+}
+
+.paper-exam__gradable-warn {
+  color: #9a6b2f;
+}
+
+.exam-blank__ai {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f3f6f4;
+}
+
+.exam-blank__ai-score {
+  margin: 0 0 6px;
+  font-weight: 600;
+  color: #3d6b4f;
+}
+
+.exam-blank__ai-fb {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #3a4a3e;
+  white-space: pre-wrap;
 }
 
 .paper-exam__empty {
@@ -892,6 +1166,12 @@ onMounted(() => {
   border: 1px dashed #e0c98a;
   border-radius: 6px;
   padding: 8px 10px;
+}
+
+.exam-blank__hint--no-ans {
+  color: #8a6d3b;
+  margin: 0 0 8px;
+  font-size: 12px;
 }
 
 .exam-q--missing {

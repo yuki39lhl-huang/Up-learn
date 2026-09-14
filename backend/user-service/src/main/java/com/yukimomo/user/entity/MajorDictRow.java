@@ -19,8 +19,16 @@ public class MajorDictRow {
 
     private String name;
 
+    /** 门类，如工学/管理学 */
+    private String discipline;
+
     @TableField("major_category")
     private String majorCategory;
+
+    private String code;
+
+    @TableField("exam_track")
+    private String examTrack;
 
     @TableLogic
     private Integer deleted;

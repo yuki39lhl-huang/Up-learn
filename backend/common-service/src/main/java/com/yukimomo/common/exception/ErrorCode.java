@@ -55,7 +55,10 @@ public enum ErrorCode {
     QUESTION_NOT_FOUND(3001, "题目不存在"),
     PAPER_NOT_FOUND(3002, "试卷不存在"),
     PAPER_ATTEMPT_NOT_FOUND(3003, "作答会话不存在"),
-    PAPER_ALREADY_SUBMITTED(3004, "试卷已提交，不可再修改");
+    PAPER_ALREADY_SUBMITTED(3004, "试卷已提交，不可再修改"),
+    PAPER_NOT_SUBMITTED(3005, "请先交卷后再进行 AI 评分"),
+    PAPER_AI_SCORE_DISABLED(3006, "当前模式不支持 AI 评分"),
+    AGENT_SCORE_FAILED(3007, "AI 评分失败，请稍后重试");
 
     /** 返回给前端的业务码（放在 Result.code） */
     private final int code;

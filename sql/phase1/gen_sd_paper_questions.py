@@ -30,6 +30,22 @@ try:
 except ImportError:
     from sql.phase1.gen_gd_paper_questions import normalize_question, esc  # type: ignore
 
+try:
+    from choice_answer_overlay import apply_choice_answers
+except ImportError:
+    from sql.phase1.choice_answer_overlay import apply_choice_answers  # type: ignore
+
+try:
+    from sd_choice_answers import answers_for as sd_answers
+except ImportError:
+    from sql.phase1.sd_choice_answers import answers_for as sd_answers  # type: ignore
+
+
+def lookup_choice_answers(province: str, subject: str, year: int) -> dict[int, str] | None:
+    if province == "山东":
+        return sd_answers(subject, year)
+    return None
+
 EXTRACT = Path(__file__).resolve().parent / "_pdf_extract_sd"
 OUT = Path(__file__).resolve().parent / "paper_questions_shandong.sql"
 REPORT = Path(__file__).resolve().parent / "_reseed_report_sd.txt"
@@ -160,6 +176,9 @@ def main() -> None:
     for sub, year in papers:
         qs, note, publish = questions_for(sub, year)
         qs = [normalize_question(q) for q in qs]
+        qs, ans_hit = apply_choice_answers("山东", sub, year, qs, lookup_choice_answers)
+        if ans_hit:
+            note = f"{note}·答案覆盖{ans_hit}"
         has_ans = 1 if any(q.get("answer") for q in qs) else 0
         pub = 1 if publish and qs else 0
         report.append(f"{sub}\t{year}\t题量={len(qs)}\tpublished={pub}\t{note}")

@@ -106,6 +106,8 @@ public class SchoolServiceImpl implements SchoolService {
         }
         List<SchoolMajor> offerings = schoolMajorMapper.selectList(new LambdaQueryWrapper<SchoolMajor>()
                 .eq(SchoolMajor::getSchoolId, schoolId)
+                .orderByAsc(SchoolMajor::getMajorGroup)
+                .orderByAsc(SchoolMajor::getMajorCode)
                 .orderByAsc(SchoolMajor::getId));
         List<MajorVO> list = toMajorVoList(offerings);
         return sortMajorsByRelevance(list, majorDictId, majorCategory);
@@ -153,6 +155,9 @@ public class SchoolServiceImpl implements SchoolService {
         if (StringUtils.hasText(q.getKw())) {
             wrapper.like(MajorDict::getName, q.getKw().trim());
         }
+        if (StringUtils.hasText(q.getDiscipline())) {
+            wrapper.eq(MajorDict::getDiscipline, q.getDiscipline().trim());
+        }
         if (StringUtils.hasText(q.getMajorCategory())) {
             wrapper.eq(MajorDict::getMajorCategory, q.getMajorCategory().trim());
         }
@@ -175,11 +180,28 @@ public class SchoolServiceImpl implements SchoolService {
     }
 
     @Override
-    public List<String> listMajorCategories() {
+    public List<String> listDisciplines() {
         List<MajorDict> dicts = majorDictMapper.selectList(new LambdaQueryWrapper<MajorDict>()
+                .select(MajorDict::getDiscipline)
+                .isNotNull(MajorDict::getDiscipline)
+                .orderByAsc(MajorDict::getDiscipline));
+        return dicts.stream()
+                .map(MajorDict::getDiscipline)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .toList();
+    }
+
+    @Override
+    public List<String> listMajorCategories(String discipline) {
+        LambdaQueryWrapper<MajorDict> wrapper = new LambdaQueryWrapper<MajorDict>()
                 .select(MajorDict::getMajorCategory)
-                .isNotNull(MajorDict::getMajorCategory)
-                .orderByAsc(MajorDict::getMajorCategory));
+                .isNotNull(MajorDict::getMajorCategory);
+        if (StringUtils.hasText(discipline)) {
+            wrapper.eq(MajorDict::getDiscipline, discipline.trim());
+        }
+        wrapper.orderByAsc(MajorDict::getMajorCategory);
+        List<MajorDict> dicts = majorDictMapper.selectList(wrapper);
         return dicts.stream()
                 .map(MajorDict::getMajorCategory)
                 .filter(StringUtils::hasText)
@@ -188,7 +210,7 @@ public class SchoolServiceImpl implements SchoolService {
     }
 
     /**
-     * 根据 majorDictId / year / majorCategory 从 school_major 反查 school_id。
+     * 根据 majorDictId / year / majorCategory / discipline 从 school_major 反查 school_id。
      *
      * @return null 表示无专业相关条件；空 Set 表示无匹配院校
      */
@@ -197,22 +219,27 @@ public class SchoolServiceImpl implements SchoolService {
         boolean filterDictId = q.getMajorDictId() != null;
         //如果招生年份不为null，则设置filterYear为true，否则为false
         boolean filterYear = q.getYear() != null;
+        boolean filterDiscipline = StringUtils.hasText(q.getDiscipline());
         //只要专业类别不为空，则设置filterCategory为true，否则为false
         boolean filterCategory = StringUtils.hasText(q.getMajorCategory());
         //如果filterDictId、filterYear、filterCategory都为false，则返回null
-        if (!filterDictId && !filterYear && !filterCategory) {
+        if (!filterDictId && !filterYear && !filterCategory && !filterDiscipline) {
             return null;
         }
 
-        // 仅有专业类、无 dictId：先把类别下所有词典 id 查出来
+        // 仅有专业类/门类、无 dictId：先把类别下所有词典 id 查出来
         Set<Long> dictIds = null;
-        //专业类存在且专业字典id不存在，则查询专业字典id
-        if (filterCategory && !filterDictId) {
-            //创建一个LambdaQueryWrapper对象，用于构建查询条件
-            List<MajorDict> dicts = majorDictMapper.selectList(new LambdaQueryWrapper<MajorDict>()
-                    //如果专业类别不为空，则添加eq查询条件，查询专业类别等于q.getMajorCategory().trim()的记录
-                    .eq(MajorDict::getMajorCategory, q.getMajorCategory().trim())
-                    .select(MajorDict::getId));
+        //专业类或门类存在且专业字典id不存在，则查询专业字典id
+        if ((filterCategory || filterDiscipline) && !filterDictId) {
+            LambdaQueryWrapper<MajorDict> dictWrapper = new LambdaQueryWrapper<MajorDict>()
+                    .select(MajorDict::getId);
+            if (filterDiscipline) {
+                dictWrapper.eq(MajorDict::getDiscipline, q.getDiscipline().trim());
+            }
+            if (filterCategory) {
+                dictWrapper.eq(MajorDict::getMajorCategory, q.getMajorCategory().trim());
+            }
+            List<MajorDict> dicts = majorDictMapper.selectList(dictWrapper);
             //如果专业字典列表为空，则返回空集合
             if (dicts.isEmpty()) {
                 return Collections.emptySet();

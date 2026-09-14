@@ -254,7 +254,8 @@ def _subjective(paper_no: int | None, stem: str, score: int, section: str, q_typ
         "answer": "",
         "analysis": "",
         "score": score,
-        "input_mode": "reveal_only",
+        # 机打主观题：交卷后可 AI 评分（与前端 allowTypedAnswer 对齐）
+        "input_mode": "answerable",
     }
 
 

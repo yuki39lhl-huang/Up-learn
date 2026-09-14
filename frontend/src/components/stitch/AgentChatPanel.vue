@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import StitchIcon from './StitchIcon.vue'
-import { chatStream, getAgentSessionId, resetAgentSession } from '../../api/agent'
+import { chatStream, fetchAgentStatus, getAgentSessionId, resetAgentSession } from '../../api/agent'
+import { useExamPrefsStore } from '../../stores/examPrefs'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -10,17 +11,40 @@ interface ChatMessage {
   loading?: boolean
 }
 
-const SESSION_KEY = 'ul_agent_session'
+const examPrefs = useExamPrefsStore()
 
 const messages = ref<ChatMessage[]>([])
 const input = ref('')
 const sending = ref(false)
 const sessionId = ref(getAgentSessionId())
 const listRef = ref<HTMLElement | null>(null)
+const ragEnabled = ref(false)
 let abortController: AbortController | null = null
 
-const welcome =
-  '你好，我是「一点通」AI 助手。我可以根据知识库检索，为你解答专升本招考、院校与专业等相关问题。'
+const statusHint = computed(() => {
+  const ragPart = ragEnabled.value ? '知识库检索已启用' : '知识库未启用'
+  if (examPrefs.isConfigured) {
+    return `已加载备考档案 · 会话记忆已启用 · ${ragPart}`
+  }
+  return `未配置备考 · 请先到主页完成备考设置 · 会话记忆已启用 · ${ragPart}`
+})
+
+const welcome = computed(() => {
+  if (examPrefs.isConfigured) {
+    const p = examPrefs.prefs
+    return `你好，我是「一点通」。已读取你的备考设置（${p.province} · ${p.cohortYear} 届 · ${p.majorCategory}），可直接问科目、目标院校或备考问题。`
+  }
+  return '你好，我是「一点通」。检测到你尚未完成备考设置，请先到主页填写省份、届别与考试科目，我才能按你的情况回答。'
+})
+
+async function loadStatus() {
+  try {
+    const st = await fetchAgentStatus()
+    ragEnabled.value = !!st.ragEnabled
+  } catch {
+    ragEnabled.value = false
+  }
+}
 
 function scrollToBottom() {
   nextTick(() => {
@@ -35,7 +59,7 @@ function startNewChat() {
   }
   sending.value = false
   sessionId.value = resetAgentSession()
-  messages.value = [{ role: 'assistant', content: welcome }]
+  messages.value = [{ role: 'assistant', content: welcome.value }]
   scrollToBottom()
 }
 
@@ -76,7 +100,6 @@ async function sendMessage() {
   } finally {
     sending.value = false
     abortController = null
-    localStorage.setItem(SESSION_KEY, sessionId.value)
     scrollToBottom()
   }
 }
@@ -95,8 +118,9 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
-onMounted(() => {
-  messages.value = [{ role: 'assistant', content: welcome }]
+onMounted(async () => {
+  await Promise.all([examPrefs.loadRemote(), loadStatus()])
+  messages.value = [{ role: 'assistant', content: welcome.value }]
 })
 </script>
 
@@ -114,7 +138,7 @@ onMounted(() => {
 
       <p class="agent-card__hint">
         <StitchIcon name="agent" />
-        <span>基于 RAG 知识库检索 · 会话记忆已启用</span>
+        <span>{{ statusHint }}</span>
       </p>
 
       <div ref="listRef" class="agent-chat__list">

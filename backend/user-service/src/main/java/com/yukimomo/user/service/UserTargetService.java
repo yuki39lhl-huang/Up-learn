@@ -1,7 +1,7 @@
 package com.yukimomo.user.service;
 
 import com.yukimomo.user.dto.AddUserTargetDTO;
-import com.yukimomo.user.vo.UserTargetVO;
+import com.yukimomo.api.user.vo.UserTargetVO;
 
 import java.util.List;
 

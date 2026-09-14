@@ -9,6 +9,7 @@ export interface SchoolListQuery {
   type?: string
   year?: number
   majorDictId?: number
+  discipline?: string
   majorCategory?: string
   preferPublic?: boolean
 }
@@ -17,6 +18,7 @@ export interface MajorOptionQuery {
   pageNo?: number
   pageSize?: number
   kw?: string
+  discipline?: string
   majorCategory?: string
 }
 
@@ -25,14 +27,19 @@ export function fetchSchoolList(query: SchoolListQuery = {}) {
   return getData<PageDTO<SchoolVO>>(request.get('/school/list', { params: query }))
 }
 
-/** 专业词典选项（Combobox 模糊搜索，可传 majorCategory 级联） */
+/** 专业词典选项（Combobox；可传 discipline / majorCategory 级联） */
 export function fetchMajorOptions(query: MajorOptionQuery = {}) {
   return getData<PageDTO<MajorOptionVO>>(request.get('/major/options', { params: query }))
 }
 
-/** 专业类列表（级联第一级） */
-export function fetchMajorCategories() {
-  return getData<string[]>(request.get('/major/categories'))
+/** 门类列表（级联第一级） */
+export function fetchMajorDisciplines() {
+  return getData<string[]>(request.get('/major/disciplines'))
+}
+
+/** 专业类列表（级联第二级；可按门类过滤） */
+export function fetchMajorCategories(discipline?: string) {
+  return getData<string[]>(request.get('/major/categories', { params: { discipline } }))
 }
 
 export interface ExamSubjectGroup {

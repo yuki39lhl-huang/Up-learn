@@ -20,9 +20,16 @@ public class MajorDict {
     private Long id;
     /** 专业名称（唯一） */
     private String name;
+    /** 门类，如工学/管理学/医学 */
+    private String discipline;
     /** 专业类，如计算机类 */
     @TableField("major_category")
     private String majorCategory;
+    /** 官方专业代码（有则填） */
+    private String code;
+    /** 统考 / 校考 / 混合 */
+    @TableField("exam_track")
+    private String examTrack;
     @TableLogic
     private Integer deleted;
     @TableField("created_at")

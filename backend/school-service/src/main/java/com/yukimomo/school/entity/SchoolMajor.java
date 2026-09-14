@@ -23,6 +23,23 @@ public class SchoolMajor {
     /** 关联 {@link MajorDict#getId()} */
     @TableField("major_dict_id")
     private Long majorDictId;
+    /** 招生展示名（含方向/班型）；空则用词典名 */
+    @TableField("display_name")
+    private String displayName;
+    @TableField("major_group")
+    private String majorGroup;
+    @TableField("major_code")
+    private String majorCode;
+    private String campus;
+    @TableField("exam_type")
+    private String examType;
+    @TableField("foundation_subject")
+    private String foundationSubject;
+    @TableField("comprehensive_subject")
+    private String comprehensiveSubject;
+    private String prerequisite;
+    @TableField("batch_name")
+    private String batchName;
     @TableField("exam_subjects")
     private String examSubjects;
     @TableField("avg_score")

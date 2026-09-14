@@ -107,7 +107,7 @@ INSERT INTO paper_question (paper_id, seq, paper_no, q_type, section_title, stem
 (@pid,20,20,'essay',NULL,'已知 $f(x)$ 在 $\\mathbb{R}$ 上连续，且 $\\displaystyle\\lim_{x\\to 0}\\dfrac{f(x)}{x}=1$。又 $g(x)=\\begin{cases}\\dfrac{1}{x}\\displaystyle\\int_{0}^{x}f(t)\\,\\mathrm{d}t,&x\\neq 0\\\\ a,&x=0\\end{cases}$，$a$ 为常数，且 $g(x)$ 在 $x=0$ 处连续。求：（1）$a$ 的值；（2）判断 $g''(x)$ 在 $x=0$ 处的连续性。',NULL,'（1）$a=1$（由洛必达或等价无穷小）；（2）$g''(x)$ 在 $x=0$ 连续（需完整讨论）','（1）$\\lim\\limits_{x\\to 0}g(x)=\\lim\\limits_{x\\to 0}\\dfrac{f(x)}{x}=1$；（2）求 $g''(0)$ 与 $\\lim\\limits_{x\\to 0}g''(x)$ 比较。',12,'reveal_only');
 UPDATE paper SET has_answer=1, published=1 WHERE id=@pid;
 
--- ===== 广东 英语 2022 (52 题, published=1) · 英语专用解析·材料6·选择30·共52 =====
+-- ===== 广东 英语 2022 (52 题, published=1) · 英语专用解析·材料6·选择30·共52·答案覆盖20 =====
 SET @pid := (SELECT id FROM paper WHERE province='广东' AND subject='英语' AND year=2022 AND deleted=0 LIMIT 1);
 DELETE FROM paper_question WHERE paper_id=@pid;
 INSERT INTO paper_question (paper_id, seq, paper_no, q_type, section_title, stem, options_json, answer, analysis, score, input_mode) VALUES
@@ -135,11 +135,11 @@ Every year, millions of people flock to Berlin for one of the most wonderful act
 throw parties, watch fireworks, and drink a German sparkling wine. Families melt lead at home by holding a
 flame beneath a tablespoon, and the melted lead has different shapes. A heart or ring shape indicates an upcoming
 wedding while a pig shape is a sign of plenty of food.',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,2,2,'choice',NULL,'What might Greeks find in St. Basil’s Cake on New Year’s Day?',JSON_ARRAY('A. A grape.','B. A ring.','C. A coin.','D. A tooth.'),NULL,NULL,2,'answerable'),
-(@pid,3,3,'choice',NULL,'What does a pig shape of melted lead indicate in Germany?',JSON_ARRAY('A. Someone will marry soon.','B. Someone will strike the clock.','C. Someone will have sufficient food.','D. Someone will jump off the chair.'),NULL,NULL,2,'answerable'),
-(@pid,4,4,'choice',NULL,'Which of the following is a Danish tradition to welcome New Year’s Day?',JSON_ARRAY('A. Doing cleaning.','B. Breaking things.','C. Watching fireworks.','D. Drinking wine.'),NULL,NULL,2,'answerable'),
-(@pid,5,5,'choice',NULL,'Eating grapes on New Year’s Eve is a custom in _____.',JSON_ARRAY('A. Greece','B. Ireland','C. Spain','D. Denmark'),NULL,NULL,2,'answerable'),
-(@pid,6,6,'choice',NULL,'What is the common purpose of celebration activities in the five countries?',JSON_ARRAY('A. To get good luck.','B. To be successful in business.','C. To scare away bad spirits.','D. To wish for a good harvest.'),NULL,NULL,2,'answerable'),
+(@pid,2,2,'choice',NULL,'What might Greeks find in St. Basil’s Cake on New Year’s Day?',JSON_ARRAY('A. A grape.','B. A ring.','C. A coin.','D. A tooth.'),'C',NULL,2,'answerable'),
+(@pid,3,3,'choice',NULL,'What does a pig shape of melted lead indicate in Germany?',JSON_ARRAY('A. Someone will marry soon.','B. Someone will strike the clock.','C. Someone will have sufficient food.','D. Someone will jump off the chair.'),'C',NULL,2,'answerable'),
+(@pid,4,4,'choice',NULL,'Which of the following is a Danish tradition to welcome New Year’s Day?',JSON_ARRAY('A. Doing cleaning.','B. Breaking things.','C. Watching fireworks.','D. Drinking wine.'),'B',NULL,2,'answerable'),
+(@pid,5,5,'choice',NULL,'Eating grapes on New Year’s Eve is a custom in _____.',JSON_ARRAY('A. Greece','B. Ireland','C. Spain','D. Denmark'),'C',NULL,2,'answerable'),
+(@pid,6,6,'choice',NULL,'What is the common purpose of celebration activities in the five countries?',JSON_ARRAY('A. To get good luck.','B. To be successful in business.','C. To scare away bad spirits.','D. To wish for a good harvest.'),'A',NULL,2,'answerable'),
 (@pid,7,NULL,'material',NULL,'【阅读理解 B】
 
 Scientists have developed DNA testing to help to keep track of animals that are hard to spot, including
@@ -226,21 +226,21 @@ If you are a 31 , you will be able to maintain constant speed with 32 hand. Men,
 their left hand will 33 down. This is one of the many 34 that prove men’s brains are in compartments (功能
 区), with verbal abilities on the left side and spatial abilities on the right, while women’s verbal an spatial 35
 are dealt with on both the left and right sides of the brain.',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,26,26,'choice',NULL,'第 21 空',JSON_ARRAY('A. part','B. fact','C. practice','D. result'),NULL,NULL,2,'answerable'),
-(@pid,27,27,'choice',NULL,'第 22 空',JSON_ARRAY('A. cooking','B. cleaning','C. jobs','D. exercises'),NULL,NULL,2,'answerable'),
-(@pid,28,28,'choice',NULL,'第 23 空',JSON_ARRAY('A. housework','B. experiments','C. assignments','D. research'),NULL,NULL,2,'answerable'),
-(@pid,29,29,'choice',NULL,'第 24 空',JSON_ARRAY('A. communicative','B. boring','C. happy','D. aggressive'),NULL,NULL,2,'answerable'),
-(@pid,30,30,'choice',NULL,'第 25 空',JSON_ARRAY('A. published','B. selected','C. borrowed','D. bought'),NULL,NULL,2,'answerable'),
-(@pid,31,31,'choice',NULL,'第 26 空',JSON_ARRAY('A. stay','B. exist','C. disappear','D. matter'),NULL,NULL,2,'answerable'),
-(@pid,32,32,'choice',NULL,'第 27 空',JSON_ARRAY('A. differently','B. happily','C. silently','D. positively'),NULL,NULL,2,'answerable'),
-(@pid,33,33,'choice',NULL,'第 28 空',JSON_ARRAY('A. move','B. walk','C. reply','D. behave'),NULL,NULL,2,'answerable'),
-(@pid,34,34,'choice',NULL,'第 29 空',JSON_ARRAY('A. phrase','B. word','C. picture','D. passage'),NULL,NULL,2,'answerable'),
-(@pid,35,35,'choice',NULL,'第 30 空',JSON_ARRAY('A. keep','B. record','C. exceed','D. reduce'),NULL,NULL,2,'answerable'),
-(@pid,36,36,'choice',NULL,'第 31 空',JSON_ARRAY('A. man','B. woman','C. scientist','D. writer'),NULL,NULL,2,'answerable'),
-(@pid,37,37,'choice',NULL,'第 32 空',JSON_ARRAY('A. either','B. left','C. neither','D. right'),NULL,NULL,2,'answerable'),
-(@pid,38,38,'choice',NULL,'第 33 空',JSON_ARRAY('A. bring','B. turn','C. slow','D. shut'),NULL,NULL,2,'answerable'),
-(@pid,39,39,'choice',NULL,'第 34 空',JSON_ARRAY('A. magazines','B. books','C. experiments','D. works'),NULL,NULL,2,'answerable'),
-(@pid,40,40,'choice',NULL,'第 35 空',JSON_ARRAY('A. problems','B. abilities','C. differences','D. features'),NULL,NULL,2,'answerable'),
+(@pid,26,26,'choice',NULL,'第 21 空',JSON_ARRAY('A. part','B. fact','C. practice','D. result'),'A',NULL,2,'answerable'),
+(@pid,27,27,'choice',NULL,'第 22 空',JSON_ARRAY('A. cooking','B. cleaning','C. jobs','D. exercises'),'C',NULL,2,'answerable'),
+(@pid,28,28,'choice',NULL,'第 23 空',JSON_ARRAY('A. housework','B. experiments','C. assignments','D. research'),'D',NULL,2,'answerable'),
+(@pid,29,29,'choice',NULL,'第 24 空',JSON_ARRAY('A. communicative','B. boring','C. happy','D. aggressive'),'A',NULL,2,'answerable'),
+(@pid,30,30,'choice',NULL,'第 25 空',JSON_ARRAY('A. published','B. selected','C. borrowed','D. bought'),'A',NULL,2,'answerable'),
+(@pid,31,31,'choice',NULL,'第 26 空',JSON_ARRAY('A. stay','B. exist','C. disappear','D. matter'),'C',NULL,2,'answerable'),
+(@pid,32,32,'choice',NULL,'第 27 空',JSON_ARRAY('A. differently','B. happily','C. silently','D. positively'),'A',NULL,2,'answerable'),
+(@pid,33,33,'choice',NULL,'第 28 空',JSON_ARRAY('A. move','B. walk','C. reply','D. behave'),'D',NULL,2,'answerable'),
+(@pid,34,34,'choice',NULL,'第 29 空',JSON_ARRAY('A. phrase','B. word','C. picture','D. passage'),'D',NULL,2,'answerable'),
+(@pid,35,35,'choice',NULL,'第 30 空',JSON_ARRAY('A. keep','B. record','C. exceed','D. reduce'),'A',NULL,2,'answerable'),
+(@pid,36,36,'choice',NULL,'第 31 空',JSON_ARRAY('A. man','B. woman','C. scientist','D. writer'),'B',NULL,2,'answerable'),
+(@pid,37,37,'choice',NULL,'第 32 空',JSON_ARRAY('A. either','B. left','C. neither','D. right'),'A',NULL,2,'answerable'),
+(@pid,38,38,'choice',NULL,'第 33 空',JSON_ARRAY('A. bring','B. turn','C. slow','D. shut'),'C',NULL,2,'answerable'),
+(@pid,39,39,'choice',NULL,'第 34 空',JSON_ARRAY('A. magazines','B. books','C. experiments','D. works'),'C',NULL,2,'answerable'),
+(@pid,40,40,'choice',NULL,'第 35 空',JSON_ARRAY('A. problems','B. abilities','C. differences','D. features'),'B',NULL,2,'answerable'),
 (@pid,41,NULL,'material',NULL,'【语法填空原文】
 
 When I was younger, I didn’t use to get any exercise. For a long time I regretted not 36 (do) much sport,
@@ -266,9 +266,9 @@ how good it can make you feel.',NULL,NULL,NULL,0,'reveal_only'),
 (@pid,50,50,'fill',NULL,'第 44 空：在空白处填入适当单词或所给词的正确形式。',NULL,NULL,NULL,2,'reveal_only'),
 (@pid,51,51,'fill',NULL,'第 45 空：在空白处填入适当单词或所给词的正确形式。',NULL,NULL,NULL,2,'reveal_only'),
 (@pid,52,52,'essay',NULL,'你是班长李华，端午将至，你班计划举办主题班会，请给 Mr. Smith 写一封电子邮件邀请他参加。内容 包括以下要点： （1）时间：6 月 3 日晚上 8 点； （2）地点：教学楼 306 课室； （3）主要活动：包粽子、朗诵诗歌、讲故事等。',NULL,NULL,NULL,15,'reveal_only');
-UPDATE paper SET has_answer=0, published=1 WHERE id=@pid;
+UPDATE paper SET has_answer=1, published=1 WHERE id=@pid;
 
--- ===== 广东 英语 2023 (52 题, published=1) · 英语专用解析·材料6·选择30·共52 =====
+-- ===== 广东 英语 2023 (52 题, published=1) · 英语专用解析·材料6·选择30·共52·答案覆盖35 =====
 SET @pid := (SELECT id FROM paper WHERE province='广东' AND subject='英语' AND year=2023 AND deleted=0 LIMIT 1);
 DELETE FROM paper_question WHERE paper_id=@pid;
 INSERT INTO paper_question (paper_id, seq, paper_no, q_type, section_title, stem, options_json, answer, analysis, score, input_mode) VALUES
@@ -297,11 +297,11 @@ This center welcomes anyone above the age of 60 who wants to improve his or her 
 regular and easy exercises. You can surely find the support you need to achieve your goals. It has a team of super
 friendly personal trainers of yoga, dancing etc. Currently they are offering programs to non-members free of
 charge, every Monday morning.',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,2,2,'choice',NULL,'At Power Station Gym, you can _____.',JSON_ARRAY('A. attend member gatherings','B. have coffee and snacks','C. use a running track for free','D. swim in a new pool'),NULL,NULL,2,'answerable'),
-(@pid,3,3,'choice',NULL,'Which of the following people who need a flexible workout schedule?',JSON_ARRAY('A. Zest-booster Leisure Center','B. Wonder Ladies’ Club','C. Josh’s Running Club','D. Papa and Mama’s Health and Fitness'),NULL,NULL,2,'answerable'),
-(@pid,4,4,'choice',NULL,'Wonder Ladies Club provides _____.',JSON_ARRAY('A. VIP fitness programs','B. health care lectures','C. swimming courses','D. running classes'),NULL,NULL,2,'answerable'),
-(@pid,5,5,'choice',NULL,'Who set up Josh’s Running Club?',JSON_ARRAY('A. A wonder lady','B. An old couple','C. A professional athlete','D. A fitness trainer'),NULL,NULL,2,'answerable'),
-(@pid,6,6,'choice',NULL,'Who are the target customers of Papa And Mama’s Health and Fitness?',JSON_ARRAY('A. Swimming athletes','B. Young mothers','C. Running lovers','D. Elderly people'),NULL,NULL,2,'answerable'),
+(@pid,2,2,'choice',NULL,'At Power Station Gym, you can _____.',JSON_ARRAY('A. attend member gatherings','B. have coffee and snacks','C. use a running track for free','D. swim in a new pool'),'D',NULL,2,'answerable'),
+(@pid,3,3,'choice',NULL,'Which of the following people who need a flexible workout schedule?',JSON_ARRAY('A. Zest-booster Leisure Center','B. Wonder Ladies’ Club','C. Josh’s Running Club','D. Papa and Mama’s Health and Fitness'),'A',NULL,2,'answerable'),
+(@pid,4,4,'choice',NULL,'Wonder Ladies Club provides _____.',JSON_ARRAY('A. VIP fitness programs','B. health care lectures','C. swimming courses','D. running classes'),'B',NULL,2,'answerable'),
+(@pid,5,5,'choice',NULL,'Who set up Josh’s Running Club?',JSON_ARRAY('A. A wonder lady','B. An old couple','C. A professional athlete','D. A fitness trainer'),'C',NULL,2,'answerable'),
+(@pid,6,6,'choice',NULL,'Who are the target customers of Papa And Mama’s Health and Fitness?',JSON_ARRAY('A. Swimming athletes','B. Young mothers','C. Running lovers','D. Elderly people'),'D',NULL,2,'answerable'),
 (@pid,7,NULL,'material',NULL,'【阅读理解 B】
 
 The first forest library in Shanghai recently opened in public. Known as Read&Joy Forest, the library was
@@ -318,11 +318,11 @@ Shanghai Library. “It offers a different reading experience to readers,” he 
 Most of the visitors to the forest library are young people and parents with kids. They are really impressed by
 the fresh air and the green. (缺失) Since most of the time they stay indoors, this special library makes it possible
 for them to get close to nature surroundings. They feel really relaxed there.',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,8,8,'choice',NULL,'The environment-friendly principle focuses on _____.',JSON_ARRAY('A. increasing green spaces','B. making the least change to nature','C. reducing disturbance to readers','D. creating a relaxing indoor environment'),NULL,NULL,2,'answerable'),
-(@pid,9,9,'choice',NULL,'What do we know about “osmanthus” in paragraph 3?',JSON_ARRAY('A. It is a plant.','B. It is a path.','C. It is a bench.','D. It is a device.'),NULL,NULL,2,'answerable'),
-(@pid,10,10,'choice',NULL,'What does Xu Qiang think of the forest library?',JSON_ARRAY('A. It appeals a lot to parents and kids.','B. It provides a new reading experience.','C. It enlarges the indoor reading space.','D. It helps reduce reader''s eyestrain.'),NULL,NULL,2,'answerable'),
-(@pid,11,11,'choice',NULL,'The forest library is special because it _____.',JSON_ARRAY('A. offers people a chance to read in nature','B. attracts a large number of readers','C. has support from the local government','D. covers a large area of forest'),NULL,NULL,2,'answerable'),
-(@pid,12,12,'choice',NULL,'Where is this passage most likely from?',JSON_ARRAY('A. A diary.','B. A handbook.','C. A newspaper.','D. A novel.'),NULL,NULL,2,'answerable'),
+(@pid,8,8,'choice',NULL,'The environment-friendly principle focuses on _____.',JSON_ARRAY('A. increasing green spaces','B. making the least change to nature','C. reducing disturbance to readers','D. creating a relaxing indoor environment'),'B',NULL,2,'answerable'),
+(@pid,9,9,'choice',NULL,'What do we know about “osmanthus” in paragraph 3?',JSON_ARRAY('A. It is a plant.','B. It is a path.','C. It is a bench.','D. It is a device.'),'A',NULL,2,'answerable'),
+(@pid,10,10,'choice',NULL,'What does Xu Qiang think of the forest library?',JSON_ARRAY('A. It appeals a lot to parents and kids.','B. It provides a new reading experience.','C. It enlarges the indoor reading space.','D. It helps reduce reader''s eyestrain.'),'B',NULL,2,'answerable'),
+(@pid,11,11,'choice',NULL,'The forest library is special because it _____.',JSON_ARRAY('A. offers people a chance to read in nature','B. attracts a large number of readers','C. has support from the local government','D. covers a large area of forest'),'A',NULL,2,'answerable'),
+(@pid,12,12,'choice',NULL,'Where is this passage most likely from?',JSON_ARRAY('A. A diary.','B. A handbook.','C. A newspaper.','D. A novel.'),'C',NULL,2,'answerable'),
 (@pid,13,NULL,'material',NULL,'【阅读理解 C】
 
 Since the first kindergarten opened in 1837, kindergarten has been a time for telling stories, building castles,
@@ -347,11 +347,11 @@ improve their abilities as creative thinkers. They learn to develop their own id
 experiment with alternatives, get input from others—and, perhaps most significantly, generate new ideas based on
 their experiences. The kindergarten approach to learning is well-matched to the core need of the current society,
 and should be extended to learners of all ages.',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,14,14,'choice',NULL,'According to paragraph 1, modern-day kindergartens spent more time _____.',JSON_ARRAY('A. encouraging children express themselves','B. engaging children in creative activities','C. teaching children school knowledge','D. telling children to share with others'),NULL,NULL,2,'answerable'),
-(@pid,15,15,'choice',NULL,'What does the underlined sentence in Paragraph 2 imply?',JSON_ARRAY('A. More high quality kindergartens are needed.','B. The kindergarten approach is more innovative.','C. Schools should adopt the kindergarten approach.','D. Schools should set an example for kindergartens.'),NULL,NULL,2,'answerable'),
-(@pid,16,16,'choice',NULL,'The kindergarten approach helps children to _____.',JSON_ARRAY('A. think creatively','B. build towers quickly','C. handle arguments properly','D. memorize words efficiently.'),NULL,NULL,2,'answerable'),
-(@pid,17,17,'choice',NULL,'The teacher shows the picture of tall buildings to _____.',JSON_ARRAY('A. help the children to develop better cooperation','B. provide materials for building block towers','C. prevent the block tower from falling down','D. inspire the children to observe and explore'),NULL,NULL,2,'answerable'),
-(@pid,18,18,'choice',NULL,'What is the purpose of this passage?',JSON_ARRAY('A. To help kindergartens to build school.','B. To promote the kindergarten approach.','C. To advise school to invest in kindergartens.','D. To start the reform of traditional kindergartens.'),NULL,NULL,2,'answerable'),
+(@pid,14,14,'choice',NULL,'According to paragraph 1, modern-day kindergartens spent more time _____.',JSON_ARRAY('A. encouraging children express themselves','B. engaging children in creative activities','C. teaching children school knowledge','D. telling children to share with others'),'C',NULL,2,'answerable'),
+(@pid,15,15,'choice',NULL,'What does the underlined sentence in Paragraph 2 imply?',JSON_ARRAY('A. More high quality kindergartens are needed.','B. The kindergarten approach is more innovative.','C. Schools should adopt the kindergarten approach.','D. Schools should set an example for kindergartens.'),'C',NULL,2,'answerable'),
+(@pid,16,16,'choice',NULL,'The kindergarten approach helps children to _____.',JSON_ARRAY('A. think creatively','B. build towers quickly','C. handle arguments properly','D. memorize words efficiently.'),'A',NULL,2,'answerable'),
+(@pid,17,17,'choice',NULL,'The teacher shows the picture of tall buildings to _____.',JSON_ARRAY('A. help the children to develop better cooperation','B. provide materials for building block towers','C. prevent the block tower from falling down','D. inspire the children to observe and explore'),'D',NULL,2,'answerable'),
+(@pid,18,18,'choice',NULL,'What is the purpose of this passage?',JSON_ARRAY('A. To help kindergartens to build school.','B. To promote the kindergarten approach.','C. To advise school to invest in kindergartens.','D. To start the reform of traditional kindergartens.'),'B',NULL,2,'answerable'),
 (@pid,19,NULL,'material',NULL,'【阅读七选五】
 
 When you type the phrase “information overload” into a search engine, you will immediately get an
@@ -371,11 +371,11 @@ B. Information overload is everywhere in our life.
 C. Reading such information is a pure waste of time.
 D. Some of them also think that it is bad for their health.
 E. At work, information overload is causing some problems.',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,20,20,'fill',NULL,'第 16 题：从上方选项中选出填入空白处的最佳选项。',NULL,NULL,NULL,2,'reveal_only'),
-(@pid,21,21,'fill',NULL,'第 17 题：从上方选项中选出填入空白处的最佳选项。',NULL,NULL,NULL,2,'reveal_only'),
-(@pid,22,22,'fill',NULL,'第 18 题：从上方选项中选出填入空白处的最佳选项。',NULL,NULL,NULL,2,'reveal_only'),
-(@pid,23,23,'fill',NULL,'第 19 题：从上方选项中选出填入空白处的最佳选项。',NULL,NULL,NULL,2,'reveal_only'),
-(@pid,24,24,'fill',NULL,'第 20 题：从上方选项中选出填入空白处的最佳选项。',NULL,NULL,NULL,2,'reveal_only'),
+(@pid,20,20,'fill',NULL,'第 16 题：从上方选项中选出填入空白处的最佳选项。',NULL,'A',NULL,2,'reveal_only'),
+(@pid,21,21,'fill',NULL,'第 17 题：从上方选项中选出填入空白处的最佳选项。',NULL,'C',NULL,2,'reveal_only'),
+(@pid,22,22,'fill',NULL,'第 18 题：从上方选项中选出填入空白处的最佳选项。',NULL,'B',NULL,2,'reveal_only'),
+(@pid,23,23,'fill',NULL,'第 19 题：从上方选项中选出填入空白处的最佳选项。',NULL,'E',NULL,2,'reveal_only'),
+(@pid,24,24,'fill',NULL,'第 20 题：从上方选项中选出填入空白处的最佳选项。',NULL,'D',NULL,2,'reveal_only'),
 (@pid,25,NULL,'material',NULL,'【完形填空原文】
 
 There’s a lot to deal with when you go off to university. The school work is just the 21 . There are new
@@ -392,21 +392,21 @@ According to the researchers, that was because exploring the 32 environment stim
 learning. So leaving home to 33 in a college makes perfect sense. What’s more, 34 seem to gain most from
 being in strange surroundings. But we adults may also be able to 35 some of the benefits, according to the
 research.',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,26,26,'choice',NULL,'第 21 空',JSON_ARRAY('A. start','B. aim','C. thing','D. case'),NULL,NULL,2,'answerable'),
-(@pid,27,27,'choice',NULL,'第 22 空',JSON_ARRAY('A. persuade','B. meet','C. leave','D. defeat'),NULL,NULL,2,'answerable'),
-(@pid,28,28,'choice',NULL,'第 23 空',JSON_ARRAY('A. design','B. build','C. honor','D. explore'),NULL,NULL,2,'answerable'),
-(@pid,29,29,'choice',NULL,'第 24 空',JSON_ARRAY('A. walked','B. forced','C. drove','D. flew'),NULL,NULL,2,'answerable'),
-(@pid,30,30,'choice',NULL,'第 25 空',JSON_ARRAY('A. must','B. struggle','C. surprise','D. success'),NULL,NULL,2,'answerable'),
-(@pid,31,31,'choice',NULL,'第 26 空',JSON_ARRAY('A. directions','B. hope','C. inspirations','D. trust'),NULL,NULL,2,'answerable'),
-(@pid,32,32,'choice',NULL,'第 27 空',JSON_ARRAY('A. room','B. friends','C. way','D. clubs'),NULL,NULL,2,'answerable'),
-(@pid,33,33,'choice',NULL,'第 28 空',JSON_ARRAY('A. hot','B. good','C. latest','D. current'),NULL,NULL,2,'answerable'),
-(@pid,34,34,'choice',NULL,'第 29 空',JSON_ARRAY('A. supermarket','B. college','C. forest','D. building'),NULL,NULL,2,'answerable'),
-(@pid,35,35,'choice',NULL,'第 30 空',JSON_ARRAY('A. different','B. quiet','C. great','D. thick'),NULL,NULL,2,'answerable'),
-(@pid,36,36,'choice',NULL,'第 31 空',JSON_ARRAY('A. learned','B. worked','C. felt','D. performed'),NULL,NULL,2,'answerable'),
-(@pid,37,37,'choice',NULL,'第 32 空',JSON_ARRAY('A. beautiful','B. unprotected','C. unfamiliar','D. noisy'),NULL,NULL,2,'answerable'),
-(@pid,38,38,'choice',NULL,'第 33 空',JSON_ARRAY('A. train','B. study','C. date','D. wander'),NULL,NULL,2,'answerable'),
-(@pid,39,39,'choice',NULL,'第 34 空',JSON_ARRAY('A. teenagers','B. researchers','C. parents','D. volunteers'),NULL,NULL,2,'answerable'),
-(@pid,40,40,'choice',NULL,'第 35 空',JSON_ARRAY('A. miss','B. notice','C. provide','D. get'),NULL,NULL,2,'answerable'),
+(@pid,26,26,'choice',NULL,'第 21 空',JSON_ARRAY('A. start','B. aim','C. thing','D. case'),'A',NULL,2,'answerable'),
+(@pid,27,27,'choice',NULL,'第 22 空',JSON_ARRAY('A. persuade','B. meet','C. leave','D. defeat'),'B',NULL,2,'answerable'),
+(@pid,28,28,'choice',NULL,'第 23 空',JSON_ARRAY('A. design','B. build','C. honor','D. explore'),'D',NULL,2,'answerable'),
+(@pid,29,29,'choice',NULL,'第 24 空',JSON_ARRAY('A. walked','B. forced','C. drove','D. flew'),'C',NULL,2,'answerable'),
+(@pid,30,30,'choice',NULL,'第 25 空',JSON_ARRAY('A. must','B. struggle','C. surprise','D. success'),'B',NULL,2,'answerable'),
+(@pid,31,31,'choice',NULL,'第 26 空',JSON_ARRAY('A. directions','B. hope','C. inspirations','D. trust'),'A',NULL,2,'answerable'),
+(@pid,32,32,'choice',NULL,'第 27 空',JSON_ARRAY('A. room','B. friends','C. way','D. clubs'),'C',NULL,2,'answerable'),
+(@pid,33,33,'choice',NULL,'第 28 空',JSON_ARRAY('A. hot','B. good','C. latest','D. current'),'B',NULL,2,'answerable'),
+(@pid,34,34,'choice',NULL,'第 29 空',JSON_ARRAY('A. supermarket','B. college','C. forest','D. building'),'C',NULL,2,'answerable'),
+(@pid,35,35,'choice',NULL,'第 30 空',JSON_ARRAY('A. different','B. quiet','C. great','D. thick'),'A',NULL,2,'answerable'),
+(@pid,36,36,'choice',NULL,'第 31 空',JSON_ARRAY('A. learned','B. worked','C. felt','D. performed'),'D',NULL,2,'answerable'),
+(@pid,37,37,'choice',NULL,'第 32 空',JSON_ARRAY('A. beautiful','B. unprotected','C. unfamiliar','D. noisy'),'C',NULL,2,'answerable'),
+(@pid,38,38,'choice',NULL,'第 33 空',JSON_ARRAY('A. train','B. study','C. date','D. wander'),'B',NULL,2,'answerable'),
+(@pid,39,39,'choice',NULL,'第 34 空',JSON_ARRAY('A. teenagers','B. researchers','C. parents','D. volunteers'),'A',NULL,2,'answerable'),
+(@pid,40,40,'choice',NULL,'第 35 空',JSON_ARRAY('A. miss','B. notice','C. provide','D. get'),'D',NULL,2,'answerable'),
 (@pid,41,NULL,'material',NULL,'【语法填空原文】
 
 It’s been several months since I arrived here and things 36 (change) so much in such a short period of
@@ -432,9 +432,9 @@ and a whole lot of good food flowed by.',NULL,NULL,NULL,0,'reveal_only'),
 (@pid,50,50,'fill',NULL,'第 44 空：在空白处填入适当单词或所给词的正确形式。',NULL,NULL,NULL,2,'reveal_only'),
 (@pid,51,51,'fill',NULL,'第 45 空：在空白处填入适当单词或所给词的正确形式。',NULL,NULL,NULL,2,'reveal_only'),
 (@pid,52,52,'essay',NULL,'假如你是李华，Mr. Smith 要帮他女儿找一个中文家教，你要发邮件应聘。 要求：自我介绍；自荐理由；希望得到这份工作。 【参考词汇】家教：tutor 【写作要求】不少于 100 词',NULL,NULL,NULL,15,'reveal_only');
-UPDATE paper SET has_answer=0, published=1 WHERE id=@pid;
+UPDATE paper SET has_answer=1, published=1 WHERE id=@pid;
 
--- ===== 广东 英语 2024 (52 题, published=1) · 英语专用解析·材料6·选择30·共52 =====
+-- ===== 广东 英语 2024 (52 题, published=1) · 英语专用解析·材料6·选择30·共52·答案覆盖35 =====
 SET @pid := (SELECT id FROM paper WHERE province='广东' AND subject='英语' AND year=2024 AND deleted=0 LIMIT 1);
 DELETE FROM paper_question WHERE paper_id=@pid;
 INSERT INTO paper_question (paper_id, seq, paper_no, q_type, section_title, stem, options_json, answer, analysis, score, input_mode) VALUES
@@ -474,11 +474,11 @@ interesting workshops. And, of course, there’s loads of play equipment to keep
 camping experiences and parent-child activities.
 Admission: $30(adults), $20(kids)
 Tel: 5568402',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,2,2,'choice',NULL,'At Organic EcoPark, visitors can _____.',JSON_ARRAY('A. build a castle','B. ride horses','C. plant vegetables','D. make drinks'),NULL,NULL,2,'answerable'),
-(@pid,3,3,'choice',NULL,'Which of the following suits people who have a dog?',JSON_ARRAY('A. Go Green Farm','B. Sunrise Village','C. Butterfly Valley','D. Holiday Farm'),NULL,NULL,2,'answerable'),
-(@pid,4,4,'choice',NULL,'What makes the trip to Sunrise Village special?',JSON_ARRAY('A. A guided tour','B. Making butterfly handicrafts','C. A camping experience','D. Learning about the rice production'),NULL,NULL,2,'answerable'),
-(@pid,5,5,'choice',NULL,'What do visitors need to do before going to Butterfly Valley?',JSON_ARRAY('A. Study butterflies','B. Take kids together','C. Book in advance','D. Sign up for classes'),NULL,NULL,2,'answerable'),
-(@pid,6,6,'choice',NULL,'How much does it cost a parent with two kids to visit Holiday Farm?',JSON_ARRAY('A. $50','B. $70','C. $80','D. $100'),NULL,NULL,2,'answerable'),
+(@pid,2,2,'choice',NULL,'At Organic EcoPark, visitors can _____.',JSON_ARRAY('A. build a castle','B. ride horses','C. plant vegetables','D. make drinks'),'B',NULL,2,'answerable'),
+(@pid,3,3,'choice',NULL,'Which of the following suits people who have a dog?',JSON_ARRAY('A. Go Green Farm','B. Sunrise Village','C. Butterfly Valley','D. Holiday Farm'),'A',NULL,2,'answerable'),
+(@pid,4,4,'choice',NULL,'What makes the trip to Sunrise Village special?',JSON_ARRAY('A. A guided tour','B. Making butterfly handicrafts','C. A camping experience','D. Learning about the rice production'),'D',NULL,2,'answerable'),
+(@pid,5,5,'choice',NULL,'What do visitors need to do before going to Butterfly Valley?',JSON_ARRAY('A. Study butterflies','B. Take kids together','C. Book in advance','D. Sign up for classes'),'C',NULL,2,'answerable'),
+(@pid,6,6,'choice',NULL,'How much does it cost a parent with two kids to visit Holiday Farm?',JSON_ARRAY('A. $50','B. $70','C. $80','D. $100'),'B',NULL,2,'answerable'),
 (@pid,7,NULL,'material',NULL,'【阅读理解 B】
 
 Philip Hayden, a primary school teacher, found a common weakness in some classrooms. They didn’t have
@@ -500,11 +500,11 @@ beautiful. When I look up, it feels like I am sitting under a tree,” David sai
 Hayden has launched a nonprofit program called Green Classrooms. The program has donated and installed
 “tree ceilings” in 10 school districts so far. “If you still don’t believe in the science behind the art, you can try it
 yourself by going outside and looking up at the trees,” said Hayden.',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,8,8,'choice',NULL,'How does the lack of windows affect students?',JSON_ARRAY('A. It relieves their anxiety.','B. It boosts their creativity.','C. It shortens their attention span.','D. It regulates their behavior.'),NULL,NULL,2,'answerable'),
-(@pid,9,9,'choice',NULL,'Hayden brought nature into classrooms by _____.',JSON_ARRAY('A. planting trees in classroom','B. installing curtains on the walls','C. turning ceiling into windows','D. printing the tree photos onto the ceiling'),NULL,NULL,2,'answerable'),
-(@pid,10,10,'choice',NULL,'The change in the classrooms led to the students’ _____.',JSON_ARRAY('A. better sense of beauty','B. increased attendance','C. stronger passion for nature','D. shared interest in science'),NULL,NULL,2,'answerable'),
-(@pid,11,11,'choice',NULL,'What is David’s attitude toward to the addition?',JSON_ARRAY('A. Favorable','B. Shocked','C. Cautious','D. Doubtful'),NULL,NULL,2,'answerable'),
-(@pid,12,12,'choice',NULL,'What is the main idea of the passage?',JSON_ARRAY('A. Teachers used the ceiling to teach students.','B. Teachers decorated ceilings in classrooms.','C. Tree ceilings had advantages over curtains.','D. Tree ceilings helped students perform better.'),NULL,NULL,2,'answerable'),
+(@pid,8,8,'choice',NULL,'How does the lack of windows affect students?',JSON_ARRAY('A. It relieves their anxiety.','B. It boosts their creativity.','C. It shortens their attention span.','D. It regulates their behavior.'),'C',NULL,2,'answerable'),
+(@pid,9,9,'choice',NULL,'Hayden brought nature into classrooms by _____.',JSON_ARRAY('A. planting trees in classroom','B. installing curtains on the walls','C. turning ceiling into windows','D. printing the tree photos onto the ceiling'),'D',NULL,2,'answerable'),
+(@pid,10,10,'choice',NULL,'The change in the classrooms led to the students’ _____.',JSON_ARRAY('A. better sense of beauty','B. increased attendance','C. stronger passion for nature','D. shared interest in science'),'B',NULL,2,'answerable'),
+(@pid,11,11,'choice',NULL,'What is David’s attitude toward to the addition?',JSON_ARRAY('A. Favorable','B. Shocked','C. Cautious','D. Doubtful'),'A',NULL,2,'answerable'),
+(@pid,12,12,'choice',NULL,'What is the main idea of the passage?',JSON_ARRAY('A. Teachers used the ceiling to teach students.','B. Teachers decorated ceilings in classrooms.','C. Tree ceilings had advantages over curtains.','D. Tree ceilings helped students perform better.'),'D',NULL,2,'answerable'),
 (@pid,13,NULL,'material',NULL,'【阅读理解 C】
 
 Birds gained the ability to fly about 150 million years ago, which was a major event animal history. For a
@@ -525,11 +525,11 @@ the team found a significant increase in the size of the cerebellum. They also n
 complexity.
 These findings have confirmed a connection between flying and changes to the cerebellum. Next, the team
 hopes to identify the exact areas within the cerebellum that helped the brain prepare for flight.',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,14,14,'choice',NULL,'According to Paragraph 1, a major event in animal history was that _____.',JSON_ARRAY('A. birds’ movement was restricted','B. birds developed the ability to fly','C. birds’ cerebellum became smaller','D. birds strengthened their muscles'),NULL,NULL,2,'answerable'),
-(@pid,15,15,'choice',NULL,'What is the second paragraph mainly about?',JSON_ARRAY('A. The key process of the research.','B. The application of the research.','C. The background of the research.','D. The basic principle of the research.'),NULL,NULL,2,'answerable'),
-(@pid,16,16,'choice',NULL,'The researchers studied bird-like dinosaurs _____.',JSON_ARRAY('A. to assess their flight distance','B. to figure out how they developed wings','C. to control their brain conditions','D. to find what their cerebellums were like'),NULL,NULL,2,'answerable'),
-(@pid,17,17,'choice',NULL,'What does the underlined word “deteriorated” in Paragraph 4 probably mean?',JSON_ARRAY('A. developed.','B. improved.','C. were damaged.','D. were enlarged.'),NULL,NULL,2,'answerable'),
-(@pid,18,18,'choice',NULL,'In which section of a magazine does this passage most likely appear?',JSON_ARRAY('A. Sports','B. Entertainment','C. Science','D. Health'),NULL,NULL,2,'answerable'),
+(@pid,14,14,'choice',NULL,'According to Paragraph 1, a major event in animal history was that _____.',JSON_ARRAY('A. birds’ movement was restricted','B. birds developed the ability to fly','C. birds’ cerebellum became smaller','D. birds strengthened their muscles'),'C',NULL,2,'answerable'),
+(@pid,15,15,'choice',NULL,'What is the second paragraph mainly about?',JSON_ARRAY('A. The key process of the research.','B. The application of the research.','C. The background of the research.','D. The basic principle of the research.'),'A',NULL,2,'answerable'),
+(@pid,16,16,'choice',NULL,'The researchers studied bird-like dinosaurs _____.',JSON_ARRAY('A. to assess their flight distance','B. to figure out how they developed wings','C. to control their brain conditions','D. to find what their cerebellums were like'),'D',NULL,2,'answerable'),
+(@pid,17,17,'choice',NULL,'What does the underlined word “deteriorated” in Paragraph 4 probably mean?',JSON_ARRAY('A. developed.','B. improved.','C. were damaged.','D. were enlarged.'),'D',NULL,2,'answerable'),
+(@pid,18,18,'choice',NULL,'In which section of a magazine does this passage most likely appear?',JSON_ARRAY('A. Sports','B. Entertainment','C. Science','D. Health'),'B',NULL,2,'answerable'),
 (@pid,19,NULL,'material',NULL,'【阅读七选五】
 
 It is well established that eating vegetables is good for us, why, then, do some people like them while others
@@ -553,11 +553,11 @@ B.Experts think the research result could also apply to children.
 C.The people in the videos had different expressions while eating.
 D.A new study has found that other people’s likes and dislikes could play a part.
 E.This could help experts find ways to encourage young people to eat more healthy foods.',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,20,20,'fill',NULL,'第 16 题：从上方选项中选出填入空白处的最佳选项。',NULL,NULL,NULL,2,'reveal_only'),
-(@pid,21,21,'fill',NULL,'第 17 题：从上方选项中选出填入空白处的最佳选项。',NULL,NULL,NULL,2,'reveal_only'),
-(@pid,22,22,'fill',NULL,'第 18 题：从上方选项中选出填入空白处的最佳选项。',NULL,NULL,NULL,2,'reveal_only'),
-(@pid,23,23,'fill',NULL,'第 19 题：从上方选项中选出填入空白处的最佳选项。',NULL,NULL,NULL,2,'reveal_only'),
-(@pid,24,24,'fill',NULL,'第 20 题：从上方选项中选出填入空白处的最佳选项。',NULL,NULL,NULL,2,'reveal_only'),
+(@pid,20,20,'fill',NULL,'第 16 题：从上方选项中选出填入空白处的最佳选项。',NULL,'D',NULL,2,'reveal_only'),
+(@pid,21,21,'fill',NULL,'第 17 题：从上方选项中选出填入空白处的最佳选项。',NULL,'C',NULL,2,'reveal_only'),
+(@pid,22,22,'fill',NULL,'第 18 题：从上方选项中选出填入空白处的最佳选项。',NULL,'A',NULL,2,'reveal_only'),
+(@pid,23,23,'fill',NULL,'第 19 题：从上方选项中选出填入空白处的最佳选项。',NULL,'B',NULL,2,'reveal_only'),
+(@pid,24,24,'fill',NULL,'第 20 题：从上方选项中选出填入空白处的最佳选项。',NULL,'E',NULL,2,'reveal_only'),
 (@pid,25,NULL,'material',NULL,'【完形填空原文】
 
 Lisa, a lady aged 79, has realized her lifelong dream of traveling around the world. She has traveled to 193
@@ -574,21 +574,21 @@ __31 she has learned that people are more 32 than we might think. “They are ju
 better jobs and better opportunities, and most of them are very kind and helpful.” said Lisa.
 When asked what her 34 is for people who want to travel, she said, “Don’t be afraid. Just 35 .
 Don’t wait, because if you wait, it will never happen.”',NULL,NULL,NULL,0,'reveal_only'),
-(@pid,26,26,'choice',NULL,'第 21 空',JSON_ARRAY('A. guilty','B. confident','C. ashamed','D. proud'),NULL,NULL,2,'answerable'),
-(@pid,27,27,'choice',NULL,'第 22 空',JSON_ARRAY('A. acting','B. traveling','C. filming','D. drawing'),NULL,NULL,2,'answerable'),
-(@pid,28,28,'choice',NULL,'第 23 空',JSON_ARRAY('A. scenery','B. customs','C. history','D. tales'),NULL,NULL,2,'answerable'),
-(@pid,29,29,'choice',NULL,'第 24 空',JSON_ARRAY('A. allowed','B. forced','C. inspired','D. required'),NULL,NULL,2,'answerable'),
-(@pid,30,30,'choice',NULL,'第 25 空',JSON_ARRAY('A. city','B. world','C. cultural','D. ecological'),NULL,NULL,2,'answerable'),
-(@pid,31,31,'choice',NULL,'第 26 空',JSON_ARRAY('A. aimlessly','B. conveniently','C. quickly','D. reasonably'),NULL,NULL,2,'answerable'),
-(@pid,32,32,'choice',NULL,'第 27 空',JSON_ARRAY('A. career','B. concept','C. degree','D. discovery'),NULL,NULL,2,'answerable'),
-(@pid,33,33,'choice',NULL,'第 28 空',JSON_ARRAY('A. remote','B. appealing','C. dangerous','D. rewarding'),NULL,NULL,2,'answerable'),
-(@pid,34,34,'choice',NULL,'第 29 空',JSON_ARRAY('A. make','B. stop','C. leave','D. miss'),NULL,NULL,2,'answerable'),
-(@pid,35,35,'choice',NULL,'第 30 空',JSON_ARRAY('A. taught','B. challenged','C. followed','D. met'),NULL,NULL,2,'answerable'),
-(@pid,36,36,'choice',NULL,'第 31 空',JSON_ARRAY('A. comments','B. negotiations','C. experiences','D. directions'),NULL,NULL,2,'answerable'),
-(@pid,37,37,'choice',NULL,'第 32 空',JSON_ARRAY('A. independent','B. helpful','C. innocent','D. similar'),NULL,NULL,2,'answerable'),
-(@pid,38,38,'choice',NULL,'第 33 空',JSON_ARRAY('A. depend on','B. learn from','C. long for','D. begin with'),NULL,NULL,2,'answerable'),
-(@pid,39,39,'choice',NULL,'第 34 空',JSON_ARRAY('A. waning','B. reaction','C. request','D. advice'),NULL,NULL,2,'answerable'),
-(@pid,40,40,'choice',NULL,'第 35 空',JSON_ARRAY('A. work','B. go','C. observe','D. delay'),NULL,NULL,2,'answerable'),
+(@pid,26,26,'choice',NULL,'第 21 空',JSON_ARRAY('A. guilty','B. confident','C. ashamed','D. proud'),'A',NULL,2,'answerable'),
+(@pid,27,27,'choice',NULL,'第 22 空',JSON_ARRAY('A. acting','B. traveling','C. filming','D. drawing'),'B',NULL,2,'answerable'),
+(@pid,28,28,'choice',NULL,'第 23 空',JSON_ARRAY('A. scenery','B. customs','C. history','D. tales'),'C',NULL,2,'answerable'),
+(@pid,29,29,'choice',NULL,'第 24 空',JSON_ARRAY('A. allowed','B. forced','C. inspired','D. required'),'D',NULL,2,'answerable'),
+(@pid,30,30,'choice',NULL,'第 25 空',JSON_ARRAY('A. city','B. world','C. cultural','D. ecological'),'D',NULL,2,'answerable'),
+(@pid,31,31,'choice',NULL,'第 26 空',JSON_ARRAY('A. aimlessly','B. conveniently','C. quickly','D. reasonably'),'D',NULL,2,'answerable'),
+(@pid,32,32,'choice',NULL,'第 27 空',JSON_ARRAY('A. career','B. concept','C. degree','D. discovery'),'A',NULL,2,'answerable'),
+(@pid,33,33,'choice',NULL,'第 28 空',JSON_ARRAY('A. remote','B. appealing','C. dangerous','D. rewarding'),'C',NULL,2,'answerable'),
+(@pid,34,34,'choice',NULL,'第 29 空',JSON_ARRAY('A. make','B. stop','C. leave','D. miss'),'D',NULL,2,'answerable'),
+(@pid,35,35,'choice',NULL,'第 30 空',JSON_ARRAY('A. taught','B. challenged','C. followed','D. met'),'B',NULL,2,'answerable'),
+(@pid,36,36,'choice',NULL,'第 31 空',JSON_ARRAY('A. comments','B. negotiations','C. experiences','D. directions'),'B',NULL,2,'answerable'),
+(@pid,37,37,'choice',NULL,'第 32 空',JSON_ARRAY('A. independent','B. helpful','C. innocent','D. similar'),'A',NULL,2,'answerable'),
+(@pid,38,38,'choice',NULL,'第 33 空',JSON_ARRAY('A. depend on','B. learn from','C. long for','D. begin with'),'C',NULL,2,'answerable'),
+(@pid,39,39,'choice',NULL,'第 34 空',JSON_ARRAY('A. waning','B. reaction','C. request','D. advice'),'D',NULL,2,'answerable'),
+(@pid,40,40,'choice',NULL,'第 35 空',JSON_ARRAY('A. work','B. go','C. observe','D. delay'),'A',NULL,2,'answerable'),
 (@pid,41,NULL,'material',NULL,'【语法填空原文】
 
 On his tenth birthday, Greenburg woke to the news of a serious earthquake in the city where he was born.
@@ -615,7 +615,7 @@ those people I’m helping and I would keep pushing on.”',NULL,NULL,NULL,0,'re
 (@pid,50,50,'fill',NULL,'第 44 空：在空白处填入适当单词或所给词的正确形式。',NULL,NULL,NULL,2,'reveal_only'),
 (@pid,51,51,'fill',NULL,'第 45 空：在空白处填入适当单词或所给词的正确形式。',NULL,NULL,NULL,2,'reveal_only'),
 (@pid,52,52,'essay',NULL,'你是李华，你校英语报在为外国交换生开展名为“我眼中的中国”征文比赛，请你给你校交换生 Mark 写一封电子邮件，邀请他参赛，内容如下: （1）活动介绍； （2）征文要求； （3）邀请参赛。 【参考词汇】征文比赛：writing contest 【写作要求】正文约 100 个英文单词，文中不可出现你自己的真实姓名，学校等信息。 【评分标准】信息完整，语言规范，语篇连贯。',NULL,NULL,NULL,15,'reveal_only');
-UPDATE paper SET has_answer=0, published=1 WHERE id=@pid;
+UPDATE paper SET has_answer=1, published=1 WHERE id=@pid;
 
 -- ===== 广东 英语 2025 (0 题, published=0) · 英语卷残缺或解析失败（已清空） =====
 SET @pid := (SELECT id FROM paper WHERE province='广东' AND subject='英语' AND year=2025 AND deleted=0 LIMIT 1);
@@ -1101,30 +1101,30 @@ INSERT INTO paper_question (paper_id, seq, paper_no, q_type, section_title, stem
 (@pid,41,NULL,'essay','六、材料分析题（本大题共 15 分）','（2）如何推动高质量发展',NULL,NULL,NULL,15,'reveal_only');
 UPDATE paper SET has_answer=0, published=1 WHERE id=@pid;
 
--- ===== 广东 政治理论 2024 (41 题, published=1) · 中文卷解析·选择30·材料3·主观8·暂缺0·共41 =====
+-- ===== 广东 政治理论 2024 (41 题, published=1) · 中文卷解析·选择30·材料3·主观8·暂缺0·共41·答案覆盖20 =====
 SET @pid := (SELECT id FROM paper WHERE province='广东' AND subject='政治理论' AND year=2024 AND deleted=0 LIMIT 1);
 DELETE FROM paper_question WHERE paper_id=@pid;
 INSERT INTO paper_question (paper_id, seq, paper_no, q_type, section_title, stem, options_json, answer, analysis, score, input_mode) VALUES
-(@pid,1,1,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','2023 年 2 月 13 日至 14 日在中国北京召开的世界数字教育大会的主题是（ ）。',JSON_ARRAY('A. 数字变革与中国未来','B. 数字变革与教育未来','C. 数字经济与世界未来','D. 数字教育与产业发展'),NULL,NULL,1,'answerable'),
-(@pid,2,2,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','第 19 届亚运会的举办地点是（ ）。',JSON_ARRAY('A. 上海','B. 成都','C. 杭州','D. 广州'),NULL,NULL,1,'answerable'),
-(@pid,3,3,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','2023 年 12 月 15 日，港珠澳大桥旅游正式向公众开放，举行试运营开通仪式的地点是（ ）。',JSON_ARRAY('A. 珠海','B. 深圳','C. 香港','D. 澳门'),NULL,NULL,1,'answerable'),
-(@pid,4,4,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','中国高铁首次全系统、全要素、全产业链在海外落地的是（ ）。',JSON_ARRAY('A. 新马高铁','B. 雅万高铁','C. 中老高铁','D. 中缅高铁'),NULL,NULL,1,'answerable'),
-(@pid,5,5,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','中国革命进入新民主主义革命的标志是（ ）。',JSON_ARRAY('A. 辛亥革命','B. 鸦片战争','C. 五四运动','D. 护国运动'),NULL,NULL,1,'answerable'),
-(@pid,6,6,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','1954 年 9 月，第一届全国人民代表大会制定颁布施行的法律是（ ）。',JSON_ARRAY('A. 《中华人民共和国民法典》','B. 《中华人民共和国宪法》','C. 《中华人民共和国合同法》','D. 《中华人民共和国行政法》'),NULL,NULL,1,'answerable'),
-(@pid,7,7,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','标志着党探索中国社会主义建设道路的良好开端的著作是（ ）。',JSON_ARRAY('A. 《论十大关系》','B. 《关于正确处理人民内部矛盾的问题》','C. 《反对本本主义》','D. 《人的正确思想是从哪里来的》'),NULL,NULL,1,'answerable'),
-(@pid,8,8,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','开启改革开放和社会主义现代化建设新时期的重要会议是（ ）。',JSON_ARRAY('A. 党的八大','B. 党的十一大','C. 党的十一届三中全会','D. 党的十二届三中全会'),NULL,NULL,1,'answerable'),
-(@pid,9,9,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','党的十八大以来，中国特色社会主义进入（ ）。',JSON_ARRAY('A. 新世纪','B. 新阶段','C. 新时期','D. 新时代'),NULL,NULL,1,'answerable'),
-(@pid,10,10,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','党执政兴国的第一要务是（ ）。',JSON_ARRAY('A. 发展','B. 革命','C. 改革','D. 开放'),NULL,NULL,1,'answerable'),
-(@pid,11,11,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','中国特色社会主义最本质的特征是（ ）。 B.人民代表大会制度',JSON_ARRAY('A. 中国共产党领导','B. 人民代表大会制度','C. 社会主义市场经济','D. 以人民为中心'),NULL,NULL,1,'answerable'),
-(@pid,12,12,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','我们说做好一切工作的价值取向和根本标准是（ ）。',JSON_ARRAY('A. 推动经济发展','B. 促进文化繁荣','C. 让群众满意','D. 改善生态环境'),NULL,NULL,1,'answerable'),
-(@pid,13,13,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','新时代坚持和发展中国特色社会主义的根本动力是（ ）。',JSON_ARRAY('A. 实现科技自立自强','B. 全面深化改革开放','C. 全面从严治党','D. 全面建成社会主义现代化国家'),NULL,NULL,1,'answerable'),
-(@pid,14,14,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','全面建设社会主义现代化国家的首要任务是（ ）。',JSON_ARRAY('A. 贯彻新发展理念','B. 推动高质量发展','C. 推动高水平对外开放','D. 推进中国式现代化'),NULL,NULL,1,'answerable'),
-(@pid,15,15,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','全面依法治国的总抓手是（ ）。',JSON_ARRAY('A. 完善中国特色社会主义法律规范体系','B. 建设中国特色社会主义法治体系','C. 完善中国特色社会主义法治监督体系','D. 建设中国特色社会主义法治理论'),NULL,NULL,1,'answerable'),
-(@pid,16,16,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','社会主义生产的根本目的是（ ）。',JSON_ARRAY('A. 推进生产力快速发展','B. 赢得与资本主义比较优势','C. 促进科技进步','D. 增进民生福祉'),NULL,NULL,1,'answerable'),
-(@pid,17,17,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','在国家安全中，处于首要位置的是（ ）。',JSON_ARRAY('A. 政治安全','B. 经济安全','C. 军事安全','D. 社会安全'),NULL,NULL,1,'answerable'),
-(@pid,18,18,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','反映军队根本职能和军队建设根本指向是（ ）。',JSON_ARRAY('A. 听党指挥','B. 能打胜仗','C. 作风优良','D. 纪律严明'),NULL,NULL,1,'answerable'),
-(@pid,19,19,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','在党的建设中，基础性建设是（ ）。',JSON_ARRAY('A. 政治建设','B. 思想建设','C. 组织建设','D. 作风建设'),NULL,NULL,1,'answerable'),
-(@pid,20,20,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','我国对外工作的出发点和落脚点是（ ）。',JSON_ARRAY('A. 维护国家主权、安全、发展利益','B. 人类命运共同体','C. 坚持走和平发展道路','D. 增进人民福祉'),NULL,NULL,1,'answerable'),
+(@pid,1,1,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','2023 年 2 月 13 日至 14 日在中国北京召开的世界数字教育大会的主题是（ ）。',JSON_ARRAY('A. 数字变革与中国未来','B. 数字变革与教育未来','C. 数字经济与世界未来','D. 数字教育与产业发展'),'B',NULL,1,'answerable'),
+(@pid,2,2,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','第 19 届亚运会的举办地点是（ ）。',JSON_ARRAY('A. 上海','B. 成都','C. 杭州','D. 广州'),'C',NULL,1,'answerable'),
+(@pid,3,3,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','2023 年 12 月 15 日，港珠澳大桥旅游正式向公众开放，举行试运营开通仪式的地点是（ ）。',JSON_ARRAY('A. 珠海','B. 深圳','C. 香港','D. 澳门'),'A',NULL,1,'answerable'),
+(@pid,4,4,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','中国高铁首次全系统、全要素、全产业链在海外落地的是（ ）。',JSON_ARRAY('A. 新马高铁','B. 雅万高铁','C. 中老高铁','D. 中缅高铁'),'B',NULL,1,'answerable'),
+(@pid,5,5,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','中国革命进入新民主主义革命的标志是（ ）。',JSON_ARRAY('A. 辛亥革命','B. 鸦片战争','C. 五四运动','D. 护国运动'),'C',NULL,1,'answerable'),
+(@pid,6,6,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','1954 年 9 月，第一届全国人民代表大会制定颁布施行的法律是（ ）。',JSON_ARRAY('A. 《中华人民共和国民法典》','B. 《中华人民共和国宪法》','C. 《中华人民共和国合同法》','D. 《中华人民共和国行政法》'),'B',NULL,1,'answerable'),
+(@pid,7,7,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','标志着党探索中国社会主义建设道路的良好开端的著作是（ ）。',JSON_ARRAY('A. 《论十大关系》','B. 《关于正确处理人民内部矛盾的问题》','C. 《反对本本主义》','D. 《人的正确思想是从哪里来的》'),'A',NULL,1,'answerable'),
+(@pid,8,8,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','开启改革开放和社会主义现代化建设新时期的重要会议是（ ）。',JSON_ARRAY('A. 党的八大','B. 党的十一大','C. 党的十一届三中全会','D. 党的十二届三中全会'),'C',NULL,1,'answerable'),
+(@pid,9,9,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','党的十八大以来，中国特色社会主义进入（ ）。',JSON_ARRAY('A. 新世纪','B. 新阶段','C. 新时期','D. 新时代'),'D',NULL,1,'answerable'),
+(@pid,10,10,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','党执政兴国的第一要务是（ ）。',JSON_ARRAY('A. 发展','B. 革命','C. 改革','D. 开放'),'A',NULL,1,'answerable'),
+(@pid,11,11,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','中国特色社会主义最本质的特征是（ ）。 B.人民代表大会制度',JSON_ARRAY('A. 中国共产党领导','B. 人民代表大会制度','C. 社会主义市场经济','D. 以人民为中心'),'A',NULL,1,'answerable'),
+(@pid,12,12,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','我们说做好一切工作的价值取向和根本标准是（ ）。',JSON_ARRAY('A. 推动经济发展','B. 促进文化繁荣','C. 让群众满意','D. 改善生态环境'),'C',NULL,1,'answerable'),
+(@pid,13,13,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','新时代坚持和发展中国特色社会主义的根本动力是（ ）。',JSON_ARRAY('A. 实现科技自立自强','B. 全面深化改革开放','C. 全面从严治党','D. 全面建成社会主义现代化国家'),'B',NULL,1,'answerable'),
+(@pid,14,14,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','全面建设社会主义现代化国家的首要任务是（ ）。',JSON_ARRAY('A. 贯彻新发展理念','B. 推动高质量发展','C. 推动高水平对外开放','D. 推进中国式现代化'),'B',NULL,1,'answerable'),
+(@pid,15,15,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','全面依法治国的总抓手是（ ）。',JSON_ARRAY('A. 完善中国特色社会主义法律规范体系','B. 建设中国特色社会主义法治体系','C. 完善中国特色社会主义法治监督体系','D. 建设中国特色社会主义法治理论'),'B',NULL,1,'answerable'),
+(@pid,16,16,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','社会主义生产的根本目的是（ ）。',JSON_ARRAY('A. 推进生产力快速发展','B. 赢得与资本主义比较优势','C. 促进科技进步','D. 增进民生福祉'),'D',NULL,1,'answerable'),
+(@pid,17,17,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','在国家安全中，处于首要位置的是（ ）。',JSON_ARRAY('A. 政治安全','B. 经济安全','C. 军事安全','D. 社会安全'),'A',NULL,1,'answerable'),
+(@pid,18,18,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','反映军队根本职能和军队建设根本指向是（ ）。',JSON_ARRAY('A. 听党指挥','B. 能打胜仗','C. 作风优良','D. 纪律严明'),'B',NULL,1,'answerable'),
+(@pid,19,19,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','在党的建设中，基础性建设是（ ）。',JSON_ARRAY('A. 政治建设','B. 思想建设','C. 组织建设','D. 作风建设'),'B',NULL,1,'answerable'),
+(@pid,20,20,'choice','一、单项选择题（本大题共 20 小题，每小题 1 分，共 20 分。每小题只有一个选项符合题目','我国对外工作的出发点和落脚点是（ ）。',JSON_ARRAY('A. 维护国家主权、安全、发展利益','B. 人类命运共同体','C. 坚持走和平发展道路','D. 增进人民福祉'),'A',NULL,1,'answerable'),
 (@pid,21,21,'choice','二、多项选择题（本大题共 10 小题，每小题 2 分，共 20 分。每小题有两个或两个以上选项','（多选）中国空间站全面建成后首次出舱活动，漫步太空航天员是（ ）。',JSON_ARRAY('A. 费俊龙','B. 刘洋','C. 陈冬','D. 张陆'),NULL,NULL,2,'answerable'),
 (@pid,22,22,'choice','二、多项选择题（本大题共 10 小题，每小题 2 分，共 20 分。每小题有两个或两个以上选项','（多选）2023 年 11 月 15 日国家主席习近平在旧金山会晤美国总统拜登指出，从 50 年中美关系历程中得出的经 验是（ ）。',JSON_ARRAY('A. 相互尊重','B. 竞争对抗','C. 合作共赢','D. 和平共处'),NULL,NULL,2,'answerable'),
 (@pid,23,23,'choice','二、多项选择题（本大题共 10 小题，每小题 2 分，共 20 分。每小题有两个或两个以上选项','（多选）新民主主义革命动力包括（ ）。',JSON_ARRAY('A. 无产阶级','B. 农民阶级','C. 城市小资产阶级','D. 民族资产阶级'),NULL,NULL,2,'answerable'),
@@ -1162,7 +1162,7 @@ INSERT INTO paper_question (paper_id, seq, paper_no, q_type, section_title, stem
 2023 年 2 月 7 日',NULL,NULL,NULL,0,'reveal_only'),
 (@pid,40,NULL,'essay','六、材料分析题（本大题 15 分）。','（1）上述材料说明了什么?',NULL,NULL,NULL,15,'reveal_only'),
 (@pid,41,NULL,'essay','六、材料分析题（本大题 15 分）。','（2）推进中国式现代化需要把握哪些重大原则?',NULL,NULL,NULL,15,'reveal_only');
-UPDATE paper SET has_answer=0, published=1 WHERE id=@pid;
+UPDATE paper SET has_answer=1, published=1 WHERE id=@pid;
 
 -- ===== 广东 政治理论 2025 (38 题, published=1) · 中文卷解析·选择30·材料0·主观8·暂缺0·共38 =====
 SET @pid := (SELECT id FROM paper WHERE province='广东' AND subject='政治理论' AND year=2025 AND deleted=0 LIMIT 1);

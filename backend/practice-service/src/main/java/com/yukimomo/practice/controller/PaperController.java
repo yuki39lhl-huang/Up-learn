@@ -1,8 +1,10 @@
 package com.yukimomo.practice.controller;
 
 import com.yukimomo.common.domain.Result;
+import com.yukimomo.practice.dto.PaperAiScoreDTO;
 import com.yukimomo.practice.dto.PaperSaveAnswersDTO;
 import com.yukimomo.practice.service.PaperService;
+import com.yukimomo.practice.vo.PaperAiScoreResultVO;
 import com.yukimomo.practice.vo.PaperDetailVO;
 import com.yukimomo.practice.vo.PaperListItemVO;
 import com.yukimomo.practice.vo.PaperOptionsVO;
@@ -70,5 +72,13 @@ public class PaperController {
     @PostMapping("/attempts/{attemptId}/submit")
     public Result<PaperSubmitResultVO> submit(@PathVariable Long attemptId) {
         return Result.ok(paperService.submit(attemptId));
+    }
+
+    @Operation(summary = "主观题 AI 评分（交卷后按需；仅供参考）")
+    @PostMapping("/attempts/{attemptId}/ai-score")
+    public Result<PaperAiScoreResultVO> aiScore(
+            @PathVariable Long attemptId,
+            @RequestBody(required = false) PaperAiScoreDTO dto) {
+        return Result.ok(paperService.aiScore(attemptId, dto != null ? dto : new PaperAiScoreDTO()));
     }
 }

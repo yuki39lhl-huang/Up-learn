@@ -21,6 +21,10 @@ public class PaperAttemptAnswer {
     @TableField("user_answer")
     private String userAnswer;
     private Integer correct;
+    @TableField("ai_score")
+    private java.math.BigDecimal aiScore;
+    @TableField("ai_feedback")
+    private String aiFeedback;
     @TableField("created_at")
     private LocalDateTime createdAt;
     @TableField("updated_at")

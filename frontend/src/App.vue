@@ -35,7 +35,7 @@ async function handleLogout() {
   <div class="app-shell">
     <header v-if="!hideAppChrome" class="topbar">
       <div class="topbar-brand" @click="router.push('/home')">
-        <BrandLogo variant="landing" :size="22" />
+        <BrandLogo variant="landing" :size="40" />
         <span v-if="!isLanding" class="brand-tag">招生查询与刷题平台</span>
       </div>
       <nav class="topbar-nav">

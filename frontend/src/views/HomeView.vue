@@ -1,13 +1,21 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchSchoolList } from '../api/school'
+import { fetchMajorOptions, fetchSchoolList } from '../api/school'
+import { fetchPaperList } from '../api/papers'
 import { useAuthStore } from '../stores/auth'
 import LoginModal from '../components/stitch/LoginModal.vue'
 import BrandLogo from '../components/stitch/BrandLogo.vue'
 import StitchIcon from '../components/stitch/StitchIcon.vue'
-import { consoleFullPath, isDashboardConsoleHref, markConsoleDashboardEntry, pushConsole, pushConsoleHref, type ConsoleModule } from '../utils/consoleNav'
-import type { SchoolVO } from '../types/api'
+import {
+  consoleFullPath,
+  isDashboardConsoleHref,
+  markConsoleDashboardEntry,
+  pushConsole,
+  pushConsoleHref,
+  type ConsoleModule,
+} from '../utils/consoleNav'
+import type { MajorOptionVO, PaperListItemVO, SchoolVO } from '../types/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -18,72 +26,50 @@ const loginRedirect = ref(consoleFullPath('dashboard'))
 
 const schools = ref<SchoolVO[]>([])
 const loadingSchools = ref(false)
-const province = ref('广东')
-const preferPublic = ref(true)
+const featuredMajors = ref<MajorOptionVO[]>([])
+const previewPapers = ref<PaperListItemVO[]>([])
 const activeSubject = ref('计算机基础')
 
-const majorCards = [
-  {
-    title: '软件工程',
-    icon: 'code' as const,
-    exam: '政治 + 大学英语 + 高等数学 + 计算机基础',
-    minScore: 360,
-    enrollment: 280,
-    tuition: '¥5,500/年起',
-  },
-  {
-    title: '计算机科学与技术',
-    icon: 'cpu' as const,
-    exam: '政治 + 大学英语 + 高等数学 + 计算机基础',
-    minScore: 380,
-    enrollment: 200,
-    tuition: '¥5,500/年起',
-  },
-  {
-    title: '计算机基础',
-    icon: 'layers' as const,
-    exam: '政治 + 大学英语 + 高等数学 + 计算机基础',
-    minScore: 340,
-    enrollment: 150,
-    tuition: '¥5,000/年起',
-  },
-]
+const majorIconCycle = ['code', 'cpu', 'layers'] as const
 
 const features = [
   {
     icon: 'filter' as const,
     title: '精准筛选',
-    desc: '按省份、年份、专业大类多维筛选，快速定位目标院校。',
+    desc: '按省份、公办民办、专业类型多维筛选，快速定位目标院校。',
   },
   {
     icon: 'school' as const,
-    title: '权威分类',
-    desc: '公办、民办、独立学院标签清晰，学费信息一目了然。',
+    title: '招生目录',
+    desc: '对接当年招生专业明细，专业组、考试科目与校考统考一目了然。',
   },
   {
-    icon: 'trend' as const,
-    title: '分数趋势',
-    desc: '历年最低投档线图表化展示，辅助报考决策。',
+    icon: 'paper' as const,
+    title: '历年真题',
+    desc: '真题卷面在线作答，客观题机判，主观题可 AI 评分参考。',
   },
   {
     icon: 'practice' as const,
-    title: '沉浸练习',
-    desc: '海量真题与模拟卷，AI 智能批改与解析推荐。',
+    title: '刷题打卡',
+    desc: '每日一练与随机刷题，错题本与间隔复习帮你稳住题感。',
   },
 ]
 
-const trustItems = [
-  { value: '24+', label: '套历年真题' },
-  { value: '15', label: '省招生数据' },
+const trustItems = computed(() => [
+  { value: previewPapers.value.length ? `${previewPapers.value.length}+` : '真题', label: '历年试卷' },
+  { value: schools.value.length ? `${schools.value.length}+` : '院校', label: '在招院校预览' },
   { value: 'AI', label: '智能批改' },
-]
+])
 
-const papers = [
-  { title: '2024 计算机基础全真真题', meta: '耗时 120min · 难度中等', locked: false },
-  { title: '2023 高等数学（专升本）', meta: '已作答 · 得分 132', locked: true },
-]
-
-const subjects = ['政治', '大学英语', '高等数学', '计算机基础']
+const featuredMajorCards = computed(() =>
+  featuredMajors.value.map((m, i) => ({
+    title: m.name,
+    icon: majorIconCycle[i % majorIconCycle.length],
+    category: m.majorCategory || m.discipline || '—',
+    examTrack: m.examTrack || '—',
+    discipline: m.discipline || '—',
+  })),
+)
 
 function goConsole(module: ConsoleModule = 'dashboard') {
   const target = consoleFullPath(module)
@@ -127,9 +113,10 @@ async function loadSchools() {
   try {
     const data = await fetchSchoolList({
       pageNo: 1,
-      pageSize: 5,
-      province: province.value,
-      preferPublic: preferPublic.value || undefined,
+      pageSize: 8,
+      province: '广东',
+      year: 2026,
+      preferPublic: true,
     })
     schools.value = data.list
   } catch {
@@ -139,43 +126,76 @@ async function loadSchools() {
   }
 }
 
+async function loadFeaturedMajors() {
+  try {
+    const data = await fetchMajorOptions({
+      majorCategory: '计算机类',
+      pageNo: 1,
+      pageSize: 3,
+    })
+    featuredMajors.value = data.list
+    if (featuredMajors.value.length < 3) {
+      const more = await fetchMajorOptions({ pageNo: 1, pageSize: 3 })
+      featuredMajors.value = more.list
+    }
+  } catch {
+    featuredMajors.value = []
+  }
+}
+
+async function loadPreviewPapers() {
+  if (!auth.isLoggedIn) {
+    previewPapers.value = []
+    return
+  }
+  try {
+    const list = await fetchPaperList({ province: '广东', subject: activeSubject.value })
+    previewPapers.value = (list || []).slice(0, 4)
+  } catch {
+    previewPapers.value = []
+  }
+}
+
 function chipClass(row: SchoolVO) {
   return row.type === '公办' ? 'chip chip--public' : 'chip chip--private'
 }
 
-onMounted(() => {
-  loadSchools()
+function paperMeta(p: PaperListItemVO) {
+  const parts = [`${p.year} 年`, p.subject]
+  if (p.questionCount) parts.push(`${p.questionCount} 题`)
+  return parts.join(' · ')
+}
+
+onMounted(async () => {
   openLoginFromQuery()
+  await Promise.all([loadSchools(), loadFeaturedMajors(), loadPreviewPapers()])
 })
 </script>
 
 <template>
   <div class="landing-page">
-    <!-- 图一：Apple-like 顶栏 -->
     <header class="landing-nav">
       <div class="nav-inner">
         <button type="button" class="logo-wrap" @click="router.push('/home')">
-          <BrandLogo variant="landing" :size="22" />
+          <BrandLogo variant="landing" :size="44" />
         </button>
         <nav class="nav-links">
           <a href="#school-query" @click.prevent="scrollTo('school-query')">招生查询</a>
-          <a href="#school-query" @click.prevent="scrollTo('school-query')">分数线</a>
-          <a href="#practice-center" @click.prevent="scrollTo('practice-center')">历年试卷</a>
+          <a href="#papers-preview" @click.prevent="scrollTo('papers-preview')">历年真题</a>
           <a href="#daily-practice" @click.prevent="scrollTo('daily-practice')">每日一练</a>
-          <a href="#daily-practice" @click.prevent="scrollTo('daily-practice')">学习分析</a>
+          <a href="#random-practice" @click.prevent="scrollTo('random-practice')">随机刷题</a>
         </nav>
-        <button class="nav-cta" @click="goConsole()">进入控制台 →</button>
+        <button type="button" class="nav-cta" @click="goConsole()">进入控制台 →</button>
       </div>
     </header>
 
-    <!-- 图一：Hero -->
     <section class="hero">
       <div class="hero-inner">
         <h1 class="hero-title">查院校，刷真题，一站完成。</h1>
         <p class="hero-sub">面向专升本备考的招生数据与在线练习平台，让升学之路更有确定性。</p>
         <div class="hero-btns">
-          <button class="btn btn-primary" @click="goConsole('school')">开始查询</button>
-          <button class="btn btn-outline" @click="goConsole('random')">体验刷题</button>
+          <button type="button" class="btn btn-primary" @click="goConsole('school')">开始查询</button>
+          <button type="button" class="btn btn-outline" @click="goConsole('random')">体验刷题</button>
         </div>
         <ul class="trust-strip" aria-label="平台数据概览">
           <li v-for="t in trustItems" :key="t.label">
@@ -189,22 +209,22 @@ onMounted(() => {
               <div class="stats-head">
                 <div>
                   <span class="stats-region">广东省</span>
-                  <span class="stats-year">2025 年数据</span>
+                  <span class="stats-year">2026 年招生目录预览</span>
                 </div>
-                <span class="stats-badge">志愿填报参考</span>
+                <span class="stats-badge">登录后完整使用</span>
               </div>
               <div class="stats-metrics">
                 <div class="metric">
-                  <small>公办院校录取率</small>
-                  <strong>28.5%</strong>
+                  <small>在招院校（预览）</small>
+                  <strong>{{ schools.length || '—' }}</strong>
                 </div>
                 <div class="metric">
-                  <small>平均分数线</small>
-                  <strong>186<em>分</em></strong>
+                  <small>热门专业类</small>
+                  <strong>计算机类</strong>
                 </div>
                 <div class="metric">
-                  <small>总招生人数</small>
-                  <strong>8.4<em>万</em></strong>
+                  <small>备考闭环</small>
+                  <strong>真题+刷题</strong>
                 </div>
               </div>
             </div>
@@ -213,7 +233,6 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- 图一：四宫格特性（2×2） -->
     <section class="features-section">
       <div class="section-inner">
         <h2 class="section-heading">全面了解，精准决策</h2>
@@ -229,38 +248,28 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- 图二向下：招生库查询 -->
+    <!-- 招生查询：真实数据只读预览 -->
     <section id="school-query" class="scroll-section muted">
       <div class="section-inner">
         <div class="section-head">
           <h2>招生库查询</h2>
-          <p>实时同步最新广东省招生计划</p>
+          <p>广东 2026 在招院校预览（只读）；完整筛选与专业明细请进入控制台</p>
         </div>
-        <div class="filter-bar">
-          <select v-model="province" class="native-select" @change="loadSchools">
-            <option value="广东">广东</option>
-          </select>
-          <select class="native-select" disabled>
-            <option>全部专业</option>
-          </select>
-          <label class="native-check">
-            <input v-model="preferPublic" type="checkbox" @change="loadSchools" />
-            公办优先
-          </label>
-          <button class="btn btn-primary btn-sm" :disabled="loadingSchools" @click="loadSchools">
-            {{ loadingSchools ? '查询中…' : '立即查询' }}
+        <div class="filter-bar filter-bar--readonly" aria-hidden="true">
+          <span class="filter-chip">广东</span>
+          <span class="filter-chip">公办优先</span>
+          <span class="filter-chip muted">预览前 8 所</span>
+          <button type="button" class="btn btn-primary btn-sm" @click="goConsole('school')">
+            立即查询
           </button>
         </div>
-        <div class="table-wrap">
-          <table class="data-table">
+        <div class="table-wrap" :class="{ 'is-loading': loadingSchools }">
+          <table class="data-table data-table--readonly">
             <thead>
               <tr>
                 <th>院校名称</th>
                 <th>性质</th>
                 <th>专业数</th>
-                <th>最低分</th>
-                <th>计划人数</th>
-                <th>学费</th>
               </tr>
             </thead>
             <tbody>
@@ -268,12 +277,9 @@ onMounted(() => {
                 <td>{{ row.name }}</td>
                 <td><span :class="chipClass(row)">{{ row.type }}</span></td>
                 <td>{{ row.majorCount ?? '—' }}</td>
-                <td>{{ row.minScore ?? '—' }}</td>
-                <td>{{ row.enrollment ?? '—' }}</td>
-                <td>{{ row.tuition ? `¥${row.tuition}` : '—' }}</td>
               </tr>
               <tr v-if="!loadingSchools && schools.length === 0">
-                <td colspan="6" class="empty">暂无数据，请确认 school-service 已启动</td>
+                <td colspan="3" class="empty">暂无数据，请确认 school-service 已启动</td>
               </tr>
             </tbody>
           </table>
@@ -281,12 +287,13 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- 图二：重点关注专业 -->
+    <!-- 重点专业：词典真实数据，只展示 -->
     <section class="scroll-section">
       <div class="section-inner">
         <h2 class="section-heading left">重点关注专业</h2>
+        <p class="section-note">来自专业词典（计算机类等），仅供预览</p>
         <div class="major-grid">
-          <article v-for="m in majorCards" :key="m.title" class="major-card">
+          <article v-for="m in featuredMajorCards" :key="m.title" class="major-card major-card--readonly">
             <div class="major-top">
               <div class="major-icon-box">
                 <StitchIcon :name="m.icon" />
@@ -294,99 +301,105 @@ onMounted(() => {
               <h3>{{ m.title }}</h3>
             </div>
             <ul class="major-meta">
-              <li class="major-meta__stack">
-                <span class="label">考试科目</span>
-                <p class="value">{{ m.exam }}</p>
+              <li>
+                <span class="label">门类</span>
+                <span class="value">{{ m.discipline }}</span>
               </li>
               <li>
-                <span class="label">最低录取分</span>
-                <span class="value value--accent">{{ m.minScore }}</span>
+                <span class="label">专业类</span>
+                <span class="value">{{ m.category }}</span>
               </li>
               <li>
-                <span class="label">招生总数</span>
-                <span class="value">{{ m.enrollment }} 人</span>
-              </li>
-              <li>
-                <span class="label">学费基数</span>
-                <span class="value">{{ m.tuition }}</span>
+                <span class="label">考试轨道</span>
+                <span class="value">{{ m.examTrack }}</span>
               </li>
             </ul>
           </article>
+          <p v-if="!featuredMajorCards.length" class="empty-block">暂无专业词典数据</p>
+        </div>
+        <div class="section-cta">
+          <button type="button" class="btn btn-primary" @click="goConsole('school')">去控制台查看招生专业</button>
         </div>
       </div>
     </section>
 
-    <!-- 图二：在线刷题中心 -->
-    <section id="practice-center" class="scroll-section muted">
+    <!-- 历年真题预览 -->
+    <section id="papers-preview" class="scroll-section muted">
       <div class="section-inner">
-        <h2 class="section-heading left">在线刷题中心</h2>
-        <div class="subject-tabs">
-          <button
-            v-for="s in subjects"
+        <h2 class="section-heading left">历年真题</h2>
+        <p class="section-note">登录后可加载真实试卷列表；此处仅展示，不作答</p>
+        <div class="subject-tabs subject-tabs--readonly">
+          <span
+            v-for="s in ['政治', '大学英语', '高等数学', '计算机基础']"
             :key="s"
-            type="button"
             class="pill"
             :class="{ active: activeSubject === s }"
-            @click="activeSubject = s"
           >
             {{ s }}
-          </button>
+          </span>
         </div>
-        <div class="practice-split">
-          <div class="paper-list">
-            <div
-              v-for="p in papers"
-              :key="p.title"
-              class="paper-item"
-              :class="{ locked: p.locked }"
-            >
-              <div class="paper-icon">
-                <StitchIcon name="paper" />
-              </div>
-              <div>
-                <strong>{{ p.title }}</strong>
-                <span>{{ p.meta }}</span>
-              </div>
+        <div class="paper-list paper-list--readonly">
+          <div v-for="p in previewPapers" :key="p.id" class="paper-item">
+            <div class="paper-icon">
+              <StitchIcon name="paper" />
+            </div>
+            <div>
+              <strong>{{ p.title }}</strong>
+              <span>{{ paperMeta(p) }}</span>
             </div>
           </div>
-          <div class="quiz-panel">
-            <div class="quiz-panel__head">
-              <p class="quiz-label"><StitchIcon name="spark" /> Q12 / 150 · AI 实时评分</p>
-              <div class="progress-bar"><i style="width: 8%" /></div>
+          <div v-if="!previewPapers.length" class="paper-item paper-item--hint">
+            <div class="paper-icon">
+              <StitchIcon name="paper" />
             </div>
-            <h3>以下关于操作系统的描述中，错误的是？</h3>
-            <div class="quiz-options">
-              <label>A. 操作系统是管理硬件资源的软件</label>
-              <label class="selected">B. Linux 是典型的实时操作系统</label>
-              <label>C. 进程管理是操作系统的核心功能</label>
-              <label>D. Windows 支持多任务处理</label>
+            <div>
+              <strong>登录后查看广东真题目录</strong>
+              <span>政治 / 英语 / 高数 / 计算机等科目卷面</span>
             </div>
-            <button class="btn btn-primary" @click="goConsole('random')">提交并解析</button>
           </div>
+        </div>
+        <div class="section-cta">
+          <button type="button" class="btn btn-primary" @click="goConsole('papers')">进入真题中心</button>
         </div>
       </div>
     </section>
 
-    <!-- 图二：每日一练 -->
-    <section id="daily-practice" class="scroll-section">
+    <!-- 随机刷题预览 -->
+    <section id="random-practice" class="scroll-section">
+      <div class="section-inner">
+        <h2 class="section-heading left">随机刷题</h2>
+        <p class="section-note">题面示意，选项不可点选；完整刷题请进入控制台</p>
+        <div class="quiz-panel quiz-panel--readonly">
+          <div class="quiz-panel__head">
+            <p class="quiz-label"><StitchIcon name="spark" /> 随机刷题预览</p>
+          </div>
+          <h3>以下关于操作系统的描述中，错误的是？</h3>
+          <div class="quiz-options">
+            <span>A. 操作系统是管理硬件资源的软件</span>
+            <span class="selected">B. Linux 是典型的实时操作系统</span>
+            <span>C. 进程管理是操作系统的核心功能</span>
+            <span>D. Windows 支持多任务处理</span>
+          </div>
+          <button type="button" class="btn btn-primary" @click="goConsole('random')">去控制台刷题</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 每日一练预览 -->
+    <section id="daily-practice" class="scroll-section muted">
       <div class="section-inner daily-wrap">
         <div class="daily-info">
           <h2>每日一练</h2>
-          <p>每天 10 道题，保持题感，离本科更近一步。</p>
-          <div class="daily-stats">
-            <div><small>今日进度</small><strong>7 / 10</strong></div>
-            <div><small>准确率</small><strong>92%</strong></div>
-            <div><small>连续打卡</small><strong><span class="streak-val"><StitchIcon name="flame" />14 天</span></strong></div>
-          </div>
-          <button class="btn btn-primary" @click="goConsole('dashboard')">开始今日练习</button>
+          <p>每天一题打卡，保持题感。进度与连续签到在控制台查看。</p>
+          <button type="button" class="btn btn-primary" @click="goConsole('dashboard')">开始今日练习</button>
         </div>
-        <div class="daily-quiz">
+        <div class="daily-quiz daily-quiz--readonly">
           <div class="tags"><span>时态</span><span>固定搭配</span></div>
           <p class="q-stem">By the time he ______ his homework, his mother had already come back.</p>
           <div class="quiz-options compact">
-            <label>A. finishes</label>
-            <label>B. will finish</label>
-            <label class="correct">C. finished ✓</label>
+            <span>A. finishes</span>
+            <span>B. will finish</span>
+            <span class="correct">C. finished ✓</span>
           </div>
           <div class="analysis">
             <strong>名师解析</strong>
@@ -396,11 +409,10 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- 图一 Footer -->
     <footer class="landing-footer">
       <div class="footer-inner">
-        <BrandLogo variant="landing" :size="20" />
-        <span class="copy">© 2024 升学通. All rights reserved.</span>
+        <BrandLogo variant="landing" :size="36" />
+        <span class="copy">© 2026 升学通. All rights reserved.</span>
         <div class="dev-badges">
           <span><i class="dot" />数据实时同步</span>
           <span><i class="dot" />多端刷题体验</span>
@@ -437,7 +449,7 @@ onMounted(() => {
   max-width: var(--apple-max);
   margin: 0 auto;
   padding: 0 24px;
-  height: 52px;
+  height: 60px;
   display: flex;
   align-items: center;
   gap: 32px;
@@ -645,14 +657,8 @@ onMounted(() => {
 }
 
 .stats-metrics strong {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
-}
-
-.stats-metrics em {
-  font-style: normal;
-  font-size: 14px;
-  font-weight: 500;
 }
 
 .features-section {
@@ -674,6 +680,17 @@ onMounted(() => {
 
 .section-heading.left {
   text-align: left;
+  margin-bottom: 8px;
+}
+
+.section-note {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--apple-text-muted);
+}
+
+.section-cta {
+  margin-top: 20px;
 }
 
 .features-grid {
@@ -688,12 +705,6 @@ onMounted(() => {
   border-radius: var(--apple-radius-lg);
   padding: 24px 22px;
   box-shadow: var(--apple-shadow-sm);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--apple-shadow);
 }
 
 .feature-icon {
@@ -751,23 +762,22 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-.native-select {
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
   height: 36px;
   padding: 0 12px;
   border: 1px solid #d2d2d7;
   border-radius: 8px;
-  background: #fff;
+  background: #f5f5f7;
   font-size: 14px;
   color: var(--apple-text);
+  user-select: none;
 }
 
-.native-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
+.filter-chip.muted {
   color: var(--apple-text-muted);
-  cursor: pointer;
+  border-style: dashed;
 }
 
 .btn-sm {
@@ -788,8 +798,8 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.data-table tbody tr:hover {
-  background: rgb(0 113 227 / 3%);
+.data-table--readonly tbody tr {
+  cursor: default;
 }
 
 .data-table th,
@@ -823,7 +833,8 @@ onMounted(() => {
   color: #9a3412;
 }
 
-.empty {
+.empty,
+.empty-block {
   text-align: center;
   color: var(--apple-text-muted);
   padding: 24px !important;
@@ -841,11 +852,11 @@ onMounted(() => {
   border-radius: var(--apple-radius-md);
   padding: 22px 20px;
   box-shadow: var(--apple-shadow-sm);
-  transition: box-shadow 0.2s ease;
 }
 
-.major-card:hover {
-  box-shadow: var(--apple-shadow);
+.major-card--readonly {
+  pointer-events: none;
+  user-select: none;
 }
 
 .major-top {
@@ -900,12 +911,6 @@ onMounted(() => {
   border-bottom: none;
 }
 
-.major-meta__stack {
-  flex-direction: column;
-  align-items: stretch !important;
-  gap: 6px !important;
-}
-
 .major-meta .label {
   color: var(--apple-text-muted);
   flex-shrink: 0;
@@ -917,24 +922,16 @@ onMounted(() => {
   font-weight: 500;
 }
 
-.major-meta__stack .value {
-  text-align: left;
-  line-height: 1.55;
-  margin: 0;
-  font-weight: 400;
-}
-
-.value--accent {
-  color: var(--apple-blue) !important;
-  font-weight: 700 !important;
-  font-size: 15px;
-}
-
 .subject-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 20px;
+}
+
+.subject-tabs--readonly {
+  pointer-events: none;
+  user-select: none;
 }
 
 .pill {
@@ -943,7 +940,6 @@ onMounted(() => {
   border-radius: 980px;
   padding: 6px 14px;
   font-size: 13px;
-  cursor: pointer;
 }
 
 .pill.active {
@@ -952,16 +948,15 @@ onMounted(() => {
   border-color: var(--apple-blue);
 }
 
-.practice-split {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 16px;
-}
-
 .paper-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.paper-list--readonly {
+  pointer-events: none;
+  user-select: none;
 }
 
 .paper-item {
@@ -972,6 +967,10 @@ onMounted(() => {
   border: 1px solid var(--apple-border);
   border-radius: var(--apple-radius-md);
   padding: 14px 16px;
+}
+
+.paper-item--hint {
+  opacity: 0.9;
 }
 
 .paper-icon {
@@ -989,59 +988,6 @@ onMounted(() => {
 .paper-icon :deep(svg) {
   width: 18px;
   height: 18px;
-}
-
-.quiz-panel__head {
-  margin-bottom: 12px;
-}
-
-.quiz-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--apple-blue);
-  margin: 0 0 8px;
-  font-weight: 600;
-}
-
-.quiz-label :deep(svg) {
-  width: 14px;
-  height: 14px;
-}
-
-.progress-bar {
-  height: 4px;
-  border-radius: 999px;
-  background: #ececf1;
-  overflow: hidden;
-}
-
-.progress-bar i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--apple-blue), #5ac8fa);
-}
-
-.streak-val {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.streak-val :deep(svg) {
-  width: 16px;
-  height: 16px;
-  color: #ff9500;
-}
-
-.daily-stats strong {
-  font-size: 20px;
-}
-
-.paper-item.locked {
-  opacity: 0.65;
 }
 
 .paper-item strong {
@@ -1064,6 +1010,31 @@ onMounted(() => {
   box-shadow: var(--apple-shadow-sm);
 }
 
+.quiz-panel--readonly .quiz-options,
+.daily-quiz--readonly .quiz-options {
+  pointer-events: none;
+  user-select: none;
+}
+
+.quiz-panel__head {
+  margin-bottom: 12px;
+}
+
+.quiz-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--apple-blue);
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.quiz-label :deep(svg) {
+  width: 14px;
+  height: 14px;
+}
+
 .quiz-panel h3 {
   margin: 0 0 16px;
   font-size: 16px;
@@ -1077,19 +1048,20 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-.quiz-options label {
+.quiz-options span {
+  display: block;
   padding: 10px 12px;
   border: 1px solid #ededf2;
   border-radius: 8px;
   font-size: 14px;
 }
 
-.quiz-options label.selected {
+.quiz-options span.selected {
   border-color: var(--apple-blue);
   background: rgb(0 113 227 / 6%);
 }
 
-.quiz-options label.correct {
+.quiz-options span.correct {
   border-color: var(--apple-green);
   background: rgb(52 199 89 / 8%);
 }
@@ -1109,22 +1081,6 @@ onMounted(() => {
 .daily-info p {
   color: var(--apple-text-muted);
   margin: 0 0 20px;
-}
-
-.daily-stats {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.daily-stats small {
-  display: block;
-  font-size: 12px;
-  color: var(--apple-text-muted);
-}
-
-.daily-stats strong {
-  font-size: 20px;
 }
 
 .tags {
@@ -1219,7 +1175,6 @@ onMounted(() => {
 
   .features-grid,
   .major-grid,
-  .practice-split,
   .daily-wrap {
     grid-template-columns: 1fr;
   }

@@ -36,6 +36,30 @@ except ImportError:
         quality_chinese_paper,
     )
 
+try:
+    from choice_answer_overlay import apply_choice_answers
+except ImportError:
+    from sql.phase1.choice_answer_overlay import apply_choice_answers  # type: ignore
+
+try:
+    from gd_english_choice_answers import answers_for as gd_english_answers
+except ImportError:
+    from sql.phase1.gd_english_choice_answers import answers_for as gd_english_answers  # type: ignore
+
+try:
+    from gd_politics_choice_answers import answers_for as gd_politics_answers
+except ImportError:
+    from sql.phase1.gd_politics_choice_answers import answers_for as gd_politics_answers  # type: ignore
+
+
+def lookup_choice_answers(province: str, subject: str, year: int) -> dict[int, str] | None:
+    if province == "广东" and subject == "英语":
+        return gd_english_answers(year)
+    if province == "广东" and subject == "政治理论":
+        return gd_politics_answers(year)
+    return None
+
+
 EXTRACT = Path(__file__).resolve().parent / "_pdf_extract"
 OUT = Path(__file__).resolve().parent / "paper_questions_guangdong.sql"
 REPORT = Path(__file__).resolve().parent / "_reseed_report.txt"
@@ -349,6 +373,9 @@ def main() -> None:
     for sub, year in papers:
         qs, note, publish = questions_for(sub, year)
         qs = [normalize_question(q) for q in qs]
+        qs, ans_hit = apply_choice_answers("广东", sub, year, qs, lookup_choice_answers)
+        if ans_hit:
+            note = f"{note}·答案覆盖{ans_hit}"
         has_ans = 1 if any(q.get("answer") for q in qs) else 0
         pub = 1 if publish and qs else 0
         report.append(f"{sub}\t{year}\t题量={len(qs)}\tpublished={pub}\t{note}")

@@ -15,5 +15,13 @@ public class PaperDetailVO {
     private Boolean pdfAvailable;
     private Long attemptId;
     private String attemptStatus;
+    /** 选择题总数（answerable） */
+    private Integer choiceCount;
+    /** 有标准答案、可机判的选择题数 */
+    private Integer gradableChoiceCount;
+    /** 已交卷时的客观题得分 */
+    private Integer objectiveScore;
+    /** 已交卷时的客观题满分 */
+    private Integer objectiveTotal;
     private List<PaperQuestionVO> questions;
 }

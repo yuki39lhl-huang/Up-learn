@@ -163,7 +163,7 @@ async function handleLogout() {
         <StitchIcon name="menu" />
       </button>
       <button type="button" class="gmail-logo" @click="router.push('/home')">
-        <BrandLogo />
+        <BrandLogo :size="40" />
       </button>
       <div class="gmail-topbar__spacer" />
       <span class="gmail-topbar__meta">{{ seasonMeta }}</span>

@@ -86,13 +86,17 @@ CREATE TABLE IF NOT EXISTS `school` (
 CREATE TABLE IF NOT EXISTS `major_dict` (
   `id`             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
   `name`           VARCHAR(128) NOT NULL COMMENT '专业名称（全局唯一语义）',
+  `discipline`     VARCHAR(32)           DEFAULT NULL COMMENT '门类，如工学/管理学/医学',
   `major_category` VARCHAR(64)           DEFAULT NULL COMMENT '专业类，如计算机类',
+  `code`           VARCHAR(32)           DEFAULT NULL COMMENT '官方专业代码（有则填）',
+  `exam_track`     VARCHAR(16)           DEFAULT NULL COMMENT '统考/校考/混合',
   `deleted`        TINYINT      NOT NULL DEFAULT 0,
   `created_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updated_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_major_dict_name` (`name`),
-  KEY `idx_major_dict_category` (`major_category`)
+  KEY `idx_major_dict_category` (`major_category`),
+  KEY `idx_major_dict_discipline_category` (`discipline`, `major_category`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='院校服务·专业词典表（全局专业名称）';
 
@@ -150,6 +154,15 @@ CREATE TABLE IF NOT EXISTS `school_major` (
   `id`             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
   `school_id`      BIGINT       NOT NULL COMMENT '院校 ID，关联 school.id',
   `major_dict_id`  BIGINT       NOT NULL COMMENT '专业词典 ID，关联 major_dict.id',
+  `display_name`   VARCHAR(128)          DEFAULT NULL COMMENT '招生展示名（含方向/班型）',
+  `major_group`    VARCHAR(16)           DEFAULT NULL COMMENT '专业组',
+  `major_code`     VARCHAR(16)           DEFAULT NULL COMMENT '专业号',
+  `campus`         VARCHAR(128)          DEFAULT NULL COMMENT '教学地点',
+  `exam_type`      VARCHAR(16)           DEFAULT NULL COMMENT '统考/校考',
+  `foundation_subject` VARCHAR(128)      DEFAULT NULL COMMENT '专业基础课',
+  `comprehensive_subject` VARCHAR(128)   DEFAULT NULL COMMENT '专业综合课',
+  `prerequisite`   VARCHAR(64)           DEFAULT NULL COMMENT '前置要求：不限/限招等',
+  `batch_name`     VARCHAR(32)           DEFAULT NULL COMMENT '批次，如普通批',
   `exam_subjects`  VARCHAR(255)          DEFAULT NULL COMMENT '考试科目，逗号分隔',
   `avg_score`      INT                   DEFAULT NULL COMMENT '平均分',
   `enrollment`     INT                   DEFAULT NULL COMMENT '招生人数',
@@ -160,7 +173,7 @@ CREATE TABLE IF NOT EXISTS `school_major` (
   `created_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
   `updated_at`     DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_school_major_year` (`school_id`, `major_dict_id`, `year`),
+  UNIQUE KEY `uk_school_major_offer` (`school_id`, `year`, `major_group`, `major_code`),
   KEY `idx_school_major_school` (`school_id`),
   KEY `idx_school_major_dict` (`major_dict_id`),
   KEY `idx_school_major_year` (`year`)

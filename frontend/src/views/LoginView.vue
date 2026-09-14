@@ -5,6 +5,7 @@
  */
 import { useRoute, useRouter } from 'vue-router'
 import { useLoginForm } from '../composables/useLoginForm'
+import BrandLogo from '../components/stitch/BrandLogo.vue'
 import {
   consoleFullPath,
   isDashboardConsoleHref,
@@ -42,7 +43,9 @@ const {
 <template>
   <div class="login-page">
     <div class="login-card st-card">
-      <p class="st-label-caps">升学通</p>
+      <div class="login-brand">
+        <BrandLogo :size="48" />
+      </div>
       <h1 class="st-headline">登录</h1>
       <p class="hint">验证码可自动注册；密码登录需先在账号安全中设置密码</p>
 
@@ -114,6 +117,10 @@ const {
   width: 100%;
   max-width: 420px;
   padding: 28px 24px 20px;
+}
+
+.login-brand {
+  margin-bottom: 12px;
 }
 
 .login-card h1 {

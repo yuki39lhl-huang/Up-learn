@@ -12,7 +12,7 @@ import com.yukimomo.user.mapper.SchoolMajorRowMapper;
 import com.yukimomo.user.mapper.SchoolRowMapper;
 import com.yukimomo.user.mapper.UserTargetMapper;
 import com.yukimomo.user.service.UserTargetService;
-import com.yukimomo.user.vo.UserTargetVO;
+import com.yukimomo.api.user.vo.UserTargetVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

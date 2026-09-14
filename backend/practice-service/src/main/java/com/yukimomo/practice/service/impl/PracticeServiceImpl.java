@@ -287,9 +287,15 @@ public class PracticeServiceImpl implements PracticeService {
         return vo;
     }
 
-    /** 清空重刷时同步清除随机刷题答题记录，统计归零。 */
+    /** 清空重刷时同步清除对应科目的随机刷题答题历史，统计归零。 */
     private void clearRandomAnswerRecords(Long userId, List<String> subjects) {
         if (subjects == null || subjects.isEmpty()) {
+            // 无科目范围时仍清掉该用户全部 random 历史，避免残留
+            answerRecordMapper.delete(
+                    new LambdaQueryWrapper<AnswerRecord>()
+                            .eq(AnswerRecord::getUserId, userId)
+                            .eq(AnswerRecord::getSource, SOURCE_RANDOM)
+            );
             return;
         }
         List<Long> questionIds = questionMapper.selectList(
@@ -300,12 +306,17 @@ public class PracticeServiceImpl implements PracticeService {
         if (questionIds.isEmpty()) {
             return;
         }
-        answerRecordMapper.delete(
-                new LambdaQueryWrapper<AnswerRecord>()
-                        .eq(AnswerRecord::getUserId, userId)
-                        .eq(AnswerRecord::getSource, SOURCE_RANDOM)
-                        .in(AnswerRecord::getQuestionId, questionIds)
-        );
+        // 分批删除，避免 IN 列表过长
+        final int batchSize = 500;
+        for (int i = 0; i < questionIds.size(); i += batchSize) {
+            List<Long> batch = questionIds.subList(i, Math.min(i + batchSize, questionIds.size()));
+            answerRecordMapper.delete(
+                    new LambdaQueryWrapper<AnswerRecord>()
+                            .eq(AnswerRecord::getUserId, userId)
+                            .eq(AnswerRecord::getSource, SOURCE_RANDOM)
+                            .in(AnswerRecord::getQuestionId, batch)
+            );
+        }
     }
 
     @Override

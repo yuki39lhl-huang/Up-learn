@@ -5,7 +5,7 @@ import com.yukimomo.common.utils.UserContext;
 import com.yukimomo.user.dto.RandomSubjectFilterSaveDTO;
 import com.yukimomo.user.dto.UserExamPreferenceSaveDTO;
 import com.yukimomo.user.service.UserExamPreferenceService;
-import com.yukimomo.user.vo.UserExamPreferenceVO;
+import com.yukimomo.api.user.vo.UserExamPreferenceVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

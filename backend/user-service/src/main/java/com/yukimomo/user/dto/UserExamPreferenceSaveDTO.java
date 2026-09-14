@@ -1,5 +1,6 @@
 package com.yukimomo.user.dto;
 
+import com.yukimomo.api.user.dto.ExamSubjectSelectionDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

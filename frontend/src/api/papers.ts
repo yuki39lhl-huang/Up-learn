@@ -6,6 +6,8 @@ import type {
   PaperStartVO,
   PaperSubmitResultVO,
   PaperSaveAnswersDTO,
+  PaperAiScoreDTO,
+  PaperAiScoreResultVO,
 } from '../types/api'
 
 export function fetchPaperOptions() {
@@ -30,4 +32,10 @@ export function savePaperAnswers(attemptId: number, body: PaperSaveAnswersDTO) {
 
 export function submitPaper(attemptId: number) {
   return getData<PaperSubmitResultVO>(request.post(`/practice/papers/attempts/${attemptId}/submit`))
+}
+
+export function aiScorePaper(attemptId: number, body?: PaperAiScoreDTO) {
+  return getData<PaperAiScoreResultVO>(
+    request.post(`/practice/papers/attempts/${attemptId}/ai-score`, body ?? {})
+  )
 }

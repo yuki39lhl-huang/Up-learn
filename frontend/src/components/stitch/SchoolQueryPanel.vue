@@ -2,9 +2,15 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { addUserTarget, fetchUserTargets, removeUserTarget } from '../../api/user'
-import { fetchMajorCategories, fetchMajorOptions, fetchSchoolList, fetchSchoolMajors } from '../../api/school'
+import {
+  fetchMajorCategories,
+  fetchMajorOptions,
+  fetchSchoolList,
+  fetchSchoolMajors,
+} from '../../api/school'
 import { useAuthStore } from '../../stores/auth'
 import type { MajorOptionVO, MajorVO, SchoolVO, UserTargetVO } from '../../types/api'
+import ProvinceGuideDialog from './ProvinceGuideDialog.vue'
 
 const auth = useAuthStore()
 const loading = ref(false)
@@ -25,6 +31,8 @@ const majorOptions = ref<MajorOptionVO[]>([])
 const majorSearchLoading = ref(false)
 const pageNo = ref(1)
 const pageSize = 12
+/** 广东新目录默认查 2026；山东暂不按年强过滤 */
+const listYear = computed(() => (province.value === '广东' ? 2026 : undefined))
 
 const selectedSchool = ref<SchoolVO | null>(null)
 const schoolMajors = ref<MajorVO[]>([])
@@ -32,6 +40,7 @@ const targetsExpanded = ref(false)
 const highlightedMajorId = ref<number | null>(null)
 const activeTargetId = ref<number | null>(null)
 const majorsPanelRef = ref<HTMLElement | null>(null)
+const guideOpen = ref(false)
 
 const TARGET_HOME_HINT = '主页仅展示第一目标志愿'
 
@@ -41,6 +50,18 @@ const targetPreview = computed(() => {
   if (targets.value.length <= 2) return names.join('、')
   return `${names.join('、')} 等`
 })
+
+function majorTitle(m: MajorVO) {
+  return m.displayName || m.name || '—'
+}
+
+function isSchoolExam(m: MajorVO) {
+  return (m.examType || '').includes('校考')
+}
+
+function isLimited(m: MajorVO) {
+  return (m.prerequisite || '').includes('限招')
+}
 
 function toggleTargetsPanel() {
   targetsExpanded.value = !targetsExpanded.value
@@ -101,7 +122,7 @@ async function scrollToMajorsPanel(majorId?: number | null) {
 
   if (majorId == null) return
   await nextTick()
-  const majorEl = panel.querySelector(`.majors-item[data-major-id="${majorId}"]`) as HTMLElement | null
+  const majorEl = panel.querySelector(`tr[data-major-id="${majorId}"]`) as HTMLElement | null
   majorEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
 
@@ -206,6 +227,7 @@ async function loadSchools() {
       kw: kw.value.trim() || undefined,
       province: province.value || undefined,
       type: type.value || undefined,
+      year: listYear.value,
       majorDictId: majorDictId.value,
       majorCategory:
         !majorDictId.value && majorCategory.value ? majorCategory.value : undefined,
@@ -242,14 +264,13 @@ function onSearch() {
   loadSchools()
 }
 
-/** 专业筛选变更：刷新院校列表，若当前校仍在结果中则同步刷新专业列表 */
 async function reloadWithSelection() {
   const keep = selectedSchool.value
   pageNo.value = 1
   await loadSchools()
   if (keep && schools.value.some((s) => s.id === keep.id)) {
     selectedSchool.value = keep
-    await showMajors(keep)
+    await showMajors(keep, { scroll: false })
   }
 }
 
@@ -267,9 +288,8 @@ async function searchMajorOptions(query: string) {
       pageSize: 30,
     })
     majorOptions.value = data.list
-  } catch (e) {
+  } catch {
     majorOptions.value = []
-    ElMessage.error(e instanceof Error ? e.message : '专业选项加载失败')
   } finally {
     majorSearchLoading.value = false
   }
@@ -279,13 +299,19 @@ function onMajorCategoryChange() {
   majorDictId.value = undefined
   majorOptions.value = []
   if (majorCategory.value) {
-    searchMajorOptions('')
+    void searchMajorOptions('')
   }
-  reloadWithSelection()
+  void reloadWithSelection()
 }
 
 async function onMajorDictChange() {
   await reloadWithSelection()
+}
+
+function isMajorFilterMatch(m: MajorVO) {
+  if (majorDictId.value != null && m.majorDictId === majorDictId.value) return true
+  if (!majorDictId.value && majorCategory.value && m.majorCategory === majorCategory.value) return true
+  return false
 }
 
 /** 防止连点切换院校时旧请求覆盖新结果 */
@@ -301,7 +327,6 @@ async function showMajors(
   highlightedMajorId.value = opts?.majorId ?? null
   activeTargetId.value = opts?.targetId ?? null
   selectedSchool.value = row
-  // 切换院校时保留旧列表，避免先清空再加载造成闪屏
   if (!alreadyOpen) {
     schoolMajors.value = []
   }
@@ -322,7 +347,6 @@ async function showMajors(
   } finally {
     if (seq !== majorsRequestSeq) return
     majorsLoading.value = false
-    // 首次打开或目标跳转要定位；面板内换校且专业区已在视口内则不滚动，避免画面跳动
     const jumpFromTarget = opts?.majorId != null || opts?.targetId != null
     if (shouldScroll && (!alreadyOpen || jumpFromTarget || !isMajorsPanelMostlyVisible())) {
       await scrollToMajorsPanel(opts?.majorId)
@@ -348,22 +372,11 @@ function isTargetMajorHighlighted(m: MajorVO) {
   return highlightedMajorId.value != null && m.id === highlightedMajorId.value
 }
 
-function isMajorFilterMatch(m: MajorVO) {
-  if (majorDictId.value != null && m.majorDictId === majorDictId.value) return true
-  if (!majorDictId.value && majorCategory.value && m.majorCategory === majorCategory.value) return true
-  return false
-}
-
-function isMajorHighlighted(m: MajorVO) {
-  return isTargetMajorHighlighted(m) || isMajorFilterMatch(m)
-}
-
 onMounted(async () => {
   try {
     majorCategories.value = await fetchMajorCategories()
-  } catch (e) {
+  } catch {
     majorCategories.value = []
-    ElMessage.error(e instanceof Error ? e.message : '专业类型加载失败')
   }
   await loadTargets()
   loadSchools()
@@ -491,19 +504,15 @@ onMounted(async () => {
           :placeholder="majorCategory ? '专业筛选' : '先选专业类型'"
           :remote-method="searchMajorOptions"
           :loading="majorSearchLoading"
-          style="width: 180px"
+          style="width: 160px"
           @change="onMajorDictChange"
           @clear="onMajorDictChange"
         >
-          <el-option
-            v-for="item in majorOptions"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          />
+          <el-option v-for="item in majorOptions" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
         <el-input v-model="kw" placeholder="搜索院校" clearable style="width: 160px" @keyup.enter="onSearch" />
         <el-button type="primary" @click="onSearch">查询</el-button>
+        <el-button @click="guideOpen = true">前言</el-button>
       </div>
 
       <el-checkbox v-model="preferPublic" class="prefer-public" @change="onSearch">
@@ -511,22 +520,13 @@ onMounted(async () => {
       </el-checkbox>
 
       <el-table v-loading="loading" :data="schools" size="small" class="school-table">
-        <el-table-column prop="name" label="院校" min-width="140" />
-        <el-table-column prop="city" label="城市" width="80" />
+        <el-table-column prop="name" label="院校" min-width="180" />
         <el-table-column label="类型" width="88">
           <template #default="{ row }">
             <span class="st-chip" :class="typeChip(row)">{{ row.type }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="majorCount" label="专业数" width="72" align="center" />
-        <el-table-column prop="minScore" label="最低分" width="72" align="center" />
-        <el-table-column prop="enrollment" label="招生" width="72" align="center" />
-        <el-table-column label="学费" width="88" align="right">
-          <template #default="{ row }">
-            <span v-if="row.tuition">¥{{ row.tuition }}</span>
-            <span v-else>—</span>
-          </template>
-        </el-table-column>
+        <el-table-column prop="majorCount" label="专业数" width="88" align="center" />
         <el-table-column label="" width="148" align="center">
           <template #default="{ row }">
             <el-button
@@ -566,51 +566,89 @@ onMounted(async () => {
 
       <section v-if="selectedSchool" ref="majorsPanelRef" class="majors-panel">
         <header class="majors-panel__head">
-          {{ selectedSchool.name }} · 开设专业（{{ majorsLoading ? '…' : schoolMajors.length }}）
+          <span>{{ selectedSchool.name }} · 招生专业（{{ majorsLoading ? '…' : schoolMajors.length }}）</span>
+          <span v-if="selectedSchool.type" class="st-chip" :class="typeChip(selectedSchool)">{{
+            selectedSchool.type
+          }}</span>
         </header>
         <div v-loading="majorsLoading" class="majors-panel__body">
           <p v-if="!majorsLoading && schoolMajors.length === 0" class="majors-empty">暂无开设专业数据</p>
-          <ul v-else class="majors-list">
-            <li
-              v-for="m in schoolMajors"
-              :key="m.id"
-              class="majors-item"
-              :class="{ 'majors-item--match': isMajorHighlighted(m) }"
-              :data-major-id="m.id"
-            >
-              <div class="majors-item__head">
-                <strong>{{ m.name }}</strong>
-                <span v-if="isTargetMajorHighlighted(m)" class="st-chip st-chip--match">目标专业</span>
-                <span v-else-if="isMajorFilterMatch(m)" class="st-chip st-chip--match">与筛选相关</span>
-                <span v-if="m.majorCategory" class="st-chip st-chip--muted">{{ m.majorCategory }}</span>
-                <el-button
-                  link
-                  type="success"
-                  size="small"
-                  class="majors-item__target-btn"
-                  :loading="targetAdding === m.id"
-                  :disabled="!selectedSchool || isMajorTargeted(selectedSchool.id, m.id)"
-                  @click.stop="handleAddMajorTarget(m)"
+          <div v-else class="majors-table-wrap">
+            <table class="majors-table">
+              <thead>
+                <tr>
+                  <th>专业组</th>
+                  <th>专业号</th>
+                  <th>批次</th>
+                  <th class="majors-table__col-major">招生专业</th>
+                  <th>公共课</th>
+                  <th>专业基础课</th>
+                  <th>专业综合课</th>
+                  <th>专综类型</th>
+                  <th>学费</th>
+                  <th>教学地点</th>
+                  <th>前置要求</th>
+                  <th class="majors-table__col-act">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="m in schoolMajors"
+                  :key="m.id"
+                  :class="{
+                    'majors-table__row--target': isTargetMajorHighlighted(m),
+                    'majors-table__row--match': isMajorFilterMatch(m),
+                  }"
+                  :data-major-id="m.id"
                 >
-                  {{
-                    selectedSchool && isMajorTargeted(selectedSchool.id, m.id) ? '已加入' : '加入目标'
-                  }}
-                </el-button>
-              </div>
-              <dl class="majors-item__meta">
-                <div><dt>考试科目</dt><dd>{{ m.examSubjects || '—' }}</dd></div>
-                <div><dt>最低分</dt><dd>{{ m.minScore ?? '—' }}</dd></div>
-                <div><dt>招生</dt><dd>{{ m.enrollment ?? '—' }}</dd></div>
-                <div><dt>学费</dt><dd>{{ m.tuition ? `¥${m.tuition}` : '—' }}</dd></div>
-                <div><dt>年份</dt><dd>{{ m.year ?? '—' }}</dd></div>
-              </dl>
-            </li>
-          </ul>
+                  <td>{{ m.majorGroup || '—' }}</td>
+                  <td>{{ m.majorCode || '—' }}</td>
+                  <td>{{ m.batchName || '—' }}</td>
+                  <td class="majors-table__col-major">
+                    <span class="majors-table__major-name">{{ majorTitle(m) }}</span>
+                    <span v-if="isTargetMajorHighlighted(m)" class="st-chip st-chip--match">目标</span>
+                  </td>
+                  <td>{{ m.publicSubjects || '—' }}</td>
+                  <td>{{ m.foundationSubject || '—' }}</td>
+                  <td>{{ m.comprehensiveSubject || '—' }}</td>
+                  <td>
+                    <span
+                      class="majors-table__exam"
+                      :class="{ 'majors-table__exam--school': isSchoolExam(m) }"
+                    >
+                      {{ m.examType || '—' }}
+                    </span>
+                  </td>
+                  <td>{{ m.tuition != null ? m.tuition : '—' }}</td>
+                  <td>{{ m.campus || '—' }}</td>
+                  <td>
+                    <span :class="{ 'majors-table__limit': isLimited(m) }">{{ m.prerequisite || '—' }}</span>
+                  </td>
+                  <td class="majors-table__col-act">
+                    <el-button
+                      link
+                      type="success"
+                      size="small"
+                      :loading="targetAdding === m.id"
+                      :disabled="!selectedSchool || isMajorTargeted(selectedSchool.id, m.id)"
+                      @click.stop="handleAddMajorTarget(m)"
+                    >
+                      {{
+                        selectedSchool && isMajorTargeted(selectedSchool.id, m.id) ? '已加入' : '加入目标'
+                      }}
+                    </el-button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
       </div>
     </div>
     </section>
+
+    <ProvinceGuideDialog :open="guideOpen" :province="province" @close="guideOpen = false" />
   </div>
 </template>
 
@@ -628,11 +666,80 @@ onMounted(async () => {
 }
 
 .majors-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 12px 16px;
   font-size: 14px;
   font-weight: 650;
   color: #0f172a;
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.majors-table-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.majors-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.majors-table th,
+.majors-table td {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  background: #fff;
+}
+
+.majors-table thead th {
+  background: #eef2ef;
+  font-weight: 650;
+  color: #1e293b;
+}
+
+.majors-table__col-major {
+  white-space: normal;
+  min-width: 140px;
+  max-width: 220px;
+}
+
+.majors-table__col-act {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  background: #fff;
+  box-shadow: -4px 0 8px rgba(15, 23, 42, 0.04);
+}
+
+.majors-table thead .majors-table__col-act {
+  background: #eef2ef;
+}
+
+.majors-table__major-name {
+  display: inline;
+  line-height: 1.45;
+}
+
+.majors-table__exam--school {
+  color: #b42318;
+  font-weight: 600;
+}
+
+.majors-table__limit {
+  color: #b42318;
+  font-weight: 600;
+}
+
+.majors-table__row--target td,
+.majors-table__row--match td {
+  background: rgba(61, 107, 79, 0.08);
 }
 
 /* —— 目标院校：可收缩悬浮层 —— */
@@ -977,8 +1084,6 @@ onMounted(async () => {
 
 .majors-panel__body {
   min-height: 80px;
-  max-height: 320px;
-  overflow-y: auto;
   padding: 12px 16px;
 }
 

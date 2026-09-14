@@ -2,7 +2,7 @@ package com.yukimomo.user.service;
 
 import com.yukimomo.user.dto.RandomSubjectFilterSaveDTO;
 import com.yukimomo.user.dto.UserExamPreferenceSaveDTO;
-import com.yukimomo.user.vo.UserExamPreferenceVO;
+import com.yukimomo.api.user.vo.UserExamPreferenceVO;
 
 /**
  * 用户备考设置服务。

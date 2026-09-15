@@ -1,4 +1,6 @@
 @import './stitch-tokens.css';
+@import './stitch-ep-theme.css';
+@import './stitch-content-emphasis.css';
 
 * {
   box-sizing: border-box;
@@ -11,6 +13,33 @@ body {
   line-height: 1.43;
   color: var(--st-on-surface);
   background: var(--st-bg);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(100 116 139 / 28%) transparent;
+}
+
+body::-webkit-scrollbar,
+html::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body::-webkit-scrollbar-track,
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body::-webkit-scrollbar-thumb,
+html::-webkit-scrollbar-thumb {
+  background: rgb(100 116 139 / 28%);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+body::-webkit-scrollbar-thumb:hover,
+html::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139 / 42%);
+  background-clip: content-box;
 }
 
 #app {
@@ -23,20 +52,6 @@ body {
   border: 1px solid var(--st-outline-variant);
   border-radius: var(--st-radius-md);
   box-shadow: var(--st-shadow-card);
-}
-
-.st-card-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--st-outline-variant);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--st-on-surface-variant);
-}
-
-.st-card-body {
-  padding: 16px;
 }
 
 /* 状态 Chip */
@@ -60,19 +75,6 @@ body {
   color: #6d2d00;
 }
 
-.st-display-lg {
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 38px;
-  letter-spacing: -0.02em;
-}
-
-.st-display-md {
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 32px;
-}
-
 .st-headline {
   font-size: 18px;
   font-weight: 600;
@@ -85,9 +87,4 @@ body {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--st-on-surface-variant);
-}
-
-.st-mono {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 13px;
 }

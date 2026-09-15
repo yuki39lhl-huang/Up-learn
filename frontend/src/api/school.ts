@@ -32,11 +32,6 @@ export function fetchMajorOptions(query: MajorOptionQuery = {}) {
   return getData<PageDTO<MajorOptionVO>>(request.get('/major/options', { params: query }))
 }
 
-/** 门类列表（级联第一级） */
-export function fetchMajorDisciplines() {
-  return getData<string[]>(request.get('/major/disciplines'))
-}
-
 /** 专业类列表（级联第二级；可按门类过滤） */
 export function fetchMajorCategories(discipline?: string) {
   return getData<string[]>(request.get('/major/categories', { params: { discipline } }))

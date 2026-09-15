@@ -27,6 +27,9 @@ public class OssProperties {
     /** 头像对象前缀目录 */
     private String avatarDir = "avatar";
 
+    /** 控制台底层背景图对象前缀目录 */
+    private String wallpaperDir = "wallpaper";
+
     /** 签名 URL 有效期（秒），供前端 img 加载私有对象 */
     private long presignTtlSeconds = 7200;
 }

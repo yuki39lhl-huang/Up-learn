@@ -82,13 +82,6 @@ public class JwtUtils {
         throw new UnauthorizedException();
     }
 
-    //根据token获取用户邮箱
-    public String getEmail(String token) {
-        Claims claims = parseToken(token);
-        //创建的时候email是email的键,直接get得到用户邮箱,这里String.class是类型,指定返回类型为String
-        return claims.get(CLAIM_EMAIL, String.class);
-    }
-
     //创建密钥,使用jwtProperties.getSecret()作为密钥,getBytes(StandardCharsets.UTF_8)将字符串转换为字节数组,然后使用Keys.hmacShaKeyFor(keyBytes)创建密钥
     private SecretKey secretKey() {
         byte[] keyBytes = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);

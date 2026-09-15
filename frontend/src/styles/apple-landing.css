@@ -15,10 +15,49 @@
   --apple-orange: #ff9500;
   --apple-orange-soft: rgb(255 149 0 / 12%);
   --apple-border: #ededf2;
+  --apple-surface: #ffffff;
+  --apple-nav-bg: rgb(255 255 255 / 82%);
+  --apple-hero-grad-start: #ffffff;
+  --apple-divider: #f0f0f5;
+  --apple-chip-bg: #f5f5f7;
+  --apple-input-border: #d2d2d7;
+  --apple-stats-inner: rgb(255 255 255 / 94%);
+  --apple-stats-border: rgb(255 255 255 / 80%);
+  --apple-metric-bg: rgb(245 245 247 / 80%);
+  --apple-option-selected-bg: rgb(0 113 227 / 6%);
+  --apple-option-correct-bg: rgb(52 199 89 / 8%);
   --apple-radius-lg: 20px;
   --apple-radius-md: 14px;
   --apple-radius-sm: 10px;
   --apple-shadow: 0 8px 32px rgb(0 0 0 / 6%);
   --apple-shadow-sm: 0 2px 12px rgb(0 0 0 / 4%);
   --apple-max: 1120px;
+}
+
+html[data-theme='dark'] {
+  --apple-bg: #0f1218;
+  --apple-bg-muted: #171c26;
+  --apple-bg-soft: #141820;
+  --apple-text: #e8edf7;
+  --apple-text-muted: #a8b3c7;
+  --apple-blue: #5aa9ff;
+  --apple-blue-soft: rgb(90 169 255 / 14%);
+  --apple-green: #4ade80;
+  --apple-green-soft: rgb(74 222 128 / 14%);
+  --apple-orange: #fb923c;
+  --apple-orange-soft: rgb(251 146 60 / 14%);
+  --apple-border: rgba(148, 163, 184, 0.14);
+  --apple-surface: #1a1f2a;
+  --apple-nav-bg: rgb(15 18 24 / 86%);
+  --apple-hero-grad-start: #0f1218;
+  --apple-divider: rgba(148, 163, 184, 0.12);
+  --apple-chip-bg: #232a38;
+  --apple-input-border: rgba(148, 163, 184, 0.22);
+  --apple-stats-inner: rgba(26, 31, 42, 0.92);
+  --apple-stats-border: rgba(148, 163, 184, 0.14);
+  --apple-metric-bg: rgba(35, 42, 56, 0.8);
+  --apple-option-selected-bg: rgb(90 169 255 / 12%);
+  --apple-option-correct-bg: rgb(74 222 128 / 12%);
+  --apple-shadow: 0 8px 32px rgb(0 0 0 / 40%);
+  --apple-shadow-sm: 0 2px 12px rgb(0 0 0 / 28%);
 }

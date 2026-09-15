@@ -52,7 +52,7 @@ export default defineComponent({
   margin: 0 0 8px;
   font-size: 15px;
   font-weight: 650;
-  color: #0f172a;
+  color: var(--st-on-surface);
 }
 
 .syllabus-block__p {

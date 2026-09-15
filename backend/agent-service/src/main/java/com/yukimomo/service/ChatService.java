@@ -17,7 +17,6 @@ import reactor.core.publisher.Flux;
         chatModel = "openAiChatModel",
         streamingChatModel = "openAiStreamingChatModel",
         chatMemoryProvider = "chatMemoryProvider",
-        contentRetriever = "contentRetriever",
         tools = {"upLearnQueryTools", "knowledgeSearchTools"}
 )
 public interface ChatService {

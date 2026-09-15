@@ -11,6 +11,16 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8082',
         changeOrigin: true,
+        // 一点通流式：避免中间层缓冲整段再吐出
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes, req) => {
+            const url = req.url ?? ''
+            if (url.includes('/agent/chat/stream')) {
+              proxyRes.headers['cache-control'] = 'no-cache, no-transform'
+              proxyRes.headers['x-accel-buffering'] = 'no'
+            }
+          })
+        },
       },
     },
   },

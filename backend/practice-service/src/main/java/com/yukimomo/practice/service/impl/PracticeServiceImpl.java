@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
  * {@link RequiredArgsConstructor} 生成含 final 字段的构造器，由 Spring 注入 Mapper 与 Redis。
  */
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor 
 public class PracticeServiceImpl implements PracticeService {
 
     /** Redis 日维度 Key 用的日期格式，如 20260826 */
@@ -283,14 +283,17 @@ public class PracticeServiceImpl implements PracticeService {
     public RandomResetVO resetRandom(RandomResetDTO dto) {
         Long userId = UserContext.requireUserId();
         RandomResetVO vo = randomPracticeService.resetProgress(userId, dto.getScope(), dto.getSubject());
-        clearRandomAnswerRecords(userId, vo.getSubjects());
+        clearRandomAnswerRecords(userId, dto.getScope(), vo.getSubjects());
         return vo;
     }
 
-    /** 清空重刷时同步清除对应科目的随机刷题答题历史，统计归零。 */
-    private void clearRandomAnswerRecords(Long userId, List<String> subjects) {
-        if (subjects == null || subjects.isEmpty()) {
-            // 无科目范围时仍清掉该用户全部 random 历史，避免残留
+    /**
+     * 清空重刷时同步清除随机刷题答题历史（source=random），统计归零。
+     * scope=all：清除该用户全部 random 记录；scope=single：仅清除指定科目题目对应记录。
+     */
+    private void clearRandomAnswerRecords(Long userId, String scope, List<String> subjects) {
+        boolean clearAll = !"single".equalsIgnoreCase(StrUtil.blankToDefault(scope, ""));
+        if (clearAll || subjects == null || subjects.isEmpty()) {
             answerRecordMapper.delete(
                     new LambdaQueryWrapper<AnswerRecord>()
                             .eq(AnswerRecord::getUserId, userId)
@@ -349,14 +352,19 @@ public class PracticeServiceImpl implements PracticeService {
     }
 
     /**
-     * 历史分页：逻辑同错题列表，主表换成 answer_record，按 created_at 倒序。
+     * 历史分页：主表 answer_record，按 created_at 倒序；可选按 source 过滤。
      */
     @Override
-    public PageDTO<AnswerHistoryVO> listHistory(PageQuery query) {
+    public PageDTO<AnswerHistoryVO> listHistory(PageQuery query, String source) {
         Long userId = UserContext.requireUserId();
+        LambdaQueryWrapper<AnswerRecord> wrapper = new LambdaQueryWrapper<AnswerRecord>()
+                .eq(AnswerRecord::getUserId, userId);
+        if (StrUtil.isNotBlank(source)) {
+            wrapper.eq(AnswerRecord::getSource, source.trim());
+        }
         Page<AnswerRecord> page = answerRecordMapper.selectPage(
                 query.toMpPage("created_at", false),
-                new LambdaQueryWrapper<AnswerRecord>().eq(AnswerRecord::getUserId, userId)
+                wrapper
         );
         if (page.getRecords() == null || page.getRecords().isEmpty()) {
             return PageDTO.empty();

@@ -1,23 +1,34 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import SchoolQueryPanel from '../components/stitch/SchoolQueryPanel.vue'
-import SyllabusPanel from '../components/stitch/SyllabusPanel.vue'
 import DashboardPanel from '../components/stitch/DashboardPanel.vue'
-import PracticePanel from '../components/stitch/PracticePanel.vue'
-import PapersPanel from '../components/stitch/PapersPanel.vue'
-import AgentChatPanel from '../components/stitch/AgentChatPanel.vue'
-import AccountSettingsPanel from '../components/stitch/AccountSettingsPanel.vue'
 import BrandLogo from '../components/stitch/BrandLogo.vue'
 import StitchIcon from '../components/stitch/StitchIcon.vue'
 import { useAuthStore } from '../stores/auth'
 import { useExamPrefsStore } from '../stores/examPrefs'
-import { logout } from '../api/user'
-import { consumeConsoleDashboardEntry, consoleLocation, pushConsole } from '../utils/consoleNav'
+import { useUiPrefsStore } from '../stores/uiPrefs'
+import {
+  consumeConsoleDashboardEntry,
+  consoleLocation,
+  hashToConsoleModule,
+  pushConsole,
+  type ConsoleModule,
+} from '../utils/consoleNav'
 import '../styles/console-workbench.css'
 
-type ModuleKey = 'dashboard' | 'school' | 'syllabus' | 'random' | 'papers' | 'community' | 'agent'
+/** 非首屏模块异步分包，首次进入控制台只扛主页 */
+const SchoolQueryPanel = defineAsyncComponent(() => import('../components/stitch/SchoolQueryPanel.vue'))
+const SyllabusPanel = defineAsyncComponent(() => import('../components/stitch/SyllabusPanel.vue'))
+const PracticePanel = defineAsyncComponent(() => import('../components/stitch/PracticePanel.vue'))
+const PapersPanel = defineAsyncComponent(() => import('../components/stitch/PapersPanel.vue'))
+const AgentChatPanel = defineAsyncComponent(() => import('../components/stitch/AgentChatPanel.vue'))
+const AccountSettingsPanel = defineAsyncComponent(
+  () => import('../components/stitch/AccountSettingsPanel.vue'),
+)
+const SettingsPanel = defineAsyncComponent(() => import('../components/stitch/SettingsPanel.vue'))
+
+type ModuleKey = ConsoleModule
 type SystemKey = 'ui-settings' | 'notifications' | 'account'
 type ViewKey = ModuleKey | SystemKey
 
@@ -25,79 +36,130 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const examPrefs = useExamPrefsStore()
+const ui = useUiPrefsStore()
 
-const SIDEBAR_COLLAPSED_KEY = 'ul_console_sidebar_collapsed'
-const sidebarCollapsed = ref(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1')
+/** 按访问过的视图才挂载，之后 v-show 保活 */
+const mountedViews = reactive<Record<ViewKey, boolean>>({
+  dashboard: false,
+  school: false,
+  syllabus: false,
+  random: false,
+  papers: false,
+  community: false,
+  agent: false,
+  'ui-settings': false,
+  notifications: false,
+  account: false,
+})
 
+function ensureMounted(view: ViewKey) {
+  mountedViews[view] = true
+}
 function toggleSidebar() {
-  sidebarCollapsed.value = !sidebarCollapsed.value
-  localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed.value ? '1' : '0')
+  void ui.persist({ sidebarCollapsed: !ui.state.sidebarCollapsed })
 }
 
-const uiSettingsTab = ref('appearance')
+async function onToggleTheme() {
+  try {
+    await ui.toggleTheme()
+  } catch (e) {
+    ElMessage.error(e instanceof Error ? e.message : '主题切换失败')
+  }
+}
 
-const navItems: {
-  key: ModuleKey
-  label: string
-  icon: 'home' | 'school' | 'syllabus' | 'practice' | 'paper' | 'community' | 'agent'
-}[] = [
-  { key: 'dashboard', label: '主页', icon: 'home' },
-  { key: 'school', label: '院校查询', icon: 'school' },
-  { key: 'syllabus', label: '考纲查询', icon: 'syllabus' },
-  { key: 'random', label: '随机刷题', icon: 'practice' },
-  { key: 'papers', label: '历年真题', icon: 'paper' },
-  { key: 'community', label: '社区', icon: 'community' },
-  { key: 'agent', label: '一点通', icon: 'agent' },
-]
-
-const uiSettingsNav = [
-  { key: 'appearance', label: '外观' },
-  { key: 'layout', label: '布局' },
-  { key: 'locale', label: '语言与地区' },
-]
+const navItems = computed(() => [
+  { key: 'dashboard' as const, label: ui.tr('nav.home'), icon: 'home' as const },
+  { key: 'school' as const, label: ui.tr('nav.school'), icon: 'school' as const },
+  { key: 'syllabus' as const, label: ui.tr('nav.syllabus'), icon: 'syllabus' as const },
+  { key: 'random' as const, label: ui.tr('nav.random'), icon: 'practice' as const },
+  { key: 'papers' as const, label: ui.tr('nav.papers'), icon: 'paper' as const },
+  { key: 'community' as const, label: ui.tr('nav.community'), icon: 'community' as const },
+  { key: 'agent' as const, label: ui.tr('nav.agent'), icon: 'agent' as const },
+])
 
 const mockNotifications = [
   { id: 1, title: '每日一练提醒', desc: '今天还有 1 道题未完成', time: '2 小时前', unread: true },
   { id: 2, title: '院校数据更新', desc: '广东省 2025 招生计划已同步', time: '昨天', unread: false },
 ]
 
+/** 系统视图 hash；模块 hash 交给 consoleNav 的单一映射 */
+const SYSTEM_HASH: Record<string, SystemKey> = {
+  '#ui-settings': 'ui-settings',
+  '#settings': 'ui-settings',
+  '#notifications': 'notifications',
+  '#account': 'account',
+}
+
 function hashToView(hash: string): ViewKey {
-  const h = hash.replace('#', '')
-  if (h === 'daily' || h === 'home' || h === '' || h === 'dashboard') return 'dashboard'
-  if (h === 'school') return 'school'
-  if (h === 'syllabus') return 'syllabus'
-  if (h === 'practice' || h === 'random') return 'random'
-  if (h === 'papers') return 'papers'
-  if (h === 'community') return 'community'
-  if (h === 'agent') return 'agent'
-  if (h === 'ui-settings' || h === 'settings') return 'ui-settings'
-  if (h === 'notifications') return 'notifications'
-  if (h === 'account') return 'account'
-  return 'dashboard'
+  return SYSTEM_HASH[hash] ?? hashToConsoleModule(hash) ?? 'dashboard'
 }
 
 const activeView = ref<ViewKey>('dashboard')
 
+/** 设置/通知/账号不播；其它模块切入主展示区时轻过渡，避免瞬间切换顿挫 */
+const SYSTEM_VIEWS = new Set<ViewKey>(['ui-settings', 'notifications', 'account'])
+const isModuleView = computed(() => !SYSTEM_VIEWS.has(activeView.value))
+const moduleEnter = ref(false)
+let moduleEnterTimer: ReturnType<typeof setTimeout> | null = null
+
+async function playModuleEnter() {
+  if (moduleEnterTimer) {
+    clearTimeout(moduleEnterTimer)
+    moduleEnterTimer = null
+  }
+  moduleEnter.value = false
+  await nextTick()
+  requestAnimationFrame(() => {
+    moduleEnter.value = true
+    // 动画结束后摘掉标记，恢复主区滚动，避免 overflow:hidden 常驻
+    moduleEnterTimer = setTimeout(() => {
+      moduleEnter.value = false
+      moduleEnterTimer = null
+    }, 360)
+  })
+}
+
+watch(
+  activeView,
+  (view) => {
+    ensureMounted(view)
+    if (SYSTEM_VIEWS.has(view)) {
+      if (moduleEnterTimer) {
+        clearTimeout(moduleEnterTimer)
+        moduleEnterTimer = null
+      }
+      moduleEnter.value = false
+      return
+    }
+    // 院校查询自带下拉展开，避免与通用淡入叠加重卡顿感
+    if (view === 'school') {
+      if (moduleEnterTimer) {
+        clearTimeout(moduleEnterTimer)
+        moduleEnterTimer = null
+      }
+      moduleEnter.value = false
+      return
+    }
+    void playModuleEnter()
+  },
+  { immediate: true },
+)
+
 const pageTitle = computed(() => {
   const map: Record<ViewKey, string> = {
-    dashboard: '主页',
-    school: '院校查询',
-    syllabus: '考纲查询',
-    random: '随机刷题',
-    papers: '历年真题',
-    community: '社区',
-    agent: '一点通',
-    'ui-settings': '界面设置',
-    notifications: '通知',
-    account: '账号',
+    dashboard: ui.tr('nav.home'),
+    school: ui.tr('nav.school'),
+    syllabus: ui.tr('nav.syllabus'),
+    random: ui.tr('nav.random'),
+    papers: ui.tr('nav.papers'),
+    community: ui.tr('nav.community'),
+    agent: ui.tr('nav.agent'),
+    'ui-settings': ui.tr('nav.settings'),
+    notifications: ui.tr('nav.notifications'),
+    account: ui.tr('nav.account'),
   }
   return map[activeView.value]
 })
-
-function viewHash(key: ViewKey) {
-  if (key === 'random') return '#practice'
-  return `#${key}`
-}
 
 function selectModule(key: ModuleKey) {
   activeView.value = key
@@ -106,7 +168,7 @@ function selectModule(key: ModuleKey) {
 
 function selectSystem(key: SystemKey) {
   activeView.value = key
-  router.replace({ path: '/console', hash: viewHash(key) })
+  router.replace({ path: '/console', hash: `#${key}` })
 }
 
 const seasonMeta = computed(() => {
@@ -143,23 +205,21 @@ onMounted(() => {
 })
 
 async function handleLogout() {
-  try {
-    if (auth.refreshToken) await logout(auth.refreshToken)
-  } catch {
-    /* ignore */
-  } finally {
-    auth.clearSession()
-    ElMessage.success('已退出')
-    router.push('/home')
-  }
+  await auth.signOut()
+  ElMessage.success(ui.tr('common.logoutOk'))
+  router.push('/home')
 }
 </script>
 
 <template>
   <div class="gmail-shell">
-    <!-- 顶层：汉堡 + Logo + 通知/用户（Gmail 同层） -->
     <header class="gmail-topbar">
-      <button type="button" class="gmail-menu-btn" aria-label="展开或收起侧边栏" @click="toggleSidebar">
+      <button
+        type="button"
+        class="gmail-menu-btn"
+        :aria-label="ui.tr('topbar.toggleSidebar')"
+        @click="toggleSidebar"
+      >
         <StitchIcon name="menu" />
       </button>
       <button type="button" class="gmail-logo" @click="router.push('/home')">
@@ -171,9 +231,18 @@ async function handleLogout() {
         <button
           type="button"
           class="gmail-icon-btn"
+          :aria-label="ui.theme === 'dark' ? ui.tr('topbar.themeToLight') : ui.tr('topbar.themeToDark')"
+          :title="ui.theme === 'dark' ? ui.tr('topbar.themeToLight') : ui.tr('topbar.themeToDark')"
+          @click="onToggleTheme"
+        >
+          <StitchIcon :name="ui.theme === 'dark' ? 'sun' : 'moon'" />
+        </button>
+        <button
+          type="button"
+          class="gmail-icon-btn"
           :class="{ 'gmail-icon-btn--active': activeView === 'notifications' }"
-          aria-label="通知"
-          title="通知"
+          :aria-label="ui.tr('topbar.notifications')"
+          :title="ui.tr('topbar.notifications')"
           @click="selectSystem('notifications')"
         >
           <StitchIcon name="bell" />
@@ -182,8 +251,8 @@ async function handleLogout() {
           type="button"
           class="gmail-avatar-btn"
           :class="{ 'gmail-avatar-btn--active': activeView === 'account' }"
-          aria-label="账号"
-          title="账号"
+          :aria-label="ui.tr('topbar.account')"
+          :title="ui.tr('topbar.account')"
           @click="selectSystem('account')"
         >
           <el-avatar :size="32" :src="auth.user?.avatarUrl">
@@ -194,10 +263,9 @@ async function handleLogout() {
     </header>
 
     <div class="gmail-frame">
-      <!-- 底层：可收缩侧栏 -->
       <aside
         class="gmail-sidebar"
-        :class="{ 'gmail-sidebar--collapsed': sidebarCollapsed }"
+        :class="{ 'gmail-sidebar--collapsed': ui.sidebarCollapsed }"
         aria-label="主导航"
       >
         <nav class="gmail-nav">
@@ -207,7 +275,7 @@ async function handleLogout() {
             type="button"
             class="gmail-nav__item"
             :class="{ 'gmail-nav__item--active': activeView === item.key }"
-            :title="sidebarCollapsed ? item.label : undefined"
+            :title="ui.sidebarCollapsed ? item.label : undefined"
             @click="selectModule(item.key)"
           >
             <StitchIcon :name="item.icon" />
@@ -220,11 +288,11 @@ async function handleLogout() {
             type="button"
             class="gmail-nav__item"
             :class="{ 'gmail-nav__item--active': activeView === 'ui-settings' }"
-            title="界面设置"
+            :title="ui.tr('nav.settings')"
             @click="selectSystem('ui-settings')"
           >
             <StitchIcon name="settings" />
-            <span class="gmail-nav__label">界面设置</span>
+            <span class="gmail-nav__label">{{ ui.tr('nav.settings') }}</span>
           </button>
           <div class="gmail-api">
             <i class="gmail-api__dot" />
@@ -233,42 +301,32 @@ async function handleLogout() {
         </div>
       </aside>
 
-      <!-- 上层：白色浮动主面板 -->
       <div class="gmail-panel-host">
         <section class="gmail-panel" aria-label="主内容">
           <header class="gmail-panel__bar">
             <h1>{{ pageTitle }}</h1>
           </header>
 
-          <div class="gmail-panel__body">
-            <!-- 界面设置 -->
-            <div v-if="activeView === 'ui-settings'" class="gmail-panel__split">
-              <nav class="gmail-panel__aside" aria-label="设置分类">
-                <p class="gmail-panel__aside-title">设置</p>
-                <button
-                  v-for="item in uiSettingsNav"
-                  :key="item.key"
-                  type="button"
-                  class="gmail-panel__link"
-                  :class="{ 'gmail-panel__link--active': uiSettingsTab === item.key }"
-                  @click="uiSettingsTab = item.key"
-                >
-                  {{ item.label }}
-                </button>
-              </nav>
-              <div class="gmail-panel__content">
-                <div class="gmail-panel__empty">
-                  <StitchIcon name="settings" />
-                  <h2>{{ uiSettingsNav.find((i) => i.key === uiSettingsTab)?.label }}</h2>
-                  <p>界面设置内容预留，后续可配置主题、侧栏默认状态、默认省份等。</p>
-                </div>
-              </div>
+          <div
+            class="gmail-panel__body"
+            :class="{ 'gmail-panel__body--module-enter': moduleEnter }"
+          >
+            <!-- 系统页与业务模块并列；未访问过的视图不挂载（懒加载），访问后 v-show 保活 -->
+            <div
+              v-if="mountedViews['ui-settings']"
+              v-show="activeView === 'ui-settings'"
+              class="gmail-panel__content"
+            >
+              <SettingsPanel />
             </div>
 
-            <!-- 通知 -->
-            <div v-else-if="activeView === 'notifications'" class="gmail-panel__content gmail-panel__content--flush">
+            <div
+              v-if="mountedViews.notifications"
+              v-show="activeView === 'notifications'"
+              class="gmail-panel__content gmail-panel__content--flush"
+            >
               <div class="notify-toolbar">
-                {{ mockNotifications.filter((n) => n.unread).length }} 条未读
+                {{ ui.tr('notify.unread', { n: mockNotifications.filter((n) => n.unread).length }) }}
               </div>
               <ul class="notify-list">
                 <li
@@ -287,24 +345,47 @@ async function handleLogout() {
               </ul>
             </div>
 
-            <!-- 账号 -->
-            <div v-else-if="activeView === 'account'" class="account-panel-host">
+            <div
+              v-if="mountedViews.account"
+              v-show="activeView === 'account'"
+              class="account-panel-host"
+            >
               <AccountSettingsPanel @logout="handleLogout" />
             </div>
 
-            <!-- 业务模块：v-show 保留各面板状态，避免切回主页丢失每日一练作答/解析 -->
-            <div v-else class="gmail-panel__content gmail-panel__content--flush">
-              <DashboardPanel v-show="activeView === 'dashboard'" />
-
-              <SchoolQueryPanel v-show="activeView === 'school'" />
-
-              <SyllabusPanel v-show="activeView === 'syllabus'" />
-
-              <PracticePanel v-show="activeView === 'random'" key="random" default-mode="random" />
-
-              <PapersPanel v-show="activeView === 'papers'" />
-
-              <div v-show="activeView === 'community'" class="module-shell">
+            <div
+              v-show="isModuleView"
+              class="gmail-panel__content gmail-panel__content--flush module-stage"
+              :class="{ 'module-stage--enter': moduleEnter }"
+            >
+              <DashboardPanel
+                v-if="mountedViews.dashboard"
+                v-show="activeView === 'dashboard'"
+              />
+              <SchoolQueryPanel
+                v-if="mountedViews.school"
+                v-show="activeView === 'school'"
+                :active="activeView === 'school'"
+              />
+              <SyllabusPanel
+                v-if="mountedViews.syllabus"
+                v-show="activeView === 'syllabus'"
+              />
+              <PracticePanel
+                v-if="mountedViews.random"
+                v-show="activeView === 'random'"
+                key="random"
+                default-mode="random"
+              />
+              <PapersPanel
+                v-if="mountedViews.papers"
+                v-show="activeView === 'papers'"
+              />
+              <div
+                v-if="mountedViews.community"
+                v-show="activeView === 'community'"
+                class="module-shell"
+              >
                 <section class="module-card">
                   <header class="module-card__head">
                     <div>
@@ -319,8 +400,10 @@ async function handleLogout() {
                   </div>
                 </section>
               </div>
-
-              <AgentChatPanel v-show="activeView === 'agent'" />
+              <AgentChatPanel
+                v-if="mountedViews.agent"
+                v-show="activeView === 'agent'"
+              />
             </div>
           </div>
         </section>
@@ -335,5 +418,35 @@ async function handleLogout() {
   height: 40px;
   color: var(--st-on-surface-variant);
   opacity: 0.6;
+}
+
+/*
+ * 切入动效只做位移，不在祖先层做 opacity 渐变：
+ * 祖先 opacity < 1 会把子元素的 backdrop-filter 限制在该合成组内，
+ * 动画期间模块卡片会直接透到底层壁纸，结束瞬间毛玻璃才「弹」出来。
+ */
+.module-stage--enter {
+  overflow: hidden !important;
+  animation: module-stage-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 动画期间锁住主区溢出，避免 translate 撑出瞬时滚动条导致内容横移 */
+:deep(.gmail-panel__body--module-enter) {
+  overflow: hidden !important;
+}
+
+@keyframes module-stage-in {
+  from {
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .module-stage--enter {
+    animation: none;
+  }
 }
 </style>

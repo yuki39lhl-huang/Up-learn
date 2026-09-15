@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { addUserTarget, fetchUserTargets, removeUserTarget } from '../../api/user'
 import {
@@ -12,7 +12,35 @@ import { useAuthStore } from '../../stores/auth'
 import type { MajorOptionVO, MajorVO, SchoolVO, UserTargetVO } from '../../types/api'
 import ProvinceGuideDialog from './ProvinceGuideDialog.vue'
 
+const props = withDefaults(
+  defineProps<{
+    /** 是否为当前激活模块；切入时播下拉展开 */
+    active?: boolean
+  }>(),
+  { active: false },
+)
+
 const auth = useAuthStore()
+const contentRevealed = ref(false)
+
+async function playContentReveal() {
+  contentRevealed.value = false
+  await nextTick()
+  // 等显示帧再展开，避免与 v-show 切显抢同一帧导致「卡一下全出来」
+  requestAnimationFrame(() => {
+    contentRevealed.value = true
+  })
+}
+
+watch(
+  () => props.active,
+  (on) => {
+    if (on) void playContentReveal()
+    else contentRevealed.value = false
+  },
+  { immediate: true },
+)
+
 const loading = ref(false)
 const majorsLoading = ref(false)
 const targetsLoading = ref(false)
@@ -23,7 +51,6 @@ const total = ref(0)
 const kw = ref('')
 const province = ref('广东')
 const type = ref('')
-const preferPublic = ref(false)
 const majorCategory = ref('')
 const majorCategories = ref<string[]>([])
 const majorDictId = ref<number | undefined>()
@@ -231,7 +258,6 @@ async function loadSchools() {
       majorDictId: majorDictId.value,
       majorCategory:
         !majorDictId.value && majorCategory.value ? majorCategory.value : undefined,
-      preferPublic: preferPublic.value || undefined,
     })
     schools.value = data.list
     total.value = data.total
@@ -393,88 +419,9 @@ onMounted(async () => {
           <h2>在招院校</h2>
         </div>
       </header>
-      <div class="school-panel__body">
-      <div v-if="auth.isLoggedIn" class="targets-anchor">
-        <button
-          type="button"
-          class="targets-toggle"
-          :class="{ 'targets-toggle--open': targetsExpanded }"
-          :aria-expanded="targetsExpanded"
-          @click="toggleTargetsPanel"
-        >
-          <span class="targets-toggle__icon" aria-hidden="true">★</span>
-          <span class="targets-toggle__label">我的目标院校</span>
-          <span class="targets-toggle__badge">{{ targets.length }}</span>
-          <span v-if="targetPreview && !targetsExpanded" class="targets-toggle__preview">
-            {{ targetPreview }}
-          </span>
-          <span class="targets-toggle__chevron" :class="{ 'targets-toggle__chevron--up': targetsExpanded }">
-            ▾
-          </span>
-        </button>
-
-        <Transition name="targets-drop">
-          <div v-if="targetsExpanded" class="targets-expanded-wrap">
-            <div class="targets-float">
-              <div class="targets-float__inner" v-loading="targetsLoading">
-                <p v-if="!targetsLoading && targets.length === 0" class="targets-empty">
-                  在下方院校或专业旁点击「加入目标」即可收藏意向志愿。
-                </p>
-                <ul v-else class="targets-list">
-                  <li
-                    v-for="item in targets"
-                    :key="item.id"
-                    class="targets-item"
-                    :class="{ 'targets-item--active': isTargetItemActive(item) }"
-                  >
-                    <button
-                      type="button"
-                      class="targets-item__main"
-                      @click="openTargetDetail(item)"
-                    >
-                      <div class="targets-item__row">
-                        <strong class="targets-item__name" :title="item.schoolName">{{ item.schoolName }}</strong>
-                        <span
-                          v-if="item.majorName"
-                          class="targets-item__tag targets-item__tag--major"
-                          :title="item.majorName"
-                        >
-                          {{ item.majorName }}
-                        </span>
-                        <span v-else class="targets-item__tag">院校意向</span>
-                      </div>
-                      <div class="targets-item__meta">
-                        <span class="targets-item__loc">{{ item.schoolCity }}</span>
-                        <span v-if="item.schoolType" class="targets-item__type">{{ item.schoolType }}</span>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      class="targets-item__remove"
-                      aria-label="移除"
-                      @click.stop="handleRemoveTarget(item.id)"
-                    >
-                      ×
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </Transition>
-      </div>
-
-      <Transition name="targets-fade">
-        <button
-          v-if="auth.isLoggedIn && targetsExpanded"
-          type="button"
-          class="targets-backdrop"
-          aria-label="收起目标院校"
-          @click="closeTargetsPanel"
-        />
-      </Transition>
-
-      <div class="school-main" :class="{ 'school-main--dimmed': targetsExpanded }">
+      <Transition name="school-reveal">
+        <div v-if="contentRevealed" class="school-reveal-clip">
+          <div class="school-panel__body school-reveal-inner">
       <div class="filters">
         <el-select v-model="province" placeholder="省份" style="width: 120px" @change="onSearch">
           <el-option label="广东" value="广东" />
@@ -513,12 +460,89 @@ onMounted(async () => {
         <el-input v-model="kw" placeholder="搜索院校" clearable style="width: 160px" @keyup.enter="onSearch" />
         <el-button type="primary" @click="onSearch">查询</el-button>
         <el-button @click="guideOpen = true">前言</el-button>
+
+        <div v-if="auth.isLoggedIn" class="targets-anchor">
+          <button
+            type="button"
+            class="targets-toggle"
+            :class="{ 'targets-toggle--open': targetsExpanded }"
+            :aria-expanded="targetsExpanded"
+            @click="toggleTargetsPanel"
+          >
+            <span class="targets-toggle__icon" aria-hidden="true">★</span>
+            <span class="targets-toggle__label">我的目标院校</span>
+            <span class="targets-toggle__badge">{{ targets.length }}</span>
+            <span v-if="targetPreview && !targetsExpanded" class="targets-toggle__preview">
+              {{ targetPreview }}
+            </span>
+            <span class="targets-toggle__chevron" :class="{ 'targets-toggle__chevron--up': targetsExpanded }">
+              ▾
+            </span>
+          </button>
+
+          <Transition name="targets-drop">
+            <div v-if="targetsExpanded" class="targets-expanded-wrap">
+              <div class="targets-float">
+                <div class="targets-float__inner" v-loading="targetsLoading">
+                  <p v-if="!targetsLoading && targets.length === 0" class="targets-empty">
+                    在下方院校或专业旁点击「加入目标」即可收藏意向志愿。
+                  </p>
+                  <ul v-else class="targets-list">
+                    <li
+                      v-for="item in targets"
+                      :key="item.id"
+                      class="targets-item"
+                      :class="{ 'targets-item--active': isTargetItemActive(item) }"
+                    >
+                      <button
+                        type="button"
+                        class="targets-item__main"
+                        @click="openTargetDetail(item)"
+                      >
+                        <div class="targets-item__row">
+                          <strong class="targets-item__name" :title="item.schoolName">{{ item.schoolName }}</strong>
+                          <span
+                            v-if="item.majorName"
+                            class="targets-item__tag targets-item__tag--major"
+                            :title="item.majorName"
+                          >
+                            {{ item.majorName }}
+                          </span>
+                          <span v-else class="targets-item__tag">院校意向</span>
+                        </div>
+                        <div class="targets-item__meta">
+                          <span class="targets-item__loc">{{ item.schoolCity }}</span>
+                          <span v-if="item.schoolType" class="targets-item__type">{{ item.schoolType }}</span>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        class="targets-item__remove"
+                        aria-label="移除"
+                        @click.stop="handleRemoveTarget(item.id)"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </div>
       </div>
 
-      <el-checkbox v-model="preferPublic" class="prefer-public" @change="onSearch">
-        优先展示公办院校
-      </el-checkbox>
+      <Transition name="targets-fade">
+        <button
+          v-if="auth.isLoggedIn && targetsExpanded"
+          type="button"
+          class="targets-backdrop"
+          aria-label="收起目标院校"
+          @click="closeTargetsPanel"
+        />
+      </Transition>
 
+      <div class="school-main" :class="{ 'school-main--dimmed': targetsExpanded }">
       <el-table v-loading="loading" :data="schools" size="small" class="school-table">
         <el-table-column prop="name" label="院校" min-width="180" />
         <el-table-column label="类型" width="88">
@@ -645,7 +669,9 @@ onMounted(async () => {
         </div>
       </section>
       </div>
-    </div>
+          </div>
+        </div>
+      </Transition>
     </section>
 
     <ProvinceGuideDialog :open="guideOpen" :province="province" @close="guideOpen = false" />
@@ -657,12 +683,61 @@ onMounted(async () => {
   position: relative;
 }
 
-.majors-panel {
-  margin-top: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 14px;
+/* 与备考设置「计算机类」展开同思路：只裁高度，避免整块瞬显 */
+.school-reveal-enter-active.school-reveal-clip,
+.school-reveal-leave-active.school-reveal-clip {
+  display: grid;
+  grid-template-rows: 1fr;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.55);
+}
+
+.school-reveal-enter-active.school-reveal-clip {
+  transition: grid-template-rows 0.48s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.school-reveal-leave-active.school-reveal-clip {
+  transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.school-reveal-enter-from.school-reveal-clip,
+.school-reveal-leave-to.school-reveal-clip {
+  grid-template-rows: 0fr;
+}
+
+.school-reveal-clip > .school-reveal-inner {
+  min-height: 0;
+}
+
+.school-reveal-enter-active .school-reveal-inner,
+.school-reveal-leave-active .school-reveal-inner {
+  overflow: hidden;
+}
+
+.school-reveal-enter-active .school-reveal-inner {
+  transition: opacity 0.36s ease 0.06s;
+}
+
+.school-reveal-enter-from .school-reveal-inner {
+  opacity: 0.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .school-reveal-enter-active.school-reveal-clip,
+  .school-reveal-leave-active.school-reveal-clip {
+    transition: none;
+  }
+
+  .school-reveal-enter-active .school-reveal-inner {
+    transition: none;
+  }
+}
+
+.majors-panel {
+  margin-top: 18px;
+  border: 1px solid color-mix(in srgb, var(--st-on-surface) 10%, transparent);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--ul-content-fill);
 }
 
 .majors-panel__head {
@@ -672,8 +747,8 @@ onMounted(async () => {
   padding: 12px 16px;
   font-size: 14px;
   font-weight: 650;
-  color: #0f172a;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  color: var(--st-on-surface);
+  border-bottom: 1px solid color-mix(in srgb, var(--st-on-surface) 8%, transparent);
 }
 
 .majors-table-wrap {
@@ -690,18 +765,20 @@ onMounted(async () => {
 
 .majors-table th,
 .majors-table td {
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  padding: 8px 10px;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--st-on-surface) 8%, transparent);
+  padding: 10px 12px;
   text-align: left;
   vertical-align: top;
   white-space: nowrap;
-  background: #fff;
+  background: transparent;
+  color: var(--st-on-surface);
 }
 
 .majors-table thead th {
-  background: #eef2ef;
+  background: var(--ul-ep-table-header-bg);
   font-weight: 650;
-  color: #1e293b;
+  color: var(--st-on-surface);
 }
 
 .majors-table__col-major {
@@ -714,12 +791,12 @@ onMounted(async () => {
   position: sticky;
   right: 0;
   z-index: 1;
-  background: #fff;
-  box-shadow: -4px 0 8px rgba(15, 23, 42, 0.04);
+  background: var(--ul-ep-table-bg);
+  box-shadow: -4px 0 8px color-mix(in srgb, var(--st-on-surface) 8%, transparent);
 }
 
 .majors-table thead .majors-table__col-act {
-  background: #eef2ef;
+  background: var(--ul-ep-table-header-bg);
 }
 
 .majors-table__major-name {
@@ -742,27 +819,28 @@ onMounted(async () => {
   background: rgba(61, 107, 79, 0.08);
 }
 
-/* —— 目标院校：可收缩悬浮层 —— */
+/* —— 目标院校：筛选项右侧紧凑入口，点击下拉同前 —— */
 .targets-anchor {
   position: relative;
   z-index: 30;
-  margin-bottom: 8px;
+  margin-left: auto;
+  flex: 0 1 auto;
+  max-width: min(340px, 100%);
 }
 
 .targets-toggle {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid rgb(255 255 255 / 55%);
-  border-radius: 14px;
-  background: rgb(255 255 255 / 72%);
-  backdrop-filter: blur(14px) saturate(1.2);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  box-shadow:
-    0 1px 2px rgb(15 23 42 / 4%),
-    inset 0 1px 0 rgb(255 255 255 / 65%);
+  gap: 6px;
+  width: auto;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--st-glass-border);
+  border-radius: 12px;
+  background: var(--st-glass-bg);
+  backdrop-filter: blur(calc(var(--ul-module-blur, 67) * 0.2px)) saturate(1.2);
+  -webkit-backdrop-filter: blur(calc(var(--ul-module-blur, 67) * 0.2px)) saturate(1.2);
+  box-shadow: var(--st-glass-shadow);
   cursor: pointer;
   font: inherit;
   color: var(--st-on-surface);
@@ -774,25 +852,25 @@ onMounted(async () => {
 }
 
 .targets-toggle:hover {
-  background: rgb(255 255 255 / 88%);
-  box-shadow: 0 4px 14px rgb(15 23 42 / 6%);
+  background: color-mix(in srgb, var(--st-glass-bg) 88%, var(--st-surface));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--st-on-surface) 8%, transparent);
 }
 
 .targets-toggle--open {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
-  border-bottom-color: rgb(255 255 255 / 35%);
+  border-bottom-color: var(--st-glass-border);
   box-shadow: none;
 }
 
 .targets-toggle__icon {
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  font-size: 11px;
+  border-radius: 7px;
+  font-size: 10px;
   color: #b45309;
   background: linear-gradient(135deg, rgb(251 191 36 / 28%), rgb(245 158 11 / 14%));
 }
@@ -805,21 +883,22 @@ onMounted(async () => {
 
 .targets-toggle__badge {
   flex-shrink: 0;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
   border-radius: 999px;
   background: rgb(34 197 94 / 14%);
   color: #15803d;
   font-size: 12px;
   font-weight: 700;
-  line-height: 22px;
+  line-height: 20px;
   text-align: center;
 }
 
 .targets-toggle__preview {
   flex: 1;
   min-width: 0;
+  max-width: 96px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -829,8 +908,8 @@ onMounted(async () => {
 
 .targets-toggle__chevron {
   flex-shrink: 0;
-  margin-left: auto;
-  font-size: 14px;
+  margin-left: 2px;
+  font-size: 13px;
   color: var(--st-on-surface-variant);
   transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   line-height: 1;
@@ -842,25 +921,24 @@ onMounted(async () => {
 
 .targets-float {
   width: 100%;
-  border: 1px solid rgb(255 255 255 / 55%);
-  border-top: 1px solid rgb(226 232 240 / 65%);
-  border-radius: 0 0 16px 16px;
-  background: rgb(255 255 255 / 88%);
+  border: 1px solid var(--st-glass-border);
+  border-top: 1px solid var(--st-glass-border);
+  border-radius: 0 0 14px 14px;
+  background: var(--st-glass-bg);
   backdrop-filter: blur(18px) saturate(1.25);
   -webkit-backdrop-filter: blur(18px) saturate(1.25);
-  box-shadow:
-    0 18px 40px rgb(15 23 42 / 12%),
-    0 4px 12px rgb(15 23 42 / 6%),
-    inset 0 1px 0 rgb(255 255 255 / 70%);
+  box-shadow: var(--st-glass-shadow);
+  color: var(--st-on-surface);
 }
 
 .targets-expanded-wrap {
   position: absolute;
   top: calc(100% - 1px);
-  left: 0;
+  left: auto;
   right: 0;
   z-index: 50;
-  max-width: min(100%, calc(100vw - 48px));
+  width: min(360px, calc(100vw - 48px));
+  min-width: 260px;
 }
 
 .targets-float__inner {
@@ -949,13 +1027,14 @@ onMounted(async () => {
   gap: 8px;
   padding: 10px 10px 10px 12px;
   border-radius: 12px;
-  background: rgb(255 255 255 / 45%);
+  background: var(--st-glass-inner-bg);
   border: 1px solid transparent;
   transition: background 0.12s, border-color 0.12s;
+  color: var(--st-on-surface);
 }
 
 .targets-item:hover {
-  background: rgb(255 255 255 / 75%);
+  background: color-mix(in srgb, var(--st-glass-inner-bg) 70%, var(--st-surface));
   border-color: rgb(34 197 94 / 22%);
 }
 
@@ -1039,7 +1118,7 @@ onMounted(async () => {
   place-items: center;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--st-on-surface-variant);
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -1055,31 +1134,73 @@ onMounted(async () => {
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--ul-content-fill);
+  border: 1px solid color-mix(in srgb, var(--st-outline-variant) 70%, transparent);
+  position: relative;
+  z-index: 28;
 }
 
-.prefer-public {
-  margin-bottom: 12px;
+.filters :deep(.el-input__wrapper),
+.filters :deep(.el-select__wrapper) {
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  background: var(--ul-content-fill-strong) !important;
 }
 
 .school-table {
   width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--st-outline-variant) 65%, transparent);
+  background: transparent;
+}
+
+.school-table :deep(.el-table) {
+  --el-table-border-color: transparent;
+  --el-table-header-bg-color: var(--ul-ep-table-header-bg);
+  --el-table-row-hover-bg-color: var(--ul-ep-table-hover-bg);
+  --el-table-bg-color: var(--ul-ep-table-bg);
+  --el-table-tr-bg-color: var(--ul-ep-table-bg);
+  --el-table-current-row-bg-color: var(--ul-ep-table-hover-bg);
+  --el-fill-color-blank: var(--ul-ep-table-bg);
+  background: transparent !important;
+}
+
+.school-table :deep(.el-table__inner-wrapper::before) {
+  display: none;
+}
+
+.school-table :deep(.el-table tr) {
+  background-color: var(--ul-ep-table-bg) !important;
+}
+
+.school-table :deep(th.el-table__cell) {
+  border-bottom: 1px solid color-mix(in srgb, var(--st-outline-variant) 45%, transparent) !important;
+  background: var(--ul-ep-table-header-bg) !important;
+}
+
+.school-table :deep(td.el-table__cell) {
+  border-bottom: 1px solid color-mix(in srgb, var(--st-outline-variant) 45%, transparent) !important;
+  background: var(--ul-ep-table-bg) !important;
 }
 
 .school-table :deep(.el-table__row) {
-  height: 40px;
+  height: 48px;
+}
+
+.school-table :deep(.el-button) {
+  border-radius: 999px;
 }
 
 .pager {
-  margin-top: 12px;
+  margin-top: 16px;
   display: flex;
   justify-content: flex-end;
-}
-
-.majors-panel {
-  margin-top: 16px;
-  border: 1px solid var(--st-outline-variant);
 }
 
 .majors-panel__body {
@@ -1105,10 +1226,10 @@ onMounted(async () => {
 }
 
 .majors-item {
-  padding: 12px;
-  border-radius: 10px;
-  background: var(--st-surface-container, #f8fafc);
-  border: 1px solid var(--st-outline-variant);
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--ul-content-fill-strong);
+  border: 1px solid color-mix(in srgb, var(--st-outline-variant) 70%, transparent);
 }
 
 .majors-item--match {
@@ -1138,14 +1259,6 @@ onMounted(async () => {
 
 .majors-item__head strong {
   font-size: 14px;
-}
-
-.st-chip--muted {
-  background: rgb(0 88 190 / 8%);
-  color: var(--st-primary, #0058be);
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 999px;
 }
 
 .majors-item__meta {

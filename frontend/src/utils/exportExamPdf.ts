@@ -4,11 +4,11 @@
  */
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
-import katex from 'katex'
-import 'katex/dist/katex.min.css'
 import { fetchPaperDetail } from '../api/papers'
 import type { PaperDetailVO } from '../types/api'
+import { optionBody, optionLetter } from './option'
 import { buildSheetSections, displayQuestionNo, sortBySeq } from './paperSheet'
+import { escapeHtml, renderMathHtml } from './renderMath'
 
 const SHEET_WIDTH = 794
 
@@ -48,47 +48,7 @@ const SHEET_CSS = `
 .ul-pdf-root .katex-display { margin: 0.4em 0; overflow: visible; }
 `
 
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
-function renderMathSafe(raw: string): string {
-  const chunks: { type: 'text' | 'html'; value: string }[] = []
-  const re = /\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g
-  let last = 0
-  let m: RegExpExecArray | null
-  while ((m = re.exec(raw))) {
-    if (m.index > last) {
-      chunks.push({ type: 'text', value: raw.slice(last, m.index) })
-    }
-    const expr = (m[1] ?? m[2] ?? '').trim()
-    const display = Boolean(m[1])
-    try {
-      chunks.push({
-        type: 'html',
-        value: katex.renderToString(expr, { throwOnError: false, displayMode: display }),
-      })
-    } catch {
-      chunks.push({ type: 'text', value: expr })
-    }
-    last = m.index + m[0].length
-  }
-  if (last < raw.length) chunks.push({ type: 'text', value: raw.slice(last) })
-  return chunks.map((c) => (c.type === 'html' ? c.value : escapeHtml(c.value))).join('')
-}
-
-function optionLetter(opt: string): string {
-  const m = opt.trim().match(/^([A-Da-d])[.、．\s]/)
-  return m ? m[1].toUpperCase() : opt.trim().charAt(0).toUpperCase()
-}
-
-function optionBody(opt: string): string {
-  return opt.replace(/^[A-Da-d][.、．\s]+/, '').trim()
-}
+const renderMathSafe = (raw: string) => renderMathHtml(raw)
 
 function buildSheetHtml(detail: PaperDetailVO): string {
   const qs = detail.questions ?? []

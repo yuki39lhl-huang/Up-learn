@@ -694,7 +694,7 @@ onMounted(loadMajorCategories)
   margin-top: 2px;
   padding: 8px 12px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--st-glass-inner-bg);
   text-align: center;
   min-height: 0;
 }
@@ -794,7 +794,7 @@ onMounted(loadMajorCategories)
   line-height: 1.45;
   color: var(--st-on-surface-variant);
   text-align: center;
-  background: rgba(255, 255, 255, 0.45);
+  background: var(--st-glass-inner-bg);
 }
 
 .settings-form__subjects :deep(.el-form-item__content) {
@@ -844,7 +844,7 @@ onMounted(loadMajorCategories)
   width: 100%;
   padding: 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.42);
+  background: var(--st-glass-inner-bg);
   box-sizing: border-box;
 }
 
@@ -864,7 +864,7 @@ onMounted(loadMajorCategories)
   padding: 10px 12px;
   border: 1px solid rgba(15 23 42 / 6%);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.62);
+  background: var(--st-glass-bg);
   text-align: left;
   font: inherit;
   box-sizing: border-box;
@@ -1032,7 +1032,7 @@ onMounted(loadMajorCategories)
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(15 23 42 / 8%);
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--st-glass-bg);
   font-size: 13px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;

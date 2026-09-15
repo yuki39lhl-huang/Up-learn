@@ -1,10 +1,10 @@
 import { useAuthStore } from '../stores/auth'
-import request, { getData } from './request'
+import request, { API_BASE, getData } from './request'
 import type { Result } from '../types/api'
 
 const SESSION_KEY = 'ul_agent_session'
 
-export interface AgentStatusVO {
+interface AgentStatusVO {
   ragEnabled: boolean
   ragIngestOnStartup: boolean
   ragEmbedding: 'dashscope' | 'local' | 'off' | string
@@ -39,7 +39,7 @@ export async function chatStream(
 ): Promise<void> {
   const auth = useAuthStore()
   const params = new URLSearchParams({ message, sessionId })
-  const res = await fetch(`/api/agent/chat/stream?${params}`, {
+  const res = await fetch(`${API_BASE}/agent/chat/stream?${params}`, {
     headers: auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {},
     signal,
   })

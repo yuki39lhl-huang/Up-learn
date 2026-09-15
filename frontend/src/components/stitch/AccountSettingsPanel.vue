@@ -543,8 +543,8 @@ async function handleLogout() {
 .account-user-card {
   padding: calc(20px * var(--acc-scale)) calc(16px * var(--acc-scale)) calc(24px * var(--acc-scale));
   border-radius: calc(12px * var(--acc-scale));
-  background: rgb(255 255 255 / 72%);
-  border: 1px solid rgb(226 232 240 / 80%);
+  background: var(--st-glass-bg);
+  border: 1px solid var(--st-glass-border);
   text-align: center;
 }
 
@@ -577,7 +577,7 @@ async function handleLogout() {
   font-size: calc(16px * var(--acc-scale));
   display: grid;
   place-items: center;
-  border: 2px solid #fff;
+  border: 2px solid var(--st-surface);
   border-radius: 50%;
   background: rgb(15 23 42 / 78%);
   color: #fff;
@@ -641,8 +641,8 @@ async function handleLogout() {
   min-height: 0;
   padding: calc(16px * var(--acc-scale)) calc(20px * var(--acc-scale)) calc(28px * var(--acc-scale));
   border-radius: calc(12px * var(--acc-scale));
-  background: rgb(255 255 255 / 55%);
-  border: 1px solid rgb(226 232 240 / 65%);
+  background: var(--st-glass-inner-bg);
+  border: 1px solid var(--st-glass-border);
 }
 
 .account-main__head {
@@ -651,7 +651,7 @@ async function handleLogout() {
   justify-content: space-between;
   margin-bottom: calc(28px * var(--acc-scale));
   padding-bottom: calc(14px * var(--acc-scale));
-  border-bottom: 1px solid rgb(226 232 240 / 70%);
+  border-bottom: 1px solid var(--st-glass-border);
 }
 
 .account-main__head h2 {
@@ -694,23 +694,6 @@ async function handleLogout() {
   margin-right: 2px;
 }
 
-.account-placeholder {
-  flex: 1;
-  padding: calc(12px * var(--acc-scale)) calc(4px * var(--acc-scale));
-}
-
-.account-placeholder h3 {
-  margin: 0 0 calc(10px * var(--acc-scale));
-  font-size: calc(16px * var(--acc-scale));
-}
-
-.account-placeholder p {
-  margin: 0;
-  color: var(--st-on-surface-variant);
-  font-size: calc(14px * var(--acc-scale));
-  line-height: 1.6;
-}
-
 .account-security__lead {
   margin: 0 0 calc(8px * var(--acc-scale));
   font-size: calc(14px * var(--acc-scale));
@@ -739,7 +722,7 @@ async function handleLogout() {
 }
 
 .account-security__tab--active {
-  background: #fff;
+  background: var(--st-surface);
   color: var(--st-on-surface);
   font-weight: 600;
   box-shadow: 0 1px 2px rgb(21 28 39 / 8%);

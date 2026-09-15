@@ -1,13 +1,12 @@
+import type { ExamSubjectSelectionVO } from '../types/api'
+
 /** 一期题库已有科目 */
-export const BANK_SUBJECTS = ['政治', '大学英语', '高等数学', '计算机基础'] as const
+const BANK_SUBJECTS = ['政治', '大学英语', '高等数学', '计算机基础'] as const
 
 export type SubjectSlot = 'public' | 'foundation' | 'comprehensive'
 
-export interface ExamSubjectSelection {
-  public: string[]
-  foundation: string[]
-  comprehensive: string[]
-}
+/** 备考科目选择：与后端契约 {@link ExamSubjectSelectionVO} 同形，前端仅保留一处定义 */
+export type ExamSubjectSelection = ExamSubjectSelectionVO
 
 const PRACTICE_SUBJECT_MAP: Record<string, string> = {
   政治: '政治',

@@ -260,6 +260,7 @@ async function loadHistoryList() {
     const page = await fetchAnswerHistory({
       pageNo: historyPageNo.value,
       pageSize: historyPageSize,
+      source: 'random',
     })
     historyList.value = page.list
     historyTotal.value = page.total
@@ -560,7 +561,7 @@ async function applyReset() {
     )
     resetDialogOpen.value = false
     poolExhausted.value = false
-    ElMessage.success(`已清除 ${vo.clearedRecordCount} 条复习记录，答题历史与统计已重置`)
+    ElMessage.success(`已清除 ${vo.clearedRecordCount} 条复习记录，随机刷题历史与统计已重置`)
     await loadStats('random')
     if (historyDrawerOpen.value) {
       historyPageNo.value = 1
@@ -1156,7 +1157,7 @@ onMounted(async () => {
 }
 
 .record-result--ok {
-  color: #15803d;
+  color: var(--st-chip-required);
   background: rgb(34 197 94 / 12%);
 }
 
@@ -1190,14 +1191,14 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 14px;
-  margin: 0 0 8px;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(12px) saturate(1.25);
-  -webkit-backdrop-filter: blur(12px) saturate(1.25);
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  padding: 16px;
+  margin: 0 0 10px;
+  background: var(--ul-content-fill);
+  backdrop-filter: blur(calc(var(--ul-module-blur, 67) * 0.18px)) saturate(1.25);
+  -webkit-backdrop-filter: blur(calc(var(--ul-module-blur, 67) * 0.18px)) saturate(1.25);
+  border-radius: 16px;
+  border: 1px solid var(--st-glass-inner-border);
+  box-shadow: inset 0 1px 0 var(--st-glass-inset);
 }
 
 .filter-field {
@@ -1387,7 +1388,7 @@ onMounted(async () => {
   border: 1px dashed #93c5fd;
   cursor: pointer;
   background: rgb(59 130 246 / 8%);
-  color: #1d4ed8;
+  color: var(--st-chip-foundation);
 }
 
 .subject-tag--link:hover {
@@ -1472,7 +1473,7 @@ onMounted(async () => {
 .options {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .options--readonly .option-btn {
@@ -1482,46 +1483,58 @@ onMounted(async () => {
 .option-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   text-align: left;
-  padding: 10px 12px;
-  border: 1px solid var(--st-outline-variant);
-  border-radius: var(--st-radius-sm);
-  background: var(--st-surface);
+  padding: 12px 16px;
+  border: 1px solid color-mix(in srgb, var(--st-outline-variant) 70%, transparent);
+  border-radius: 14px;
+  background: var(--ul-content-fill-strong);
   cursor: pointer;
   font: inherit;
   color: var(--st-on-surface);
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s, box-shadow 0.15s;
 }
 
 .option-btn:hover:not(:disabled) {
-  border-color: var(--st-secondary);
-  background: var(--st-surface-container-low);
+  border-color: color-mix(in srgb, var(--st-secondary) 55%, transparent);
+  background: color-mix(in srgb, var(--st-surface-container-low) 80%, transparent);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--st-on-surface) 6%, transparent);
+  transform: translateY(-1px);
 }
 
 .option-btn--active {
   border-color: var(--st-secondary);
-  background: var(--st-surface-container-low);
+  background: color-mix(in srgb, var(--st-secondary) 12%, var(--st-surface));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--st-secondary) 25%, transparent);
 }
 
 .option-btn:disabled {
   cursor: default;
+  transform: none;
 }
 
 .option--correct {
   border-color: var(--st-primary-container);
-  background: rgb(34 197 94 / 10%);
+  background: rgb(34 197 94 / 12%);
 }
 
 .option--wrong {
   border-color: #ba1a1a;
-  background: rgb(186 26 26 / 8%);
+  background: rgb(186 26 26 / 10%);
 }
 
 .opt-key {
   font-weight: 700;
-  min-width: 18px;
+  min-width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--st-secondary) 12%, transparent);
+  color: var(--st-secondary);
+  font-size: 12px;
 }
 
 .tag-wrong,
@@ -1542,9 +1555,10 @@ onMounted(async () => {
 .analysis,
 .user-note {
   margin-top: 16px;
-  padding: 12px;
-  background: var(--st-surface-container-low);
-  border-radius: var(--st-radius-sm);
+  padding: 14px 16px;
+  background: var(--ul-content-fill);
+  border: 1px solid color-mix(in srgb, var(--st-outline-variant) 60%, transparent);
+  border-radius: 14px;
 }
 
 .analysis p,
@@ -1665,7 +1679,7 @@ onMounted(async () => {
 .record-subject {
   font-size: 12px;
   font-weight: 700;
-  color: #15803d;
+  color: var(--st-chip-required);
   background: rgb(34 197 94 / 12%);
   padding: 2px 8px;
   border-radius: 999px;

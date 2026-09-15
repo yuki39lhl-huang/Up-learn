@@ -24,18 +24,12 @@ public enum ErrorCode {
     BAD_REQUEST(400, "请求参数错误"),
     /** 未登录或 Token 无效/过期 */
     UNAUTHORIZED(401, "未登录或令牌无效"),
-    /** 已登录但无权访问该资源 */
-    FORBIDDEN(403, "无访问权限"),
-    /** 资源不存在 */
-    NOT_FOUND(404, "资源不存在"),
     /** 未预期的服务器错误 */
     INTERNAL_ERROR(500, "系统繁忙，请稍后再试"),
 
     // --- 用户 1xxx ---
     USER_NOT_FOUND(1001, "用户不存在"),
-    EMAIL_ALREADY_EXISTS(1002, "该邮箱已注册"),
     PASSWORD_MISMATCH(1003, "密码错误"),
-    EMAIL_FORMAT_INVALID(1004, "邮箱格式不正确"),
     LOGIN_CODE_INVALID(1005, "验证码错误或已过期"),
     LOGIN_CODE_SEND_TOO_FREQUENT(1006, "验证码发送过于频繁，请稍后再试"),
     REFRESH_TOKEN_INVALID(1007, "刷新令牌无效或已过期"),
@@ -46,6 +40,7 @@ public enum ErrorCode {
     PASSWORD_NOT_SET(1012, "尚未设置登录密码，请先设置或使用验证码登录"),
     PASSWORD_WEAK(1013, "密码须为 8～32 位，且同时包含字母与数字"),
     OLD_PASSWORD_REQUIRED(1014, "请输入当前密码"),
+    WALLPAPER_FILE_INVALID(1015, "仅支持 JPG / PNG / WebP 图片，且不超过 5MB"),
 
     // --- 院校 2xxx ---
     SCHOOL_NOT_FOUND(2001, "院校不存在"),
@@ -58,7 +53,9 @@ public enum ErrorCode {
     PAPER_ALREADY_SUBMITTED(3004, "试卷已提交，不可再修改"),
     PAPER_NOT_SUBMITTED(3005, "请先交卷后再进行 AI 评分"),
     PAPER_AI_SCORE_DISABLED(3006, "当前模式不支持 AI 评分"),
-    AGENT_SCORE_FAILED(3007, "AI 评分失败，请稍后重试");
+    AGENT_SCORE_FAILED(3007, "AI 评分失败，请稍后重试"),
+    USER_PREFERENCE_UNAVAILABLE(3008, "备考设置服务暂不可用，请稍后重试"),
+    SCHOOL_SERVICE_UNAVAILABLE(2003, "院校服务暂不可用，请稍后重试");
 
     /** 返回给前端的业务码（放在 Result.code） */
     private final int code;

@@ -1,6 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { consoleLocation, markConsoleDashboardEntry } from '../utils/consoleNav'
+import {
+  playPaperPlaneTransit,
+  resolvePaperPlaneDirection,
+} from '../utils/paperPlaneTransit'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -36,7 +40,7 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to, from) => {
   const auth = useAuthStore()
   if (to.meta.requiresAuth && !auth.isLoggedIn) {
     return { path: '/home', query: { login: '1', redirect: to.fullPath } }
@@ -44,6 +48,11 @@ router.beforeEach((to) => {
   if (to.meta.guest && auth.isLoggedIn && to.path === '/login') {
     markConsoleDashboardEntry()
     return consoleLocation('dashboard')
+  }
+
+  const dir = resolvePaperPlaneDirection(from.path, to.path)
+  if (dir) {
+    await playPaperPlaneTransit(dir)
   }
   return true
 })

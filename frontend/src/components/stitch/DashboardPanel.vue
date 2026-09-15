@@ -387,8 +387,11 @@ function openSettingsFromQuery() {
 <style scoped>
 .dashboard {
   padding: 20px;
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
+  box-sizing: border-box;
+  align-self: stretch;
 }
 
 .dashboard__grid {
@@ -405,15 +408,33 @@ function openSettingsFromQuery() {
 }
 
 .dash-card {
-  background: rgba(255, 255, 255, 0.68);
-  backdrop-filter: blur(16px) saturate(1.3);
-  -webkit-backdrop-filter: blur(16px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  backdrop-filter: blur(calc(var(--ul-module-blur, 67) * 0.24px)) saturate(1.3);
+  -webkit-backdrop-filter: blur(calc(var(--ul-module-blur, 67) * 0.24px)) saturate(1.3);
+  border: 1px solid var(--st-glass-border);
   border-radius: 20px;
   padding: 24px;
-  box-shadow:
-    0 8px 32px rgb(15 23 42 / 6%),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  box-shadow: var(--st-glass-shadow);
+  color: var(--st-on-surface);
+  overflow: hidden;
+}
+
+.dash-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: var(--st-glass-bg);
+  opacity: calc(var(--ul-module-opacity, 85) * 1%);
+  pointer-events: none;
+}
+
+.dash-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .dash-card--exam {
@@ -448,6 +469,7 @@ function openSettingsFromQuery() {
   margin: 0;
   font-size: 22px;
   font-weight: 700;
+  color: var(--st-on-surface);
 }
 
 .dash-settings-btn {
@@ -458,7 +480,7 @@ function openSettingsFromQuery() {
   border-radius: 10px;
   border: 1px solid rgba(34 197 94 / 38%);
   background: linear-gradient(135deg, rgb(34 197 94 / 14%), rgb(59 130 246 / 10%));
-  color: #15803d;
+  color: var(--st-chip-required);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -495,7 +517,7 @@ function openSettingsFromQuery() {
   padding: 14px;
   border-radius: 12px;
   background: linear-gradient(135deg, rgb(34 197 94 / 8%), rgb(59 130 246 / 6%));
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--st-glass-border);
   font-size: 13px;
   line-height: 1.65;
   color: var(--st-on-surface-variant);
@@ -522,11 +544,11 @@ function openSettingsFromQuery() {
   padding: 20px 12px 24px;
   margin-bottom: 20px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.42);
+  background: var(--st-glass-inner-bg);
   backdrop-filter: blur(10px) saturate(1.2);
   -webkit-backdrop-filter: blur(10px) saturate(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--st-glass-inner-border);
+  box-shadow: inset 0 1px 0 var(--st-glass-inset);
 }
 
 .countdown-block__nums {
@@ -612,17 +634,17 @@ function openSettingsFromQuery() {
 
 .chip--required {
   background: rgb(34 197 94 / 12%);
-  color: #15803d;
+  color: var(--st-chip-required);
 }
 
 .chip--foundation {
   background: rgb(59 130 246 / 12%);
-  color: #1d4ed8;
+  color: var(--st-chip-foundation);
 }
 
 .chip--comprehensive {
   background: rgb(168 85 247 / 12%);
-  color: #7e22ce;
+  color: var(--st-chip-comprehensive);
 }
 
 .chip--muted {
@@ -695,7 +717,7 @@ function openSettingsFromQuery() {
 }
 
 .checkin-stats__item--streak strong {
-  color: #c2410c;
+  color: var(--st-streak);
 }
 
 .checkin-stats__sep {

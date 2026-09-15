@@ -59,7 +59,8 @@ public interface PracticeService {
     /** 备考重置：清除全部随机刷题复习进度、当日已做与答题历史 */
     void resetRandomProgress();
 
-    PageDTO<AnswerHistoryVO> listHistory(PageQuery query);
+    /** source 可选：如 random / daily，不传则返回全部来源 */
+    PageDTO<AnswerHistoryVO> listHistory(PageQuery query, String source);
 
     StudyStatsVO stats(String source);
 }

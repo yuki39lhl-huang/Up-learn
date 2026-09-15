@@ -1,0 +1,111 @@
+/**
+ * 内容深色底块开关。
+ * off：内层底透明，直接铺在 module-card / 主面板玻璃上。
+ */
+:root {
+  --ul-content-fill: color-mix(in srgb, var(--st-surface) 55%, transparent);
+  --ul-content-fill-strong: color-mix(in srgb, var(--st-surface) 82%, transparent);
+  /* 表格默认也走半透明，关底块时与筛选条一样彻底透明 */
+  --ul-ep-table-bg: color-mix(in srgb, var(--st-surface) 55%, transparent);
+  --ul-ep-table-header-bg: color-mix(in srgb, var(--st-surface-container) 50%, transparent);
+  --ul-ep-table-hover-bg: color-mix(in srgb, var(--st-surface-container-low) 45%, transparent);
+  --ul-ep-input-bg: var(--st-glass-inner-bg);
+  --ul-settings-block-bg: color-mix(in srgb, var(--st-surface-container-low) 70%, transparent);
+}
+
+html[data-content-emphasis='off'] {
+  --ul-content-fill: transparent;
+  --ul-content-fill-strong: transparent;
+  --ul-ep-table-bg: transparent;
+  --ul-ep-table-header-bg: transparent;
+  --ul-ep-table-hover-bg: transparent;
+  --ul-ep-input-bg: transparent;
+  --ul-settings-block-bg: transparent;
+}
+
+html[data-content-emphasis='off'] .gmail-shell .filters,
+html[data-content-emphasis='off'] .gmail-shell .school-table,
+html[data-content-emphasis='off'] .gmail-shell .majors-panel,
+html[data-content-emphasis='off'] .gmail-shell .majors-item,
+html[data-content-emphasis='off'] .gmail-shell .targets-toggle,
+html[data-content-emphasis='off'] .gmail-shell .targets-float,
+html[data-content-emphasis='off'] .gmail-shell .targets-item,
+html[data-content-emphasis='off'] .gmail-shell .option-btn,
+html[data-content-emphasis='off'] .gmail-shell .analysis,
+html[data-content-emphasis='off'] .gmail-shell .user-note,
+html[data-content-emphasis='off'] .gmail-shell .drawer-filters,
+html[data-content-emphasis='off'] .gmail-shell .papers-row,
+html[data-content-emphasis='off'] .gmail-shell .agent-chat__bubble,
+html[data-content-emphasis='off'] .gmail-shell .agent-chat__input,
+html[data-content-emphasis='off'] .gmail-shell .countdown-block,
+html[data-content-emphasis='off'] .gmail-shell .dash-encourage,
+html[data-content-emphasis='off'] .gmail-shell .quiz__option,
+html[data-content-emphasis='off'] .gmail-shell .quiz__analysis,
+html[data-content-emphasis='off'] .gmail-shell .settings-block,
+html[data-content-emphasis='off'] .gmail-shell .settings-preview,
+html[data-content-emphasis='off'] .gmail-shell .record-item {
+  /* 只清内层底块；勿动 .dash-card / .module-card 等模块玻璃壳 */
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-content-emphasis='off'] .gmail-shell .filters,
+html[data-content-emphasis='off'] .gmail-shell .school-table,
+html[data-content-emphasis='off'] .gmail-shell .majors-panel,
+html[data-content-emphasis='off'] .gmail-shell .settings-block {
+  border-color: color-mix(in srgb, var(--st-on-surface) 10%, transparent) !important;
+}
+
+html[data-content-emphasis='off'] .gmail-shell .option-btn--active,
+html[data-content-emphasis='off'] .gmail-shell .option--correct,
+html[data-content-emphasis='off'] .gmail-shell .option--wrong,
+html[data-content-emphasis='off'] .gmail-shell .opt-key {
+  background: transparent !important;
+}
+
+/* 压过 Element Plus 表格实色底（含 tr / wrapper，否则关底块后仍发黑） */
+html[data-content-emphasis='off'] .gmail-shell .el-table,
+html[data-content-emphasis='off'] .gmail-shell .el-table__inner-wrapper,
+html[data-content-emphasis='off'] .gmail-shell .el-table__inner-wrapper::before,
+html[data-content-emphasis='off'] .gmail-shell .el-table__header-wrapper,
+html[data-content-emphasis='off'] .gmail-shell .el-table__body-wrapper,
+html[data-content-emphasis='off'] .gmail-shell .el-table__footer-wrapper,
+html[data-content-emphasis='off'] .gmail-shell .el-table tr,
+html[data-content-emphasis='off'] .gmail-shell .el-table th.el-table__cell,
+html[data-content-emphasis='off'] .gmail-shell .el-table td.el-table__cell,
+html[data-content-emphasis='off'] .gmail-shell .el-table__empty-block,
+html[data-content-emphasis='off'] .gmail-shell .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+html[data-content-emphasis='off'] .gmail-shell .el-table {
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-table-header-bg-color: transparent;
+  --el-table-row-hover-bg-color: transparent;
+  --el-table-current-row-bg-color: transparent;
+  --el-fill-color-blank: transparent;
+}
+
+html[data-content-emphasis='off'] .gmail-shell .el-input__wrapper,
+html[data-content-emphasis='off'] .gmail-shell .el-select__wrapper,
+html[data-content-emphasis='off'] .gmail-shell .filters .el-input__wrapper,
+html[data-content-emphasis='off'] .gmail-shell .filters .el-select__wrapper,
+html[data-content-emphasis='off'] .gmail-shell .stitch-form .el-input__wrapper,
+html[data-content-emphasis='off'] .gmail-shell .stitch-form .el-textarea__inner,
+html[data-content-emphasis='off'] .gmail-shell .account-field .el-input__wrapper {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--st-on-surface) 12%, transparent) inset !important;
+}
+
+html[data-content-emphasis='off'] .gmail-shell .el-pagination button,
+html[data-content-emphasis='off'] .gmail-shell .el-pager li,
+html[data-content-emphasis='off'] .gmail-shell .el-pagination button:disabled {
+  background: transparent !important;
+  background-color: transparent !important;
+}

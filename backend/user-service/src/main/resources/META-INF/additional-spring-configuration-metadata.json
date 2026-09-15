@@ -53,6 +53,12 @@
       "defaultValue": "avatar"
     },
     {
+      "name": "ul.oss.wallpaper-dir",
+      "type": "java.lang.String",
+      "description": "控制台底层背景图对象前缀目录。",
+      "defaultValue": "wallpaper"
+    },
+    {
       "name": "ul.oss.presign-ttl-seconds",
       "type": "java.lang.Long",
       "description": "签名 URL 有效期（秒）。",

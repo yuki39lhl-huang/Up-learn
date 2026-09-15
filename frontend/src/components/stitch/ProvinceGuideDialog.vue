@@ -150,7 +150,7 @@ function onClose() {
   gap: 12px;
   padding: 16px 20px 12px;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  background: #fff;
+  background: var(--st-surface);
 }
 
 .preview-dlg__eyebrow {
@@ -163,7 +163,7 @@ function onClose() {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--st-on-surface);
 }
 
 .preview-dlg__close {
@@ -180,7 +180,7 @@ function onClose() {
   display: flex;
   gap: 6px;
   padding: 10px 16px 0;
-  background: #fff;
+  background: var(--st-surface);
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
 
@@ -218,7 +218,7 @@ function onClose() {
 .guide-md :deep(h1) {
   margin: 0 0 12px;
   font-size: 22px;
-  color: #0f172a;
+  color: var(--st-on-surface);
 }
 
 .guide-md :deep(h2) {
@@ -265,7 +265,7 @@ function onClose() {
   border-collapse: collapse;
   margin: 12px 0 16px;
   font-size: 13px;
-  background: #fff;
+  background: var(--st-surface);
 }
 
 .guide-md :deep(th),
@@ -289,7 +289,7 @@ function onClose() {
 }
 
 .guide-md :deep(strong) {
-  color: #0f172a;
+  color: var(--st-on-surface);
 }
 
 .preview-dlg-enter-active,

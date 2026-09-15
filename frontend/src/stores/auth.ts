@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { LoginVO, UserInfoVO } from '../types/api'
-import { fetchUserInfo } from '../api/user'
+import { fetchUserInfo, logout } from '../api/user'
 
 const ACCESS_KEY = 'ul_access_token'
 const REFRESH_KEY = 'ul_refresh_token'
@@ -57,6 +57,20 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem(USER_KEY)
   }
 
+  /**
+   * 登出：尽力吊销服务端 refresh token，无论成败都清空本地会话。
+   * App 顶栏与控制台账号页共用，避免各自复制一遍 try/finally。
+   */
+  async function signOut() {
+    try {
+      if (refreshToken.value) await logout(refreshToken.value)
+    } catch {
+      /* 服务端吊销失败不影响本地退出 */
+    } finally {
+      clearSession()
+    }
+  }
+
   function patchUser(patch: Partial<Pick<UserSummary, 'nickname' | 'avatarUrl' | 'hasPassword'>>) {
     if (!user.value) return
     user.value = { ...user.value, ...patch }
@@ -86,6 +100,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoggedIn,
     setSession,
     clearSession,
+    signOut,
     patchUser,
     refreshProfile,
   }

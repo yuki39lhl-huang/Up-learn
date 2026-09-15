@@ -23,18 +23,29 @@ public class OssService {
     /**
      * 上传头像到 OSS，返回写入数据库的 canonical URL（自定义域名 + object key）。
      */
-    public String uploadAvatar(Long userId, String extension, InputStream input, long contentLength) {
+    public String uploadAvatar(Long userId, String extension, InputStream input) {
+        return upload(ossProperties.getAvatarDir(), userId, extension, input, "头像上传失败");
+    }
+
+    /**
+     * 上传控制台底层背景图到 OSS，返回写入数据库的 canonical URL。
+     */
+    public String uploadWallpaper(Long userId, String extension, InputStream input) {
+        return upload(ossProperties.getWallpaperDir(), userId, extension, input, "背景图上传失败");
+    }
+
+    private String upload(String dir, Long userId, String extension, InputStream input, String failMessage) {
         if (!ossProperties.isEnabled() || !hasCredentials()) {
             throw new BizException(ErrorCode.OSS_NOT_CONFIGURED);
         }
-        String key = ossProperties.getAvatarDir() + "/" + userId + "/"
+        String key = dir + "/" + userId + "/"
                 + System.currentTimeMillis() + "_" + RandomUtil.randomString(6) + extension;
         OSS client = createClient();
         try {
             client.putObject(ossProperties.getBucket(), key, input);
             return buildPublicUrl(key);
         } catch (Exception e) {
-            throw new BizException(ErrorCode.INTERNAL_ERROR, "头像上传失败");
+            throw new BizException(ErrorCode.INTERNAL_ERROR, failMessage);
         } finally {
             client.shutdown();
         }
@@ -94,11 +105,15 @@ public class OssService {
         if (normalized.startsWith(bucketHost)) {
             return normalized.substring(bucketHost.length());
         }
-        // 兼容 endpoint 风格：bucket.oss-cn-xxx.aliyuncs.com
-        String marker = "/" + ossProperties.getAvatarDir() + "/";
-        int idx = normalized.indexOf(marker);
-        if (idx >= 0) {
-            return normalized.substring(idx + 1);
+        String avatarMarker = "/" + ossProperties.getAvatarDir() + "/";
+        int avatarIdx = normalized.indexOf(avatarMarker);
+        if (avatarIdx >= 0) {
+            return normalized.substring(avatarIdx + 1);
+        }
+        String wallpaperMarker = "/" + ossProperties.getWallpaperDir() + "/";
+        int wallpaperIdx = normalized.indexOf(wallpaperMarker);
+        if (wallpaperIdx >= 0) {
+            return normalized.substring(wallpaperIdx + 1);
         }
         return null;
     }

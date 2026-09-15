@@ -37,6 +37,10 @@ sql/phase1/_extract_*.txt
 sql/phase1/_extract_one.py
 sql/phase1/_reseed_report*.txt
 
+# Python 脚本缓存 / 导入临时报告
+__pycache__/
+sql/phase1/_answer_import_report.txt
+
 # Logs
 *.log
 npm-debug.log*

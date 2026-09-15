@@ -7,6 +7,7 @@ import { ElMessage } from 'element-plus'
 import MathText from './MathText.vue'
 import { fetchPaperDetail } from '../../api/papers'
 import type { PaperDetailVO, PaperQuestionVO } from '../../types/api'
+import { optionBody, optionLetter } from '../../utils/option'
 import { buildSheetSections, displayQuestionNo, isMissingQuestion, sortBySeq } from '../../utils/paperSheet'
 
 const props = defineProps<{
@@ -33,15 +34,6 @@ const sections = computed(() => buildSheetSections(detail.value?.questions ?? []
 
 function questionNo(q: PaperQuestionVO) {
   return displayQuestionNo(q, orderedQuestions.value)
-}
-
-function optionLetter(opt: string): string {
-  const m = opt.trim().match(/^([A-Da-d])[.、．\s]/)
-  return m ? m[1].toUpperCase() : opt.trim().charAt(0).toUpperCase()
-}
-
-function optionBody(opt: string): string {
-  return opt.replace(/^[A-Da-d][.、．\s]+/, '').trim()
 }
 
 async function load() {
@@ -215,7 +207,7 @@ function onDownload() {
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
-  background: #fff;
+  background: var(--st-surface);
   border-bottom: 1px solid #e2ddd4;
 }
 
@@ -242,7 +234,7 @@ function onDownload() {
   padding: 0 12px;
   border-radius: 8px;
   border: 1px solid #cfc9be;
-  background: #fff;
+  background: var(--st-surface);
   font: inherit;
   font-size: 13px;
   cursor: pointer;
@@ -297,7 +289,7 @@ function onDownload() {
 }
 
 .preview-sheet {
-  background: #fff;
+  background: var(--st-surface);
   padding: 24px 28px 32px;
   border: 1px solid #ddd;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);

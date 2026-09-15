@@ -1,0 +1,75 @@
+/**
+ * Element Plus 在控制台内的主题兜底（配合 html.dark + stitch-tokens）
+ * 背景色走 --ul-ep-*，便于「内容深色底块」开关统一透明化。
+ */
+.gmail-shell .el-table {
+  --el-table-bg-color: var(--ul-ep-table-bg);
+  --el-table-tr-bg-color: var(--ul-ep-table-bg);
+  --el-table-header-bg-color: var(--ul-ep-table-header-bg);
+  --el-table-row-hover-bg-color: var(--ul-ep-table-hover-bg);
+  --el-table-current-row-bg-color: var(--ul-ep-table-hover-bg);
+  --el-fill-color-blank: var(--ul-ep-table-bg);
+  background-color: var(--ul-ep-table-bg) !important;
+  color: var(--st-on-surface);
+}
+
+.gmail-shell .el-table__inner-wrapper::before {
+  background-color: var(--ul-ep-table-bg) !important;
+}
+
+.gmail-shell .el-table tr {
+  background-color: var(--ul-ep-table-bg) !important;
+}
+
+.gmail-shell .el-table th.el-table__cell {
+  background-color: var(--ul-ep-table-header-bg) !important;
+  color: var(--st-on-surface);
+  border-bottom-color: var(--st-outline-variant);
+}
+
+.gmail-shell .el-table td.el-table__cell {
+  background-color: var(--ul-ep-table-bg) !important;
+  color: var(--st-on-surface);
+  border-bottom-color: var(--st-outline-variant);
+}
+
+.gmail-shell .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {
+  background-color: var(--ul-ep-table-hover-bg) !important;
+}
+
+.gmail-shell .el-table__empty-block,
+.gmail-shell .el-table__body-wrapper,
+.gmail-shell .el-table__header-wrapper {
+  background: var(--ul-ep-table-bg);
+  color: var(--st-on-surface-variant);
+}
+
+.gmail-shell .el-pagination {
+  --el-pagination-bg-color: transparent;
+  --el-pagination-button-bg-color: var(--ul-ep-table-bg);
+  --el-pagination-hover-color: var(--st-primary);
+  color: var(--st-on-surface);
+}
+
+.gmail-shell .el-pagination button:disabled {
+  background-color: var(--ul-ep-table-hover-bg);
+}
+
+.gmail-shell .el-input__wrapper,
+.gmail-shell .el-select__wrapper {
+  background-color: var(--ul-ep-input-bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--st-on-surface) 12%, transparent) inset;
+}
+
+.gmail-shell .el-checkbox__label,
+.gmail-shell .el-radio__label {
+  color: var(--st-on-surface);
+}
+
+.gmail-shell .el-loading-mask {
+  background-color: color-mix(in srgb, var(--st-surface) 72%, transparent);
+}
+
+html[data-content-emphasis='off'] .gmail-shell .el-loading-mask {
+  background-color: transparent;
+}

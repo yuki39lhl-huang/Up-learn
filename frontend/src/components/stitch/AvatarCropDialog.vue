@@ -222,7 +222,7 @@ async function handleConfirm() {
   width: min(560px, calc(100vw - 32px));
   padding: 20px 20px 16px;
   border-radius: 12px;
-  background: #fff;
+  background: var(--st-surface);
   box-shadow: 0 24px 48px rgb(15 23 42 / 22%);
 }
 

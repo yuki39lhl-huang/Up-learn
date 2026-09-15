@@ -32,6 +32,39 @@ export interface UserInfoVO {
   hasPassword?: boolean
 }
 
+/** 控制台界面偏好 */
+export interface UserUiPreferenceVO {
+  userId: number
+  theme: 'light' | 'dark'
+  locale: 'zh-CN' | 'en-US'
+  wallpaperUrl?: string | null
+  panelWallpaperUrl?: string | null
+  shellBgOpacity: number
+  shellWallpaperFit: WallpaperFit
+  panelOpacity: number
+  moduleOpacity: number
+  moduleBlur: number
+  panelWallpaperFit: WallpaperFit
+  sidebarCollapsed: boolean
+}
+
+export type WallpaperFit = 'cover' | 'contain' | 'fill'
+export type WallpaperTarget = 'shell' | 'panel'
+
+export interface SaveUiPreferencePayload {
+  theme: 'light' | 'dark'
+  locale: 'zh-CN' | 'en-US'
+  shellBgOpacity: number
+  shellWallpaperFit: WallpaperFit
+  panelOpacity: number
+  moduleOpacity: number
+  moduleBlur: number
+  panelWallpaperFit: WallpaperFit
+  sidebarCollapsed: boolean
+  clearWallpaper?: boolean
+  clearPanelWallpaper?: boolean
+}
+
 export interface ExamSubjectSelectionVO {
   public: string[]
   foundation: string[]
@@ -204,10 +237,7 @@ export interface AnswerHistoryVO {
   createdAt: string
 }
 
-export interface ChatReplyVO {
-  reply: string
-  sessionId: string
-}
+
 
 /** 考纲范围块 */
 export interface SyllabusScopeBlock {

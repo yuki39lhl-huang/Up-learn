@@ -1,6 +1,6 @@
 package com.yukimomo.practice.constant;
 
-import cn.hutool.json.JSONUtil;
+import com.yukimomo.api.user.dto.ExamSubjectSelectionDTO;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,19 +60,16 @@ public final class PracticeSubjectMap {
     }
 
     /**
-     * 从备考科目 JSON 解析并映射为一期题库科目列表。
+     * 从备考科目选择（user-service 契约 DTO）映射为一期题库科目列表。
      */
-    public static List<String> bankSubjectsFromSelectionJson(String subjectSelectionJson) {
-        if (!JSONUtil.isTypeJSON(subjectSelectionJson)) {
+    public static List<String> bankSubjectsFromSelection(ExamSubjectSelectionDTO selection) {
+        if (selection == null) {
             return Collections.emptyList();
         }
-        var obj = JSONUtil.parseObj(subjectSelectionJson);
         List<String> examSubjects = new ArrayList<>();
-        appendList(examSubjects, obj.getJSONArray("public"));
-        // user-service Hutool 序列化字段名为 publicSubjects，与 API 的 public 并存
-        appendList(examSubjects, obj.getJSONArray("publicSubjects"));
-        appendList(examSubjects, obj.getJSONArray("foundation"));
-        appendList(examSubjects, obj.getJSONArray("comprehensive"));
+        appendList(examSubjects, selection.getPublicSubjects());
+        appendList(examSubjects, selection.getFoundation());
+        appendList(examSubjects, selection.getComprehensive());
         return mapExamSubjectsToBank(examSubjects);
     }
 
@@ -91,13 +88,13 @@ public final class PracticeSubjectMap {
         return new ArrayList<>(mapped);
     }
 
-    private static void appendList(List<String> target, cn.hutool.json.JSONArray array) {
-        if (array == null || array.isEmpty()) {
+    private static void appendList(List<String> target, List<String> source) {
+        if (source == null || source.isEmpty()) {
             return;
         }
-        for (Object item : array) {
-            if (item instanceof String s && !s.isBlank()) {
-                target.add(s);
+        for (String item : source) {
+            if (item != null && !item.isBlank()) {
+                target.add(item);
             }
         }
     }

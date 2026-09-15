@@ -16,6 +16,7 @@ import {
 import type { PaperDetailVO, PaperQuestionVO } from '../types/api'
 import { useAuthStore } from '../stores/auth'
 import { downloadPaperAsPdf } from '../utils/exportExamPdf'
+import { optionBody, optionLetter } from '../utils/option'
 import { buildSheetSections, displayQuestionNo, isMissingQuestion, sortBySeq } from '../utils/paperSheet'
 import '../styles/console-workbench.css'
 
@@ -210,15 +211,6 @@ const clockText = computed(() => {
 })
 
 const timerUrgent = computed(() => remainSeconds.value > 0 && remainSeconds.value <= 5 * 60)
-
-function optionLetter(opt: string): string {
-  const m = opt.trim().match(/^([A-Ea-e])[.、．\s]/)
-  return m ? m[1].toUpperCase() : opt.trim().charAt(0).toUpperCase()
-}
-
-function optionBody(opt: string): string {
-  return opt.replace(/^[A-Ea-e][.、．\s]+/, '').trim()
-}
 
 /** 规范多选串：提取 A–E 并按字母序去重 */
 function normalizeChoiceAnswer(raw: string | null | undefined): string {
@@ -842,7 +834,7 @@ onMounted(() => {
   justify-content: space-between;
   gap: 12px;
   padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--st-glass-bg);
   border-bottom: 1px solid #d8d4cc;
   backdrop-filter: blur(8px);
 }
@@ -931,7 +923,7 @@ onMounted(() => {
   padding: 0 14px;
   border-radius: 8px;
   border: 1px solid #cfc9be;
-  background: #fff;
+  background: var(--st-surface);
   font: inherit;
   font-size: 13px;
   cursor: pointer;
@@ -1010,7 +1002,7 @@ onMounted(() => {
 
 /* —— 卷面 —— */
 .exam-sheet {
-  background: #fff;
+  background: var(--st-surface);
   padding: 28px 36px 40px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   border: 1px solid #ddd;
@@ -1162,7 +1154,7 @@ onMounted(() => {
 
 .exam-blank__hint--missing {
   color: #8a6d3b;
-  background: #fff8e8;
+  background: color-mix(in srgb, var(--st-tertiary-container) 28%, var(--st-surface));
   border: 1px dashed #e0c98a;
   border-radius: 6px;
   padding: 8px 10px;
@@ -1200,7 +1192,7 @@ onMounted(() => {
   padding: 8px 10px;
   border: 1px solid #cfc9be;
   border-radius: 6px;
-  background: #fff;
+  background: var(--st-surface);
   font: inherit;
   font-size: 14px;
   color: #1a1a1a;
@@ -1246,7 +1238,7 @@ onMounted(() => {
 .ul-dlg__panel {
   position: relative;
   width: min(420px, 100%);
-  background: #fff;
+  background: var(--st-surface);
   border-radius: 14px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
   overflow: hidden;

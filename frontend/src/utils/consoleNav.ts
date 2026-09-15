@@ -19,6 +19,32 @@ const MODULE_HASH: Record<ConsoleModule, string> = {
   agent: '#agent',
 }
 
+/** hash → 模块（含历史别名 #home/#daily/#random）；单一映射源，ConsoleView 与登录 redirect 共用 */
+const HASH_TO_MODULE: Record<string, ConsoleModule> = {
+  '': 'dashboard',
+  '#': 'dashboard',
+  '#dashboard': 'dashboard',
+  '#home': 'dashboard',
+  '#daily': 'dashboard',
+  '#school': 'school',
+  '#syllabus': 'syllabus',
+  '#practice': 'random',
+  '#random': 'random',
+  '#papers': 'papers',
+  '#community': 'community',
+  '#agent': 'agent',
+}
+
+export function consoleModuleHash(module: ConsoleModule): string {
+  return MODULE_HASH[module]
+}
+
+/** 解析 hash 对应的控制台模块；非模块 hash（如 #account）返回 null */
+export function hashToConsoleModule(hash: string): ConsoleModule | null {
+  const h = hash.startsWith('#') || hash === '' ? hash : `#${hash}`
+  return HASH_TO_MODULE[h] ?? null
+}
+
 /** 控制台路由对象（history 模式下 hash 须单独字段） */
 export function consoleLocation(
   module: ConsoleModule = 'dashboard',
@@ -36,6 +62,21 @@ export function consoleFullPath(module: ConsoleModule = 'dashboard', query?: Rec
     ? `?${new URLSearchParams(query).toString()}`
     : ''
   return `/console${MODULE_HASH[module]}${q}`
+}
+
+/** 预加载控制台首屏 chunk（官网悬停/空闲时调用，减轻进入顿挫） */
+let consolePreload: Promise<unknown> | null = null
+
+export function preloadConsole() {
+  if (!consolePreload) {
+    consolePreload = Promise.all([
+      import('../views/ConsoleView.vue'),
+      import('../components/stitch/DashboardPanel.vue'),
+    ]).catch(() => {
+      consolePreload = null
+    })
+  }
+  return consolePreload
 }
 
 export function pushConsole(router: Router, module: ConsoleModule = 'dashboard', query?: Record<string, string>) {
@@ -59,27 +100,14 @@ export function consumeConsoleDashboardEntry() {
 export function isDashboardConsoleHref(href: string) {
   const hashIndex = href.indexOf('#')
   if (hashIndex < 0) return true
-  const hash = href.slice(hashIndex)
-  return hash === '#dashboard' || hash === '#home' || hash === '#daily' || hash === '#'
+  return hashToConsoleModule(href.slice(hashIndex)) === 'dashboard'
 }
 
 /** 解析 `/console#dashboard` 等字符串并跳转（兼容登录 redirect） */
 export function pushConsoleHref(router: Router, href: string) {
   const hashIndex = href.indexOf('#')
   const hash = hashIndex >= 0 ? href.slice(hashIndex) : '#dashboard'
-  const moduleMap: Record<string, ConsoleModule> = {
-    '#dashboard': 'dashboard',
-    '#home': 'dashboard',
-    '#daily': 'dashboard',
-    '#school': 'school',
-    '#syllabus': 'syllabus',
-    '#practice': 'random',
-    '#random': 'random',
-    '#papers': 'papers',
-    '#community': 'community',
-    '#agent': 'agent',
-  }
-  const module = moduleMap[hash] ?? 'dashboard'
+  const module = hashToConsoleModule(hash) ?? 'dashboard'
   const queryIndex = href.indexOf('?')
   const queryStr =
     queryIndex >= 0 && hashIndex > queryIndex

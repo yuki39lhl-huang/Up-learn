@@ -48,9 +48,9 @@ public class KnowledgeSearchTools {
             """)
     public String searchKnowledge(
             @P("检索用问句：可沿用用户原话，或改写成「2025广东高等数学考点/题型」之类") String query,
-            @P("省份，如广东、山东；用户没提可空或用备考档案省") String province,
-            @P("试卷年份，如 2025；用户没提可空") Integer year,
-            @P("科目（库内名）；用户没提可空或用档案科目") String subject) {
+            @P(value = "省份，如广东、山东；用户没提可空或用备考档案省", required = false) String province,
+            @P(value = "试卷年份，如 2025；用户没提可空", required = false) Integer year,
+            @P(value = "科目（库内名）；用户没提可空或用档案科目", required = false) String subject) {
         if (!agentProperties.getRag().isEnabled()) {
             return "{\"error\":\"知识库未启用（ul.agent.rag.enabled=false）\"}";
         }
@@ -137,7 +137,7 @@ public class KnowledgeSearchTools {
             parts.add(metadataKey("year").isEqualTo(String.valueOf(year)));
         }
         if (StrUtil.isNotBlank(subject)) {
-            parts.add(metadataKey("subject").isEqualTo(normalizeSubject(subject.trim())));
+            parts.add(metadataKey("subject").isEqualTo(SubjectAlias.normalize(subject.trim())));
         }
         if (parts.isEmpty()) {
             return null;
@@ -147,22 +147,6 @@ public class KnowledgeSearchTools {
             acc = acc.and(parts.get(i));
         }
         return acc;
-    }
-
-    private static String normalizeSubject(String subject) {
-        if ("大学英语".equals(subject) || "公共英语".equals(subject)) {
-            return "英语";
-        }
-        if ("高数".equals(subject) || "微积分".equals(subject)) {
-            return "高等数学";
-        }
-        if ("政治".equals(subject)) {
-            return "政治理论";
-        }
-        if ("计算机基础".equals(subject) || "计算机".equals(subject)) {
-            return "计算机基础与程序设计";
-        }
-        return subject;
     }
 
     private static String blankToNull(String s) {

@@ -306,7 +306,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 10px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid color-mix(in srgb, var(--st-on-surface) 10%, transparent);
 }
 
 .syllabus-filters {
@@ -321,7 +321,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 6px;
   font-size: 12px;
-  color: #64748b;
+  color: var(--st-on-surface-variant);
 }
 
 .syllabus-field :deep(.el-select) {
@@ -334,7 +334,7 @@ onMounted(() => {
   gap: 8px;
   min-height: 32px;
   padding: 0 4px;
-  color: #0f172a;
+  color: var(--st-on-surface);
 }
 
 .syllabus-year strong {
@@ -354,7 +354,7 @@ onMounted(() => {
 
 .syllabus-year__empty {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--st-on-surface-variant);
 }
 
 .syllabus-field--action {
@@ -367,9 +367,9 @@ onMounted(() => {
   gap: 6px;
   height: 32px;
   padding: 0 12px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  border: 1px solid color-mix(in srgb, var(--st-on-surface) 12%, transparent);
   border-radius: 8px;
-  background: #fff;
+  background: var(--st-surface);
   color: #0f766e;
   font-size: 13px;
   font-weight: 600;
@@ -383,7 +383,7 @@ onMounted(() => {
 }
 
 .syllabus-subjects-toggle:disabled {
-  color: #94a3b8;
+  color: var(--st-on-surface-variant);
   cursor: not-allowed;
 }
 
@@ -436,9 +436,9 @@ onMounted(() => {
 .syllabus-subject-chip {
   height: 32px;
   padding: 0 12px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  border: 1px solid color-mix(in srgb, var(--st-on-surface) 12%, transparent);
   border-radius: 8px;
-  background: #fff;
+  background: var(--st-surface);
   color: #334155;
   font-size: 13px;
   cursor: pointer;
@@ -460,7 +460,7 @@ onMounted(() => {
 .syllabus-subjects__hint {
   margin: 0;
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--st-on-surface-variant);
   line-height: 32px;
 }
 
@@ -501,7 +501,7 @@ onMounted(() => {
 .syllabus-doc__source {
   margin: 8px 0 0;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--st-on-surface-variant);
 }
 
 .syllabus-tabs {
@@ -510,7 +510,7 @@ onMounted(() => {
   gap: 4px;
   margin: 12px 0 0;
   padding: 0;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid color-mix(in srgb, var(--st-on-surface) 10%, transparent);
 }
 
 .syllabus-tab {
@@ -520,7 +520,7 @@ onMounted(() => {
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   background: transparent;
-  color: #64748b;
+  color: var(--st-on-surface-variant);
   font-size: 14px;
   cursor: pointer;
 }
@@ -542,7 +542,7 @@ onMounted(() => {
   margin: 8px 0 12px;
   font-size: 15px;
   font-weight: 650;
-  color: #0f172a;
+  color: var(--st-on-surface);
 }
 
 .syllabus-ref-list {
@@ -557,7 +557,7 @@ onMounted(() => {
 .syllabus-ref-item__title {
   font-size: 15px;
   font-weight: 650;
-  color: #0f172a;
+  color: var(--st-on-surface);
 }
 
 .syllabus-ref-item__meta {
@@ -566,13 +566,13 @@ onMounted(() => {
   gap: 6px 12px;
   margin-top: 4px;
   font-size: 13px;
-  color: #64748b;
+  color: var(--st-on-surface-variant);
 }
 
 .syllabus-ref-item__note {
   margin: 6px 0 0;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--st-on-surface-variant);
 }
 
 .syllabus-works {
@@ -593,7 +593,7 @@ onMounted(() => {
 }
 
 .syllabus-works__src {
-  color: #64748b;
+  color: var(--st-on-surface-variant);
 }
 
 .syllabus-empty {
@@ -602,7 +602,7 @@ onMounted(() => {
   align-items: flex-start;
   justify-content: center;
   min-height: 240px;
-  color: #64748b;
+  color: var(--st-on-surface-variant);
 }
 
 .syllabus-empty p {
@@ -613,12 +613,12 @@ onMounted(() => {
 
 .syllabus-empty small {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--st-on-surface-variant);
 }
 
 .syllabus-empty-inline {
   margin: 0 0 16px;
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--st-on-surface-variant);
 }
 </style>

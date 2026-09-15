@@ -5,6 +5,7 @@ import cn.hutool.json.JSONUtil;
 import com.yukimomo.api.client.PracticeFeignClient;
 import com.yukimomo.api.client.SchoolFeignClient;
 import com.yukimomo.api.practice.vo.PaperListItemVO;
+import com.yukimomo.api.school.vo.SchoolMajorVO;
 import com.yukimomo.api.school.vo.SchoolVO;
 import com.yukimomo.api.school.vo.SyllabusDesignatedWorkVO;
 import com.yukimomo.api.school.vo.SyllabusOptionItemVO;
@@ -37,7 +38,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UpLearnQueryTools {
 
-    private static final int DEFAULT_PAGE_SIZE = 8;
+    private static final int DEFAULT_PAGE_SIZE = 16;
+    private static final int MAX_MAJORS_RETURNED = 40;
     private static final int MAX_SYLLABUS_CHARS = 3500;
     private static final int MAX_SCOPE_ITEMS = 40;
 
@@ -45,27 +47,36 @@ public class UpLearnQueryTools {
     private final PracticeFeignClient practiceFeignClient;
 
     @Tool("""
-            按省份/关键词查询专升本院校列表。默认用备考档案省份。
-            重要：不要传招生年份 year（档案届别不是院校筛选年，传了常导致 0 条）。
-            用户要公办时 preferPublic=true，也可 type=公办；勿编造分数线。
+            按省份/办学类型/专业类查询专升本院校列表（与控制台「院校」筛选同一套接口）。
+            问「招计算机类的公办院校」时：province=档案省，type=公办，preferPublic=true，majorCategory=计算机类。
+            keyword 只匹配校名，不要把专业名塞进 keyword。
+            禁止传档案届别当 year（届别≠招生目录年，传了常 0 条）；year 可空。
+            需要某校具体专业明细时，再用 getSchoolMajors。
             """)
     public String searchSchools(
-            @P("省份，如广东、山东") String province,
-            @P("校名关键词，可空") String keyword,
-            @P("办学类型：公办/民办，可空；公办时建议同时 preferPublic=true") String type,
-            @P("true=公办优先排序；查公办院校时请传 true") Boolean preferPublic) {
+            @P("省份，如广东、山东；默认档案省") String province,
+            @P(value = "校名关键词，可空；勿填专业名", required = false) String keyword,
+            @P(value = "办学类型：公办/民办，可空", required = false) String type,
+            @P(value = "true=公办优先；查公办请传 true", required = false) Boolean preferPublic,
+            @P(value = "专业类，如计算机类、电子信息类；用户说「计算机」请归一成「计算机类」", required = false)
+                    String majorCategory,
+            @P(value = "专业词典 ID，精确筛某专业时用；可空", required = false) Long majorDictId) {
         try {
             String typeVal = blankToNull(type);
             Boolean prefer = preferPublic;
             if (prefer == null && typeVal != null && typeVal.contains("公办")) {
                 prefer = true;
             }
-            // 故意不传 year：届别年份会落到 school_major.year，本机常无数据 → total=0
+            String category = normalizeMajorCategory(majorCategory);
+            // 不传 year：届别年份会落到 school_major.year，常导致 0 条
             Result<PageDTO<SchoolVO>> result = schoolFeignClient.listSchools(
                     blankToNull(keyword),
                     blankToNull(province),
                     typeVal,
                     null,
+                    majorDictId,
+                    null,
+                    category,
                     prefer,
                     1,
                     DEFAULT_PAGE_SIZE);
@@ -82,9 +93,6 @@ public class UpLearnQueryTools {
                     row.put("province", s.getProvince());
                     row.put("city", s.getCity());
                     row.put("type", s.getType());
-                    row.put("minScore", s.getMinScore());
-                    row.put("enrollment", s.getEnrollment());
-                    row.put("tuition", s.getTuition());
                     row.put("majorCount", s.getMajorCount());
                     items.add(row);
                 }
@@ -92,12 +100,90 @@ public class UpLearnQueryTools {
             Map<String, Object> out = new LinkedHashMap<>();
             out.put("total", page.getTotal());
             out.put("returned", items.size());
+            out.put("filters", Map.of(
+                    "province", blankToNull(province) == null ? "" : province.trim(),
+                    "type", typeVal == null ? "" : typeVal,
+                    "majorCategory", category == null ? "" : category,
+                    "majorDictId", majorDictId == null ? "" : majorDictId));
             out.put("schools", items);
-            out.put("hint", "仅摘要；详情请引导用户到控制台「院校」页查看");
+            out.put("hint", items.isEmpty()
+                    ? "无命中；可放宽 type/majorCategory，或换档案省"
+                    : "已按筛选返回院校；要某校招生专业明细请调用 getSchoolMajors(schoolId)");
             return JSONUtil.toJsonStr(out);
         } catch (Exception e) {
             log.warn("searchSchools failed: {}", e.getMessage());
             return "{\"error\":\"院校查询异常: " + escape(e.getMessage()) + "\"}";
+        }
+    }
+
+    @Tool("""
+            查询某校开设的招生专业明细（专业名、专业类、考试科目、前置要求、学费等）。
+            用户问「某校招哪些计算机类专业 / 限招条件」时调用。
+            schoolId 来自 searchSchools 返回的 id；majorCategory 可筛同类（如计算机类）。
+            """)
+    public String getSchoolMajors(
+            @P("院校 id，来自 searchSchools") Long schoolId,
+            @P(value = "专业类过滤，如计算机类；可空表示该校全部专业", required = false) String majorCategory) {
+        if (schoolId == null) {
+            return "{\"error\":\"schoolId 必填；请先 searchSchools 取得院校 id\"}";
+        }
+        try {
+            String category = normalizeMajorCategory(majorCategory);
+            Result<List<SchoolMajorVO>> result = schoolFeignClient.listMajors(schoolId, null, category);
+            if (!isOk(result)) {
+                return err("院校专业查询失败", result);
+            }
+            List<SchoolMajorVO> all = result.getData() == null ? List.of() : result.getData();
+            // Feign 侧 majorCategory 主要用于相关度排序，不完全过滤；此处再精确过滤一次
+            List<SchoolMajorVO> filtered = all;
+            if (category != null) {
+                filtered = all.stream()
+                        .filter(m -> category.equals(StrUtil.trim(m.getMajorCategory())))
+                        .toList();
+                if (filtered.isEmpty()) {
+                    // 宽松：名称或展示名含「计算机」等
+                    String token = category.replace("类", "");
+                    filtered = all.stream()
+                            .filter(m -> containsIgnoreNull(m.getName(), token)
+                                    || containsIgnoreNull(m.getDisplayName(), token)
+                                    || containsIgnoreNull(m.getMajorCategory(), token))
+                            .toList();
+                }
+            }
+            boolean truncated = filtered.size() > MAX_MAJORS_RETURNED;
+            List<SchoolMajorVO> slice = truncated
+                    ? filtered.subList(0, MAX_MAJORS_RETURNED)
+                    : filtered;
+            List<Map<String, Object>> items = new ArrayList<>();
+            for (SchoolMajorVO m : slice) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("displayName", StrUtil.blankToDefault(m.getDisplayName(), m.getName()));
+                row.put("name", m.getName());
+                row.put("majorCategory", m.getMajorCategory());
+                row.put("majorGroup", m.getMajorGroup());
+                row.put("majorCode", m.getMajorCode());
+                row.put("batchName", m.getBatchName());
+                row.put("examType", m.getExamType());
+                row.put("publicSubjects", m.getPublicSubjects());
+                row.put("foundationSubject", m.getFoundationSubject());
+                row.put("comprehensiveSubject", m.getComprehensiveSubject());
+                row.put("prerequisite", m.getPrerequisite());
+                row.put("tuition", m.getTuition());
+                row.put("campus", m.getCampus());
+                row.put("year", m.getYear());
+                items.add(row);
+            }
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("schoolId", schoolId);
+            out.put("majorCategory", category == null ? "" : category);
+            out.put("totalMatched", filtered.size());
+            out.put("returned", items.size());
+            out.put("truncated", truncated);
+            out.put("majors", items);
+            return JSONUtil.toJsonStr(out);
+        } catch (Exception e) {
+            log.warn("getSchoolMajors failed: {}", e.getMessage());
+            return "{\"error\":\"院校专业查询异常: " + escape(e.getMessage()) + "\"}";
         }
     }
 
@@ -108,7 +194,7 @@ public class UpLearnQueryTools {
             """)
     public String getSyllabus(
             @P("省份，如广东") String province,
-            @P("期望年份；可空，空则直接取该省该科最新入库年") Integer year,
+            @P(value = "期望年份；可空，空则直接取该省该科最新入库年", required = false) Integer year,
             @P("科目，可用档案名如大学英语、高等数学") String subject) {
         if (StrUtil.isBlank(province) || StrUtil.isBlank(subject)) {
             return "{\"error\":\"province 与 subject 必填；请从备考档案读取默认值\"}";
@@ -149,7 +235,7 @@ public class UpLearnQueryTools {
         }
         try {
             String prov = province.trim();
-            String subj = normalizeSubject(prov, subject.trim());
+            String subj = SubjectAlias.normalize(prov, subject.trim());
             Result<List<PaperListItemVO>> result = practiceFeignClient.listPapers(prov, subj);
             if (!isOk(result)) {
                 // 别名未命中时再试原始名
@@ -259,7 +345,7 @@ public class UpLearnQueryTools {
         Set<String> set = new LinkedHashSet<>();
         String raw = subject.trim();
         set.add(raw);
-        set.add(normalizeSubject(province, raw));
+        set.add(SubjectAlias.normalize(province, raw));
         if (raw.contains("英语")) {
             set.add("英语");
             set.add("大学英语");
@@ -276,27 +362,6 @@ public class UpLearnQueryTools {
             set.add("高等数学");
         }
         return new ArrayList<>(set);
-    }
-
-    /** 档案科目名 → 库内常用名（广东/山东差异做简单处理）。 */
-    static String normalizeSubject(String province, String subject) {
-        if (StrUtil.isBlank(subject)) {
-            return subject;
-        }
-        String s = subject.trim();
-        if ("大学英语".equals(s) || "公共英语".equals(s)) {
-            return "英语";
-        }
-        if ("政治".equals(s) && "广东".equals(province)) {
-            return "政治理论";
-        }
-        if ("计算机基础".equals(s) || "计算机基础与编程".equals(s)) {
-            return "广东".equals(province) ? "计算机基础与程序设计" : "计算机";
-        }
-        if ("高数".equals(s)) {
-            return "高等数学";
-        }
-        return s;
     }
 
     private static Map<String, Object> summarizeSyllabus(SyllabusVO vo) {
@@ -409,6 +474,28 @@ public class UpLearnQueryTools {
 
     private static String blankToNull(String s) {
         return StrUtil.isBlank(s) ? null : s.trim();
+    }
+
+    /** 口语专业类 → 库内 major_category（如 计算机 → 计算机类） */
+    private static String normalizeMajorCategory(String raw) {
+        if (StrUtil.isBlank(raw)) {
+            return null;
+        }
+        String s = raw.trim();
+        if ("计算机".equals(s) || "计算机专业".equals(s) || "计算机相关".equals(s)) {
+            return "计算机类";
+        }
+        if (s.endsWith("专业") && !s.endsWith("类")) {
+            String base = s.substring(0, s.length() - 2);
+            if (!base.endsWith("类")) {
+                return base + "类";
+            }
+        }
+        return s;
+    }
+
+    private static boolean containsIgnoreNull(String text, String token) {
+        return StrUtil.isNotBlank(text) && StrUtil.isNotBlank(token) && text.contains(token);
     }
 
     private static String escape(String s) {

@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElConfigProvider, ElMessage } from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import en from 'element-plus/es/locale/lang/en'
 import { useAuthStore } from './stores/auth'
-import { logout } from './api/user'
+import { useUiPrefsStore } from './stores/uiPrefs'
 import BrandLogo from './components/stitch/BrandLogo.vue'
-import { markConsoleDashboardEntry, pushConsole } from './utils/consoleNav'
+import PaperPlaneTransit from './components/PaperPlaneTransit.vue'
+import { markConsoleDashboardEntry, preloadConsole, pushConsole } from './utils/consoleNav'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const ui = useUiPrefsStore()
+
+const elementLocale = computed(() => (ui.locale === 'en-US' ? en : zhCn))
 
 const isLanding = computed(() => route.path === '/home' || route.path === '/')
 const isConsole = computed(() => route.path.startsWith('/console'))
@@ -18,66 +24,75 @@ const isPaperExam = computed(() => route.path.startsWith('/paper/'))
 const hideAppChrome = computed(() => isLanding.value || isConsole.value || isPaperExam.value)
 const showWorkbenchLink = computed(() => auth.isLoggedIn && !isConsole.value && !isPaperExam.value)
 
+watch(
+  () => auth.isLoggedIn,
+  () => {
+    void ui.loadRemote()
+  },
+  { immediate: true },
+)
+
 async function handleLogout() {
-  try {
-    if (auth.refreshToken) await logout(auth.refreshToken)
-  } catch {
-    /* ignore */
-  } finally {
-    auth.clearSession()
-    ElMessage.success('已退出')
-    router.push('/home')
-  }
+  await auth.signOut()
+  ElMessage.success(ui.tr('common.logoutOk'))
+  router.push('/home')
 }
 </script>
 
 <template>
-  <div class="app-shell">
-    <header v-if="!hideAppChrome" class="topbar">
-      <div class="topbar-brand" @click="router.push('/home')">
-        <BrandLogo variant="landing" :size="40" />
-        <span v-if="!isLanding" class="brand-tag">招生查询与刷题平台</span>
-      </div>
-      <nav class="topbar-nav">
-        <router-link to="/home" class="nav-link" active-class="nav-link--active">首页</router-link>
-        <router-link
-          v-if="auth.isLoggedIn"
-          :to="{ path: '/console', hash: '#dashboard' }"
-          class="nav-link"
-          active-class="nav-link--active"
-        >
-          工作台
-        </router-link>
-      </nav>
-      <div class="topbar-actions">
-        <template v-if="auth.isLoggedIn">
-          <el-avatar :size="28" :src="auth.user?.avatarUrl" />
-          <span class="user-name">{{ auth.user?.nickname }}</span>
-          <el-button
-            v-if="showWorkbenchLink"
-            type="primary"
-            size="small"
-            @click="markConsoleDashboardEntry(); pushConsole(router, 'dashboard')"
+  <ElConfigProvider :locale="elementLocale">
+    <div class="app-shell">
+      <header v-if="!hideAppChrome" class="topbar">
+        <div class="topbar-brand" @click="router.push('/home')">
+          <BrandLogo variant="landing" :size="40" />
+          <span v-if="!isLanding" class="brand-tag">招生查询与刷题平台</span>
+        </div>
+        <nav class="topbar-nav">
+          <router-link to="/home" class="nav-link" active-class="nav-link--active">首页</router-link>
+          <router-link
+            v-if="auth.isLoggedIn"
+            :to="{ path: '/console', hash: '#dashboard' }"
+            class="nav-link"
+            active-class="nav-link--active"
+            @mouseenter="preloadConsole"
+            @focus="preloadConsole"
           >
-            进入工作台
-          </el-button>
-          <el-button link @click="handleLogout">退出</el-button>
-        </template>
-        <el-button v-else type="primary" size="small" @click="router.push('/login')">登录</el-button>
-      </div>
-    </header>
+            工作台
+          </router-link>
+        </nav>
+        <div class="topbar-actions">
+          <template v-if="auth.isLoggedIn">
+            <el-avatar :size="28" :src="auth.user?.avatarUrl" />
+            <span class="user-name">{{ auth.user?.nickname }}</span>
+            <el-button
+              v-if="showWorkbenchLink"
+              type="primary"
+              size="small"
+              @mouseenter="preloadConsole"
+              @focus="preloadConsole"
+              @click="markConsoleDashboardEntry(); pushConsole(router, 'dashboard')"
+            >
+              进入工作台
+            </el-button>
+            <el-button link @click="handleLogout">退出</el-button>
+          </template>
+          <el-button v-else type="primary" size="small" @click="router.push('/login')">登录</el-button>
+        </div>
+      </header>
 
-    <main
-      class="main"
-      :class="{
-        'main--wide': !isConsole && !isPaperExam && route.path !== '/home',
-        'main--landing': isLanding,
-        'main--console': isConsole || isPaperExam,
-      }"
-    >
-      <router-view />
-    </main>
-  </div>
+      <main
+        class="main"
+        :class="{
+          'main--wide': !isConsole && !isPaperExam && route.path !== '/home',
+          'main--landing': isLanding,
+          'main--console': isConsole || isPaperExam,
+        }"
+      >
+        <router-view />
+      </main>
+      <PaperPlaneTransit />
+    </div>
+  </ElConfigProvider>
 </template>
 
 <style scoped>

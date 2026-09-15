@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { fetchMajorOptions, fetchSchoolList } from '../api/school'
 import { fetchPaperList } from '../api/papers'
 import { useAuthStore } from '../stores/auth'
+import { useUiPrefsStore } from '../stores/uiPrefs'
 import LoginModal from '../components/stitch/LoginModal.vue'
 import BrandLogo from '../components/stitch/BrandLogo.vue'
 import StitchIcon from '../components/stitch/StitchIcon.vue'
@@ -11,6 +13,7 @@ import {
   consoleFullPath,
   isDashboardConsoleHref,
   markConsoleDashboardEntry,
+  preloadConsole,
   pushConsole,
   pushConsoleHref,
   type ConsoleModule,
@@ -20,6 +23,7 @@ import type { MajorOptionVO, PaperListItemVO, SchoolVO } from '../types/api'
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const ui = useUiPrefsStore()
 
 const showLoginModal = ref(false)
 const loginRedirect = ref(consoleFullPath('dashboard'))
@@ -72,6 +76,7 @@ const featuredMajorCards = computed(() =>
 )
 
 function goConsole(module: ConsoleModule = 'dashboard') {
+  void preloadConsole()
   const target = consoleFullPath(module)
   if (!auth.isLoggedIn) {
     loginRedirect.value = target
@@ -82,6 +87,14 @@ function goConsole(module: ConsoleModule = 'dashboard') {
     markConsoleDashboardEntry()
   }
   pushConsole(router, module)
+}
+
+async function onToggleTheme() {
+  try {
+    await ui.toggleTheme()
+  } catch (e) {
+    ElMessage.error(e instanceof Error ? e.message : '主题切换失败')
+  }
 }
 
 function closeLoginModal() {
@@ -168,6 +181,14 @@ function paperMeta(p: PaperListItemVO) {
 
 onMounted(async () => {
   openLoginFromQuery()
+  // 空闲时预拉控制台首屏，减少点击进入时的白屏/顿挫
+  const schedule =
+    typeof window !== 'undefined' && 'requestIdleCallback' in window
+      ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 2500 })
+      : (cb: () => void) => window.setTimeout(cb, 800)
+  schedule(() => {
+    void preloadConsole()
+  })
   await Promise.all([loadSchools(), loadFeaturedMajors(), loadPreviewPapers()])
 })
 </script>
@@ -185,7 +206,26 @@ onMounted(async () => {
           <a href="#daily-practice" @click.prevent="scrollTo('daily-practice')">每日一练</a>
           <a href="#random-practice" @click.prevent="scrollTo('random-practice')">随机刷题</a>
         </nav>
-        <button type="button" class="nav-cta" @click="goConsole()">进入控制台 →</button>
+        <div class="nav-actions">
+          <button
+            type="button"
+            class="nav-theme-btn"
+            :aria-label="ui.theme === 'dark' ? ui.tr('topbar.themeToLight') : ui.tr('topbar.themeToDark')"
+            :title="ui.theme === 'dark' ? ui.tr('topbar.themeToLight') : ui.tr('topbar.themeToDark')"
+            @click="onToggleTheme"
+          >
+            <StitchIcon :name="ui.theme === 'dark' ? 'sun' : 'moon'" />
+          </button>
+          <button
+            type="button"
+            class="nav-cta"
+            @mouseenter="preloadConsole"
+            @focus="preloadConsole"
+            @click="goConsole()"
+          >
+            进入控制台 →
+          </button>
+        </div>
       </div>
     </header>
 
@@ -194,8 +234,22 @@ onMounted(async () => {
         <h1 class="hero-title">查院校，刷真题，一站完成。</h1>
         <p class="hero-sub">面向专升本备考的招生数据与在线练习平台，让升学之路更有确定性。</p>
         <div class="hero-btns">
-          <button type="button" class="btn btn-primary" @click="goConsole('school')">开始查询</button>
-          <button type="button" class="btn btn-outline" @click="goConsole('random')">体验刷题</button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            @mouseenter="preloadConsole"
+            @click="goConsole('school')"
+          >
+            开始查询
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline"
+            @mouseenter="preloadConsole"
+            @click="goConsole('random')"
+          >
+            体验刷题
+          </button>
         </div>
         <ul class="trust-strip" aria-label="平台数据概览">
           <li v-for="t in trustItems" :key="t.label">
@@ -440,9 +494,9 @@ onMounted(async () => {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgb(255 255 255 / 82%);
+  background: var(--apple-nav-bg);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid #ededf2;
+  border-bottom: 1px solid var(--apple-border);
 }
 
 .nav-inner {
@@ -468,6 +522,7 @@ onMounted(async () => {
   display: flex;
   gap: 24px;
   flex: 1;
+  min-width: 0;
 }
 
 .nav-links a {
@@ -480,6 +535,37 @@ onMounted(async () => {
   color: var(--apple-text);
 }
 
+.nav-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.nav-theme-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--apple-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-theme-btn:hover {
+  background: color-mix(in srgb, var(--apple-text) 8%, transparent);
+  color: var(--apple-text);
+}
+
+.nav-theme-btn :deep(svg) {
+  width: 18px;
+  height: 18px;
+}
+
 .nav-cta {
   border: none;
   background: none;
@@ -487,12 +573,13 @@ onMounted(async () => {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  padding: 8px 4px;
 }
 
 .hero {
   padding: 64px 24px 48px;
   text-align: center;
-  background: linear-gradient(180deg, #fff 0%, var(--apple-bg-soft) 100%);
+  background: linear-gradient(180deg, var(--apple-hero-grad-start) 0%, var(--apple-bg-soft) 100%);
 }
 
 .hero-inner {
@@ -564,7 +651,7 @@ onMounted(async () => {
 }
 
 .btn-outline {
-  background: #fff;
+  background: var(--apple-surface);
   color: var(--apple-blue);
   border: 1px solid var(--apple-blue);
 }
@@ -599,12 +686,12 @@ onMounted(async () => {
 .stats-float {
   position: relative;
   width: min(480px, 100%);
-  background: rgb(255 255 255 / 94%);
+  background: var(--apple-stats-inner);
   backdrop-filter: blur(12px);
   border-radius: var(--apple-radius-md);
   padding: 22px 24px;
   text-align: left;
-  border: 1px solid rgb(255 255 255 / 80%);
+  border: 1px solid var(--apple-stats-border);
   box-shadow: var(--apple-shadow-sm);
 }
 
@@ -646,7 +733,7 @@ onMounted(async () => {
 .metric {
   padding: 10px 12px;
   border-radius: var(--apple-radius-sm);
-  background: rgb(245 245 247 / 80%);
+  background: var(--apple-metric-bg);
 }
 
 .stats-metrics small {
@@ -700,7 +787,7 @@ onMounted(async () => {
 }
 
 .feature-card {
-  background: #fff;
+  background: var(--apple-surface);
   border: 1px solid var(--apple-border);
   border-radius: var(--apple-radius-lg);
   padding: 24px 22px;
@@ -767,9 +854,9 @@ onMounted(async () => {
   align-items: center;
   height: 36px;
   padding: 0 12px;
-  border: 1px solid #d2d2d7;
+  border: 1px solid var(--apple-input-border);
   border-radius: 8px;
-  background: #f5f5f7;
+  background: var(--apple-chip-bg);
   font-size: 14px;
   color: var(--apple-text);
   user-select: none;
@@ -786,9 +873,9 @@ onMounted(async () => {
 }
 
 .table-wrap {
-  background: #fff;
+  background: var(--apple-surface);
   border-radius: var(--apple-radius-md);
-  border: 1px solid #ededf2;
+  border: 1px solid var(--apple-border);
   overflow: auto;
 }
 
@@ -806,7 +893,7 @@ onMounted(async () => {
 .data-table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid #f0f0f5;
+  border-bottom: 1px solid var(--apple-divider);
 }
 
 .data-table th {
@@ -847,7 +934,7 @@ onMounted(async () => {
 }
 
 .major-card {
-  background: #fff;
+  background: var(--apple-surface);
   border: 1px solid var(--apple-border);
   border-radius: var(--apple-radius-md);
   padding: 22px 20px;
@@ -865,7 +952,7 @@ onMounted(async () => {
   gap: 12px;
   margin-bottom: 16px;
   padding-bottom: 14px;
-  border-bottom: 1px solid #f0f0f5;
+  border-bottom: 1px solid var(--apple-divider);
 }
 
 .major-icon-box {
@@ -904,7 +991,7 @@ onMounted(async () => {
   align-items: center;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid #f5f5f7;
+  border-bottom: 1px solid var(--apple-divider);
 }
 
 .major-meta li:last-child {
@@ -935,11 +1022,12 @@ onMounted(async () => {
 }
 
 .pill {
-  border: 1px solid #ededf2;
-  background: #fff;
+  border: 1px solid var(--apple-border);
+  background: var(--apple-surface);
   border-radius: 980px;
   padding: 6px 14px;
   font-size: 13px;
+  color: var(--apple-text);
 }
 
 .pill.active {
@@ -963,7 +1051,7 @@ onMounted(async () => {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: #fff;
+  background: var(--apple-surface);
   border: 1px solid var(--apple-border);
   border-radius: var(--apple-radius-md);
   padding: 14px 16px;
@@ -1003,7 +1091,7 @@ onMounted(async () => {
 
 .quiz-panel,
 .daily-quiz {
-  background: #fff;
+  background: var(--apple-surface);
   border: 1px solid var(--apple-border);
   border-radius: var(--apple-radius-md);
   padding: 20px;
@@ -1051,19 +1139,19 @@ onMounted(async () => {
 .quiz-options span {
   display: block;
   padding: 10px 12px;
-  border: 1px solid #ededf2;
+  border: 1px solid var(--apple-border);
   border-radius: 8px;
   font-size: 14px;
 }
 
 .quiz-options span.selected {
   border-color: var(--apple-blue);
-  background: rgb(0 113 227 / 6%);
+  background: var(--apple-option-selected-bg);
 }
 
 .quiz-options span.correct {
   border-color: var(--apple-green);
-  background: rgb(52 199 89 / 8%);
+  background: var(--apple-option-correct-bg);
 }
 
 .daily-wrap {
@@ -1092,7 +1180,7 @@ onMounted(async () => {
 .tags span {
   font-size: 11px;
   padding: 2px 8px;
-  background: #f5f5f7;
+  background: var(--apple-chip-bg);
   border-radius: 4px;
   color: var(--apple-text-muted);
 }
@@ -1106,7 +1194,7 @@ onMounted(async () => {
 .analysis {
   margin-top: 16px;
   padding: 12px;
-  background: #f5f5f7;
+  background: var(--apple-chip-bg);
   border-radius: 8px;
   font-size: 13px;
 }
@@ -1118,7 +1206,7 @@ onMounted(async () => {
 }
 
 .landing-footer {
-  border-top: 1px solid #ededf2;
+  border-top: 1px solid var(--apple-border);
   padding: 24px;
   margin-top: 24px;
 }

@@ -18,6 +18,7 @@ import com.yukimomo.user.service.LoginCodeService;
 import com.yukimomo.user.service.OssService;
 import com.yukimomo.user.service.RefreshTokenService;
 import com.yukimomo.user.service.UserAuthService;
+import com.yukimomo.user.util.ImageUploadSupport;
 import com.yukimomo.user.vo.AvatarUploadVO;
 import com.yukimomo.user.vo.LoginVO;
 import com.yukimomo.user.vo.UserInfoVO;
@@ -30,7 +31,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Locale;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -50,8 +50,6 @@ public class UserAuthServiceImpl implements UserAuthService {
     private final OssService ossService;
 
     private static final long MAX_AVATAR_BYTES = 2 * 1024 * 1024L;
-    private static final Set<String> ALLOWED_AVATAR_TYPES = Set.of(
-            "image/jpeg", "image/png", "image/webp");
     /** 8～32 位，至少各含一个字母与一个数字 */
     private static final Pattern PASSWORD_PATTERN =
             Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,32}$");
@@ -154,24 +152,15 @@ public class UserAuthServiceImpl implements UserAuthService {
 
     @Override
     public AvatarUploadVO uploadAvatar(Long userId, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BizException(ErrorCode.BAD_REQUEST, "请选择图片文件");
-        }
-        String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_AVATAR_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
-            throw new BizException(ErrorCode.AVATAR_FILE_INVALID);
-        }
-        if (file.getSize() > MAX_AVATAR_BYTES) {
-            throw new BizException(ErrorCode.AVATAR_FILE_INVALID);
-        }
+        String contentType = ImageUploadSupport.validateImage(file, MAX_AVATAR_BYTES, ErrorCode.AVATAR_FILE_INVALID);
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new BizException(ErrorCode.USER_NOT_FOUND);
         }
-        String ext = extensionForContentType(contentType);
+        String ext = ImageUploadSupport.extensionForContentType(contentType);
         String avatarUrl;
         try {
-            avatarUrl = ossService.uploadAvatar(userId, ext, file.getInputStream(), file.getSize());
+            avatarUrl = ossService.uploadAvatar(userId, ext, file.getInputStream());
         } catch (IOException e) {
             throw new BizException(ErrorCode.INTERNAL_ERROR, "头像上传失败");
         }
@@ -272,17 +261,6 @@ public class UserAuthServiceImpl implements UserAuthService {
         }
         String lower = url.toLowerCase(Locale.ROOT);
         return lower.startsWith("https://") || lower.startsWith("http://");
-    }
-
-    private String extensionForContentType(String contentType) {
-        switch (contentType.toLowerCase(Locale.ROOT)) {
-            case "image/png":
-                return ".png";
-            case "image/webp":
-                return ".webp";
-            default:
-                return ".jpg";
-        }
     }
 
     private LoginVO buildLoginVO(User user, boolean newUser) {

@@ -1,8 +1,7 @@
 /**
- * Gmail 式控制台布局：底层侧栏 + 顶层白色内容面板
+ * Gmail 式控制台布局：底层侧栏 + 顶层内容面板（可透底层背景）
  */
 :root {
-  --gmail-shell-bg: #f0f4f9;
   --gmail-sidebar-w: 256px;
   --gmail-sidebar-rail: 72px;
   --gmail-topbar-h: 64px;
@@ -10,13 +9,33 @@
 }
 
 .gmail-shell {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
   background: var(--gmail-shell-bg);
 }
 
-/* ── 顶层：全宽顶栏（汉堡 + Logo + 通知/用户） ── */
+/* 用户自定义底层背景（仅壳层） */
+.gmail-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--ul-shell-bg-image);
+  background-size: var(--ul-shell-bg-size, cover);
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: calc(var(--ul-shell-bg-opacity, 100) * 1%);
+  pointer-events: none;
+}
+
+/* ── 顶栏：无底色，按钮直接铺在底层背景上；主展示区单独叠加在上层 ── */
 .gmail-topbar {
   display: flex;
   align-items: center;
@@ -24,7 +43,7 @@
   height: var(--gmail-topbar-h);
   padding: 0 12px 0 8px;
   flex-shrink: 0;
-  background: var(--gmail-shell-bg);
+  background: transparent;
   z-index: 20;
 }
 
@@ -124,22 +143,23 @@
   box-shadow: 0 0 0 2px var(--st-secondary-container);
 }
 
-/* ── 底层：侧栏 + 面板容器 ── */
+/* ── 底层：侧栏 + 面板容器（无底色，透出壳层壁纸） ── */
 .gmail-frame {
   display: flex;
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  background: transparent;
 }
 
-/* 侧栏（与顶栏同色，底层） */
+/* 侧栏：同样无底色，与顶栏同属底层背景层，不与主展示区划分色带 */
 .gmail-sidebar {
   width: var(--gmail-sidebar-w);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   padding: 8px 0 16px;
-  background: var(--gmail-shell-bg);
+  background: transparent;
   transition: width 0.22s ease;
   overflow: hidden;
 }
@@ -203,13 +223,13 @@
 }
 
 .gmail-nav__item--active {
-  background: #d3e3fd;
-  color: #001d35;
+  background: var(--ul-nav-active-bg);
+  color: var(--st-secondary);
   font-weight: 600;
 }
 
 .gmail-nav__item--active svg {
-  color: #001d35;
+  color: var(--st-secondary);
 }
 
 .gmail-nav__label {
@@ -255,27 +275,52 @@
   background: var(--st-primary-container);
 }
 
-/* ── 上层：白色浮动面板 ── */
+/* ── 上层：圆角主面板叠加在底层背景之上，四周留白透出同一壁纸 ── */
 .gmail-panel-host {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 0 16px 16px 0;
+  padding: 8px 14px 14px 10px;
+  overflow: hidden;
+  background: transparent;
 }
 
 .gmail-panel {
+  position: relative;
+  isolation: isolate;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: #fff;
-  border-top-left-radius: var(--gmail-panel-radius);
-  border-top-right-radius: var(--gmail-panel-radius);
-  box-shadow:
-    0 1px 2px rgb(60 64 67 / 12%),
-    0 2px 6px rgb(60 64 67 / 8%);
+  border-radius: var(--gmail-panel-radius);
+  border: 1px solid color-mix(in srgb, var(--st-outline-variant) 55%, transparent);
   overflow: hidden;
+  background-color: transparent;
+  background-image:
+    linear-gradient(
+      rgb(var(--ul-panel-rgb) / calc(var(--ul-panel-opacity, 100) * 1%)),
+      rgb(var(--ul-panel-rgb) / calc(var(--ul-panel-opacity, 100) * 1%))
+    ),
+    var(--ul-panel-bg-image, none);
+  background-size: auto, var(--ul-panel-bg-size, cover);
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 1px 2px rgb(60 64 67 / 10%),
+    0 4px 16px rgb(60 64 67 / 8%);
+}
+
+html[data-theme='dark'] .gmail-panel {
+  border-color: var(--st-glass-border);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 30%),
+    0 6px 20px rgb(0 0 0 / 28%);
+}
+
+.gmail-panel > * {
+  position: relative;
+  z-index: 1;
 }
 
 .gmail-panel__bar {
@@ -298,9 +343,30 @@
 .gmail-panel__body {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(100 116 139 / 28%) transparent;
+}
+
+.gmail-panel__body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.gmail-panel__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gmail-panel__body::-webkit-scrollbar-thumb {
+  background: rgb(100 116 139 / 28%);
+  border-radius: 999px;
+}
+
+.gmail-panel__body::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139 / 42%);
 }
 
 .account-panel-host {
@@ -310,93 +376,90 @@
   flex-direction: column;
 }
 
-/* 面板内：设置/账号 子侧栏 */
-.gmail-panel__split {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
-
-.gmail-panel__aside {
-  width: 200px;
-  flex-shrink: 0;
-  padding: 16px 0;
-  border-right: 1px solid var(--st-outline-variant);
-  background: #fafbfc;
-}
-
-.gmail-panel__aside-title {
-  margin: 0 0 8px;
-  padding: 0 16px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--st-on-surface-variant);
-}
-
-.gmail-panel__link {
-  display: block;
-  width: 100%;
-  padding: 10px 16px;
-  border: none;
-  background: transparent;
-  text-align: left;
-  font: inherit;
-  font-size: 14px;
-  color: var(--st-on-surface-variant);
-  cursor: pointer;
-}
-
-.gmail-panel__link:hover {
-  background: rgb(0 0 0 / 4%);
-}
-
-.gmail-panel__link--active {
-  background: rgb(0 88 190 / 10%);
-  color: var(--st-secondary);
-  font-weight: 600;
-}
-
 .gmail-panel__content {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   padding: 24px;
   overflow: auto;
 }
 
 .gmail-panel__content--flush {
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
 }
 
 /* ── 业务模块页公共壳（考纲/院校/刷题/真题/社区/一点通）──
  * 顶栏 pageTitle 只保留一层；内容区用 module-card，勿再套同名 st-card-header。
- * max-width: 1400px。需要视口内分区滚动时加 --fill（见考纲面板）。
+ * max-width: 1400px。需要视口内分区滚动时加 --fill（见考纲/一点通）。
  */
 .module-shell {
   padding: 20px;
+  width: 100%;
   max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;
+  /* flex 列容器里若只有 margin:auto 会被收成内容宽；强制拉满再受 max-width 限制 */
+  align-self: stretch;
 }
 
 .module-shell--fill {
-  height: calc(100vh - var(--gmail-topbar-h) - 56px);
-  min-height: 480px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
 
+/* 填充型模块在 flush 内容区吃满剩余高度，滚动交给内部列表 */
+.gmail-panel__content--flush > .module-shell--fill,
+.gmail-panel__content--flush > .module-shell,
+.gmail-panel__content--flush > .dashboard {
+  width: 100%;
+  align-self: stretch;
+}
+
+.gmail-panel__content--flush > .module-shell--fill {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.gmail-panel__body > .module-shell--fill {
+  flex: 1;
+  min-height: 0;
+}
+
 .module-card {
-  background: rgba(255, 255, 255, 0.68);
-  backdrop-filter: blur(16px) saturate(1.3);
-  -webkit-backdrop-filter: blur(16px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  backdrop-filter: blur(calc(var(--ul-module-blur, 67) * 0.24px)) saturate(1.3);
+  -webkit-backdrop-filter: blur(calc(var(--ul-module-blur, 67) * 0.24px)) saturate(1.3);
+  border: 1px solid var(--st-glass-border);
   border-radius: 20px;
   padding: 24px;
-  box-shadow:
-    0 8px 32px rgb(15 23 42 / 6%),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  box-shadow: var(--st-glass-shadow);
+  color: var(--st-on-surface);
+  overflow: hidden;
+}
+
+.module-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: var(--st-glass-bg);
+  opacity: calc(var(--ul-module-opacity, 85) * 1%);
+  pointer-events: none;
+}
+
+.module-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .module-card--fill {
@@ -428,37 +491,7 @@
   margin: 0;
   font-size: 22px;
   font-weight: 700;
-  color: #0f172a;
-}
-
-.gmail-panel__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 280px;
-  text-align: center;
-  color: var(--st-on-surface-variant);
-}
-
-.gmail-panel__empty svg {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 12px;
-  opacity: 0.45;
-}
-
-.gmail-panel__empty h2 {
-  margin: 0 0 8px;
-  font-size: 18px;
   color: var(--st-on-surface);
-}
-
-.gmail-panel__empty p {
-  margin: 0;
-  max-width: 360px;
-  line-height: 1.6;
-  font-size: 14px;
 }
 
 /* 通知列表 */
@@ -479,15 +512,15 @@
   display: flex;
   gap: 12px;
   padding: 14px 20px;
-  border-bottom: 1px solid #f0f0f5;
+  border-bottom: 1px solid var(--st-outline-variant);
 }
 
 .notify-item:hover {
-  background: #f8f9fa;
+  background: color-mix(in srgb, var(--st-surface-container) 70%, transparent);
 }
 
 .notify-item--unread {
-  background: rgb(0 88 190 / 4%);
+  background: color-mix(in srgb, var(--st-secondary) 8%, transparent);
 }
 
 .notify-item__dot {
@@ -541,7 +574,7 @@
   }
 
   .gmail-panel-host {
-    padding-right: 8px;
+    padding: 0;
   }
 
   .gmail-sidebar:not(.gmail-sidebar--collapsed) {

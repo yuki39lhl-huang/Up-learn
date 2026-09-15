@@ -186,7 +186,7 @@ function onCodeInput(e: Event) {
   max-width: 420px;
   padding: 32px 28px 28px;
   border-radius: 24px;
-  background: #fff;
+  background: var(--st-surface);
   box-shadow:
     0 24px 48px rgb(15 23 42 / 18%),
     0 0 0 1px rgb(255 255 255 / 60%) inset;
@@ -218,8 +218,8 @@ function onCodeInput(e: Event) {
   height: 32px;
   border: none;
   border-radius: 999px;
-  background: rgb(255 255 255 / 70%);
-  color: #64748b;
+  background: var(--st-glass-bg);
+  color: var(--st-on-surface-variant);
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
@@ -227,8 +227,8 @@ function onCodeInput(e: Event) {
 }
 
 .login-modal__close:hover {
-  background: rgb(241 245 249 / 95%);
-  color: #334155;
+  background: var(--st-surface-container);
+  color: var(--st-on-surface);
 }
 
 .login-modal__brand {
@@ -243,7 +243,7 @@ function onCodeInput(e: Event) {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #0f172a;
+  color: var(--st-on-surface);
   text-align: center;
 }
 
@@ -278,8 +278,8 @@ function onCodeInput(e: Event) {
 }
 
 .login-tabs__item--active {
-  background: #fff;
-  color: #0f172a;
+  background: var(--st-surface);
+  color: var(--st-on-surface);
   box-shadow: 0 1px 2px rgb(15 23 42 / 8%);
 }
 
@@ -316,7 +316,7 @@ function onCodeInput(e: Event) {
   border-radius: 12px;
   background: #f8fafc;
   font-size: 15px;
-  color: #0f172a;
+  color: var(--st-on-surface);
   outline: none;
   transition:
     border-color 0.15s ease,
@@ -330,7 +330,7 @@ function onCodeInput(e: Event) {
 
 .login-field__input:focus {
   border-color: #cbd5e1;
-  background: #fff;
+  background: var(--st-surface);
   box-shadow: 0 0 0 3px rgb(148 163 184 / 18%);
 }
 
@@ -350,7 +350,7 @@ function onCodeInput(e: Event) {
   padding: 0 14px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  background: #fff;
+  background: var(--st-surface);
   font-size: 13px;
   font-weight: 500;
   color: #334155;

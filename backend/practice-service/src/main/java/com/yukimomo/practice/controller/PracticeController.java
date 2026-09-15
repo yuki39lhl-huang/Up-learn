@@ -163,10 +163,12 @@ public class PracticeController {
         return Result.ok(practiceService.deleteAllNotes(date, subject));
     }
 
-    @Operation(summary = "答题历史")
+    @Operation(summary = "答题历史", description = "可选 source=random|daily 按来源过滤；不传返回全部")
     @GetMapping("/history")
-    public Result<PageDTO<AnswerHistoryVO>> history(@ParameterObject PageQuery query) {
-        return Result.ok(practiceService.listHistory(query));
+    public Result<PageDTO<AnswerHistoryVO>> history(
+            @ParameterObject PageQuery query,
+            @RequestParam(required = false) String source) {
+        return Result.ok(practiceService.listHistory(query, source));
     }
 
     @Operation(summary = "学习统计", description = "source=random 时仅统计随机刷题，不含连续打卡")

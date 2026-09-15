@@ -10,7 +10,6 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
-import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import lombok.RequiredArgsConstructor;
@@ -98,15 +97,6 @@ public class AgentRagConfig {
                 .dimension(dimension)
                 .metadataKeys(META_KEYS)
                 .build();
-    }
-
-    /**
-     * 知识库改为由 {@link com.yukimomo.tool.KnowledgeSearchTools} 按需检索；
-     * 此处仅占位，避免每轮自动 RAG 抢答/串年。
-     */
-    @Bean
-    ContentRetriever contentRetriever() {
-        return query -> List.of();
     }
 
     @Bean

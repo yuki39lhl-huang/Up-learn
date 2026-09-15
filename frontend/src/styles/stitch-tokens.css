@@ -9,6 +9,7 @@
   --st-on-primary: #ffffff;
   --st-secondary: #0058be;
   --st-secondary-container: #2170e4;
+  --st-on-secondary-container: #ffffff;
   --st-tertiary: #9d4300;
   --st-tertiary-container: #ff8e4d;
 
@@ -22,6 +23,31 @@
   --st-outline: #6d7b6c;
   --st-outline-variant: #bccbb9;
 
+  /* 控制台壳 / 主面板（可透明） */
+  --gmail-shell-bg: #f0f4f9;
+  --ul-panel-rgb: 255 255 255;
+  --ul-nav-active-bg: #d3e3fd;
+  --ul-shell-bg-image: none;
+  --ul-shell-bg-size: cover;
+  --ul-shell-bg-opacity: 100;
+  --ul-panel-bg-image: none;
+  --ul-panel-bg-size: cover;
+  --ul-panel-opacity: 100;
+  --ul-module-opacity: 85;
+  --ul-module-blur: 67;
+
+  /* 玻璃卡片（主页/模块壳）；深色下切暗面，避免异色白块 */
+  --st-glass-bg: rgba(255, 255, 255, 0.72);
+  --st-glass-border: rgba(255, 255, 255, 0.55);
+  --st-glass-inset: rgba(255, 255, 255, 0.65);
+  --st-glass-shadow: 0 8px 32px rgb(15 23 42 / 6%), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --st-glass-inner-bg: rgba(255, 255, 255, 0.48);
+  --st-glass-inner-border: rgba(255, 255, 255, 0.5);
+  --st-chip-required: #15803d;
+  --st-chip-foundation: #1d4ed8;
+  --st-chip-comprehensive: #7e22ce;
+  --st-streak: #c2410c;
+
   /* 圆角 · 间距（8px 基准） */
   --st-radius-sm: 4px;
   --st-radius-md: 8px;
@@ -32,4 +58,62 @@
   --el-color-success: var(--st-primary-container);
   --el-border-radius-base: var(--st-radius-sm);
   --el-font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  --st-primary: #4ade80;
+  --st-primary-container: #16a34a;
+  --st-on-primary: #052e16;
+  --st-secondary: #7db4ff;
+  --st-secondary-container: #3b82f6;
+  --st-on-secondary-container: #eff6ff;
+  --st-tertiary: #ffb380;
+  --st-tertiary-container: #c2410c;
+
+  --st-bg: #0f1218;
+  --st-surface: #1a1f2a;
+  --st-surface-container: #232a38;
+  --st-surface-container-low: #171c26;
+  --st-on-surface: #e8edf7;
+  --st-on-surface-variant: #a8b3c7;
+  --st-outline: #6b778c;
+  --st-outline-variant: #2f3848;
+
+  --gmail-shell-bg: #12161e;
+  --ul-panel-rgb: 26 31 42;
+  --ul-nav-active-bg: rgb(125 180 255 / 22%);
+  --st-shadow-card: 0 1px 3px rgb(0 0 0 / 35%);
+
+  --st-glass-bg: rgba(32, 38, 52, 0.82);
+  --st-glass-border: rgba(148, 163, 184, 0.14);
+  --st-glass-inset: rgba(255, 255, 255, 0.04);
+  --st-glass-shadow: 0 8px 32px rgb(0 0 0 / 40%), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --st-glass-inner-bg: rgba(12, 16, 24, 0.62);
+  --st-glass-inner-border: rgba(148, 163, 184, 0.12);
+  --st-chip-required: #4ade80;
+  --st-chip-foundation: #93c5fd;
+  --st-chip-comprehensive: #d8b4fe;
+  --st-streak: #fb923c;
+
+  /* 与 Element Plus dark/css-vars 对齐，并覆盖主色为 Stitch 绿 */
+  --el-color-primary: var(--st-primary);
+  --el-color-success: var(--st-primary-container);
+  --el-bg-color: var(--st-surface);
+  --el-bg-color-page: var(--st-bg);
+  --el-bg-color-overlay: var(--st-surface-container);
+  --el-text-color-primary: var(--st-on-surface);
+  --el-text-color-regular: var(--st-on-surface);
+  --el-text-color-secondary: var(--st-on-surface-variant);
+  --el-text-color-placeholder: var(--st-on-surface-variant);
+  --el-border-color: var(--st-outline-variant);
+  --el-border-color-light: var(--st-outline-variant);
+  --el-border-color-lighter: var(--st-outline-variant);
+  --el-fill-color-blank: var(--st-surface);
+  --el-fill-color-light: var(--st-surface-container-low);
+  --el-fill-color: var(--st-surface-container);
+  --el-mask-color: rgb(0 0 0 / 55%);
+
+  color-scheme: dark;
 }

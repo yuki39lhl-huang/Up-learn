@@ -4,11 +4,15 @@ import { ElMessage } from 'element-plus'
 import StitchIcon from './StitchIcon.vue'
 import { chatStream, fetchAgentStatus, getAgentSessionId, resetAgentSession } from '../../api/agent'
 import { useExamPrefsStore } from '../../stores/examPrefs'
+import { renderGuideMarkdown } from '../../utils/renderGuideMarkdown'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
-  loading?: boolean
+  /** 等待首包（工具调用 / 模型思考） */
+  waiting?: boolean
+  /** 正在流式输出正文 */
+  streaming?: boolean
 }
 
 const examPrefs = useExamPrefsStore()
@@ -36,6 +40,19 @@ const welcome = computed(() => {
   }
   return '你好，我是「一点通」。检测到你尚未完成备考设置，请先到主页填写省份、届别与考试科目，我才能按你的情况回答。'
 })
+
+function renderAssistantHtml(content: string) {
+  return renderGuideMarkdown(content)
+}
+
+function escapePlain(text: string) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/\n/g, '<br>')
+}
 
 async function loadStatus() {
   try {
@@ -69,7 +86,7 @@ async function sendMessage() {
 
   messages.value.push({ role: 'user', content: text })
   const assistantIndex = messages.value.length
-  messages.value.push({ role: 'assistant', content: '', loading: true })
+  messages.value.push({ role: 'assistant', content: '', waiting: true })
   input.value = ''
   scrollToBottom()
 
@@ -81,7 +98,12 @@ async function sendMessage() {
       text,
       sessionId.value,
       (accumulated) => {
-        messages.value[assistantIndex] = { role: 'assistant', content: accumulated }
+        messages.value[assistantIndex] = {
+          role: 'assistant',
+          content: accumulated,
+          waiting: false,
+          streaming: true,
+        }
         scrollToBottom()
       },
       abortController.signal
@@ -90,11 +112,13 @@ async function sendMessage() {
     if (!last.content) {
       last.content = '抱歉，未能生成有效回答，请稍后再试。'
     }
-    last.loading = false
+    last.waiting = false
+    last.streaming = false
   } catch (e) {
     if (e instanceof Error && e.name === 'AbortError') return
     const last = messages.value[assistantIndex]
-    last.loading = false
+    last.waiting = false
+    last.streaming = false
     last.content = e instanceof Error ? e.message : '请求失败'
     ElMessage.error(last.content)
   } finally {
@@ -108,7 +132,10 @@ function stopGenerating() {
   abortController?.abort()
   sending.value = false
   const last = messages.value[messages.value.length - 1]
-  if (last?.loading) last.loading = false
+  if (last) {
+    last.waiting = false
+    last.streaming = false
+  }
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -125,7 +152,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <!-- 顶栏已有「一点通」，内容区不再重复同名标题 -->
   <div class="module-shell module-shell--fill">
     <section class="module-card module-card--fill">
       <header class="module-card__head">
@@ -148,11 +174,16 @@ onMounted(async () => {
           class="agent-chat__row"
           :class="`agent-chat__row--${msg.role}`"
         >
-          <div class="agent-chat__bubble">
-            <p v-if="msg.loading && !msg.content" class="agent-chat__typing">
+          <div class="agent-chat__bubble" :class="{ 'agent-chat__bubble--streaming': msg.streaming }">
+            <p v-if="msg.waiting && !msg.content" class="agent-chat__typing">
               <span /><span /><span />
             </p>
-            <p v-else class="agent-chat__text" v-html="msg.content.replace(/\n/g, '<br>')" />
+            <div
+              v-else-if="msg.role === 'assistant'"
+              class="agent-chat__md"
+              v-html="renderAssistantHtml(msg.content)"
+            />
+            <div v-else class="agent-chat__text" v-html="escapePlain(msg.content)" />
           </div>
         </div>
       </div>
@@ -218,10 +249,10 @@ onMounted(async () => {
 
 .agent-chat__bubble {
   max-width: min(720px, 88%);
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: 14px;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .agent-chat__row--user .agent-chat__bubble {
@@ -236,9 +267,128 @@ onMounted(async () => {
   border-bottom-left-radius: 4px;
 }
 
+.agent-chat__bubble--streaming::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--st-primary, #0058be);
+  animation: agent-caret 0.9s step-end infinite;
+}
+
+@keyframes agent-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
 .agent-chat__text {
   margin: 0;
   word-break: break-word;
+}
+
+.agent-chat__md {
+  word-break: break-word;
+}
+
+.agent-chat__md :deep(h1),
+.agent-chat__md :deep(h2),
+.agent-chat__md :deep(h3) {
+  margin: 0.85em 0 0.4em;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--st-on-surface);
+}
+
+.agent-chat__md :deep(h1:first-child),
+.agent-chat__md :deep(h2:first-child),
+.agent-chat__md :deep(h3:first-child) {
+  margin-top: 0;
+}
+
+.agent-chat__md :deep(h2) {
+  font-size: 15px;
+}
+
+.agent-chat__md :deep(h3) {
+  font-size: 14px;
+}
+
+.agent-chat__md :deep(p) {
+  margin: 0 0 0.65em;
+}
+
+.agent-chat__md :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.agent-chat__md :deep(ul),
+.agent-chat__md :deep(ol) {
+  margin: 0.35em 0 0.75em;
+  padding-left: 1.25em;
+}
+
+.agent-chat__md :deep(li) {
+  margin: 0.2em 0;
+}
+
+.agent-chat__md :deep(li + li) {
+  margin-top: 0.35em;
+}
+
+.agent-chat__md :deep(strong) {
+  font-weight: 650;
+  color: var(--st-on-surface);
+}
+
+.agent-chat__md :deep(blockquote) {
+  margin: 0.5em 0;
+  padding: 0.35em 0 0.35em 0.85em;
+  border-left: 3px solid var(--st-primary, #0058be);
+  color: var(--st-on-surface-variant);
+}
+
+.agent-chat__md :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.55em 0 0.85em;
+  font-size: 13px;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.agent-chat__md :deep(th),
+.agent-chat__md :deep(td) {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  vertical-align: top;
+}
+
+.agent-chat__md :deep(th) {
+  background: var(--st-glass-inner-bg);
+  font-weight: 600;
+}
+
+.agent-chat__md :deep(tr:last-child td) {
+  border-bottom: none;
+}
+
+.agent-chat__md :deep(hr) {
+  border: none;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  margin: 0.85em 0;
+}
+
+.agent-chat__md :deep(code) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.06);
 }
 
 .agent-chat__typing {
@@ -295,7 +445,8 @@ onMounted(async () => {
   font: inherit;
   line-height: 1.5;
   outline: none;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--st-glass-inner-bg);
+  color: var(--st-on-surface);
   transition: border-color 0.15s ease;
   box-sizing: border-box;
 }

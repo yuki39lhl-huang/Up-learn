@@ -2,15 +2,17 @@ package com.yukimomo.practice.service;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.yukimomo.api.user.vo.UserExamPreferenceVO;
 import com.yukimomo.common.exception.BadRequestException;
+import com.yukimomo.common.exception.BizException;
+import com.yukimomo.common.exception.ErrorCode;
+import com.yukimomo.practice.client.UserPreferenceClient;
 import com.yukimomo.practice.constant.PracticeRedisConstants;
 import com.yukimomo.practice.constant.PracticeSubjectMap;
 import com.yukimomo.practice.constant.QuestionRecordStatus;
 import com.yukimomo.practice.entity.Question;
-import com.yukimomo.practice.entity.UserExamPreferenceRow;
 import com.yukimomo.practice.entity.UserQuestionRecord;
 import com.yukimomo.practice.mapper.QuestionMapper;
-import com.yukimomo.practice.mapper.UserExamPreferenceRowMapper;
 import com.yukimomo.practice.mapper.UserQuestionRecordMapper;
 import com.yukimomo.practice.vo.RandomResetVO;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +57,8 @@ public class RandomPracticeService {
     /** 连续做对后的复习间隔：2→4→7→14→30 天。 */
     private static final int[] REVIEW_INTERVALS = {2, 4, 7, 14, 30};
 
-    private final UserExamPreferenceRowMapper preferenceRowMapper;
+    /** 备考设置经 Feign 取自 user-service，practice 不直读 user 域表。 */
+    private final UserPreferenceClient userPreferenceClient;
     private final QuestionMapper questionMapper;
     private final UserQuestionRecordMapper userQuestionRecordMapper;
     private final StringRedisTemplate stringRedisTemplate;
@@ -64,7 +67,7 @@ public class RandomPracticeService {
      * 按用户备考与随机筛选，从选题池加权随机一题。
      */
     public Question pickQuestion(Long userId) {
-        UserExamPreferenceRow preference = requirePreference(userId);
+        UserExamPreferenceVO preference = requirePreference();
         List<String> bankSubjects = resolveTargetBankSubjects(preference);
         if (bankSubjects.isEmpty()) {
             throw new BadRequestException("当前备考科目暂无题库覆盖，请调整备考设置");
@@ -119,7 +122,7 @@ public class RandomPracticeService {
 
         Question question = questionMapper.selectById(pickedId);
         if (question == null) {
-            throw new BadRequestException("题目不存在");
+            throw new BizException(ErrorCode.QUESTION_NOT_FOUND);
         }
         return question;
     }
@@ -169,30 +172,14 @@ public class RandomPracticeService {
         markTodayDone(userId, question.getSubject(), question.getId());
     }
 
-    /** 当前筛选在 UI 上的展示文案。 */
-    public String currentFilterLabel(Long userId) {
-        UserExamPreferenceRow preference = preferenceRowMapper.selectOne(
-                new LambdaQueryWrapper<UserExamPreferenceRow>()
-                        .eq(UserExamPreferenceRow::getUserId, userId)
-        );
-        if (preference == null) {
-            return MODE_ALL;
-        }
-        if (MODE_SINGLE.equalsIgnoreCase(StrUtil.blankToDefault(preference.getRandomSubjectMode(), MODE_ALL))
-                && StrUtil.isNotBlank(preference.getRandomSubject())) {
-            return preference.getRandomSubject().trim();
-        }
-        return "全随机";
-    }
-
     /**
      * 根据备考设置与随机筛选，解析本次出题使用的题库科目列表。
      * <p>
      * 切换科目筛选只收窄出题范围，不删除 {@code user_question_record} 中的历史记录。
      */
-    public List<String> resolveTargetBankSubjects(UserExamPreferenceRow preference) {
-        List<String> bankSubjects = PracticeSubjectMap.bankSubjectsFromSelectionJson(
-                preference.getSubjectSelectionJson());
+    public List<String> resolveTargetBankSubjects(UserExamPreferenceVO preference) {
+        List<String> bankSubjects = PracticeSubjectMap.bankSubjectsFromSelection(
+                preference.getSubjectSelection());
         if (bankSubjects.isEmpty()) {
             return Collections.emptyList();
         }
@@ -207,14 +194,10 @@ public class RandomPracticeService {
         return bankSubjects;
     }
 
-    /** 要求用户已保存备考设置，否则无法随机刷题。 */
-    public UserExamPreferenceRow requirePreference(Long userId) {
-        UserExamPreferenceRow preference = preferenceRowMapper.selectOne(
-                new LambdaQueryWrapper<UserExamPreferenceRow>()
-                        .eq(UserExamPreferenceRow::getUserId, userId)
-        );
-        if (preference == null
-                || StrUtil.isBlank(preference.getSubjectSelectionJson())) {
+    /** 要求当前用户已保存备考设置，否则无法随机刷题。 */
+    public UserExamPreferenceVO requirePreference() {
+        UserExamPreferenceVO preference = userPreferenceClient.getCurrentPreference();
+        if (preference == null || preference.getSubjectSelection() == null) {
             throw new BadRequestException("请先完成备考设置后再刷题");
         }
         return preference;
@@ -231,15 +214,12 @@ public class RandomPracticeService {
      * 用于科目标签旁提示用户切换科目继续复习。
      */
     public List<String> listOtherSubjectsWithPendingWrong(Long userId) {
-        UserExamPreferenceRow preference = preferenceRowMapper.selectOne(
-                new LambdaQueryWrapper<UserExamPreferenceRow>()
-                        .eq(UserExamPreferenceRow::getUserId, userId)
-        );
-        if (preference == null || StrUtil.isBlank(preference.getSubjectSelectionJson())) {
+        UserExamPreferenceVO preference = userPreferenceClient.getCurrentPreference();
+        if (preference == null || preference.getSubjectSelection() == null) {
             return Collections.emptyList();
         }
-        List<String> allBankSubjects = PracticeSubjectMap.bankSubjectsFromSelectionJson(
-                preference.getSubjectSelectionJson());
+        List<String> allBankSubjects = PracticeSubjectMap.bankSubjectsFromSelection(
+                preference.getSubjectSelection());
         if (allBankSubjects.size() <= 1) {
             return Collections.emptyList();
         }
@@ -313,9 +293,9 @@ public class RandomPracticeService {
     }
 
     public RandomResetVO resetProgress(Long userId, String scope, String subject) {
-        UserExamPreferenceRow preference = requirePreference(userId);
-        List<String> allBankSubjects = PracticeSubjectMap.bankSubjectsFromSelectionJson(
-                preference.getSubjectSelectionJson());
+        UserExamPreferenceVO preference = requirePreference();
+        List<String> allBankSubjects = PracticeSubjectMap.bankSubjectsFromSelection(
+                preference.getSubjectSelection());
         if (allBankSubjects.isEmpty()) {
             throw new BadRequestException("当前备考科目暂无题库覆盖，请调整备考设置");
         }

@@ -19,6 +19,8 @@ defineProps<{
     | 'agent'
     | 'home'
     | 'syllabus'
+    | 'sun'
+    | 'moon'
 }>()
 </script>
 
@@ -104,6 +106,13 @@ defineProps<{
       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
       <path d="M8 7h8M8 11h6" />
+    </template>
+    <template v-else-if="name === 'sun'">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </template>
+    <template v-else-if="name === 'moon'">
+      <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5Z" />
     </template>
   </svg>
 </template>

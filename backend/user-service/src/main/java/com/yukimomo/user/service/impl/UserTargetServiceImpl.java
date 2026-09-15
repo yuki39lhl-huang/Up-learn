@@ -1,38 +1,37 @@
 package com.yukimomo.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.yukimomo.api.school.vo.SchoolMajorVO;
+import com.yukimomo.api.school.vo.SchoolVO;
+import com.yukimomo.api.user.vo.UserTargetVO;
 import com.yukimomo.common.exception.BadRequestException;
+import com.yukimomo.common.exception.BizException;
+import com.yukimomo.common.exception.ErrorCode;
+import com.yukimomo.user.client.SchoolCatalogClient;
 import com.yukimomo.user.dto.AddUserTargetDTO;
-import com.yukimomo.user.entity.MajorDictRow;
-import com.yukimomo.user.entity.SchoolMajorRow;
-import com.yukimomo.user.entity.SchoolRow;
 import com.yukimomo.user.entity.UserTarget;
-import com.yukimomo.user.mapper.MajorDictRowMapper;
-import com.yukimomo.user.mapper.SchoolMajorRowMapper;
-import com.yukimomo.user.mapper.SchoolRowMapper;
 import com.yukimomo.user.mapper.UserTargetMapper;
 import com.yukimomo.user.service.UserTargetService;
-import com.yukimomo.api.user.vo.UserTargetVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * 目标院校服务：院校/专业信息经 Feign 取自 school-service，user 域不直读 school 域表。
+ */
 @Service
 @RequiredArgsConstructor
 public class UserTargetServiceImpl implements UserTargetService {
 
     private final UserTargetMapper userTargetMapper;
-    private final SchoolRowMapper schoolRowMapper;
-    private final SchoolMajorRowMapper schoolMajorRowMapper;
-    private final MajorDictRowMapper majorDictRowMapper;
+    private final SchoolCatalogClient schoolCatalogClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -51,20 +50,18 @@ public class UserTargetServiceImpl implements UserTargetService {
     @Override
     @Transactional
     public UserTargetVO add(Long userId, AddUserTargetDTO dto) {
-        SchoolRow school = schoolRowMapper.selectById(dto.getSchoolId());
+        SchoolVO school = schoolCatalogClient.findSchool(dto.getSchoolId());
         if (school == null) {
-            throw new BadRequestException("院校不存在");
+            throw new BizException(ErrorCode.SCHOOL_NOT_FOUND);
         }
 
         Long majorId = dto.getMajorId();
+        SchoolMajorVO major = null;
         if (majorId != null) {
-            SchoolMajorRow major = schoolMajorRowMapper.selectById(majorId);
-            if (major == null) {
-                throw new BadRequestException("开设专业不存在");
-            }
-            if (!Objects.equals(major.getSchoolId(), dto.getSchoolId())) {
-                throw new BadRequestException("专业不属于该院校");
-            }
+            major = schoolCatalogClient.listMajors(dto.getSchoolId()).stream()
+                    .filter(m -> Objects.equals(m.getId(), majorId))
+                    .findFirst()
+                    .orElseThrow(() -> new BizException(ErrorCode.MAJOR_NOT_FOUND, "开设专业不存在或不属于该院校"));
         }
 
         if (existsTarget(userId, dto.getSchoolId(), majorId)) {
@@ -76,7 +73,7 @@ public class UserTargetServiceImpl implements UserTargetService {
         row.setSchoolId(dto.getSchoolId());
         row.setMajorId(majorId);
         userTargetMapper.insert(row);
-        return toVo(row, school, resolveMajor(majorId));
+        return toVo(row, school, major);
     }
 
     @Override
@@ -101,33 +98,35 @@ public class UserTargetServiceImpl implements UserTargetService {
         return userTargetMapper.selectCount(wrapper) > 0;
     }
 
+    /** 按院校聚合远程查询：每校一次详情，含专业目标的院校再取一次专业列表。 */
     private List<UserTargetVO> toVoList(List<UserTarget> rows) {
         Set<Long> schoolIds = rows.stream().map(UserTarget::getSchoolId).collect(Collectors.toSet());
-        Map<Long, SchoolRow> schoolMap = schoolIds.isEmpty()
-                ? Collections.emptyMap()
-                : schoolRowMapper.selectBatchIds(schoolIds).stream()
-                .collect(Collectors.toMap(SchoolRow::getId, Function.identity(), (a, b) -> a));
+        Set<Long> schoolsNeedingMajors = rows.stream()
+                .filter(r -> r.getMajorId() != null)
+                .map(UserTarget::getSchoolId)
+                .collect(Collectors.toSet());
 
-        Set<Long> majorIds = rows.stream()
-                .map(UserTarget::getMajorId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        Map<Long, SchoolMajorRow> majorMap = loadMajorMap(majorIds);
-        Set<Long> dictIds = majorMap.values().stream()
-                .map(SchoolMajorRow::getMajorDictId)
-                .collect(Collectors.toSet());
-        Map<Long, MajorDictRow> dictMap = loadDictMap(dictIds);
+        Map<Long, SchoolVO> schoolMap = new HashMap<>();
+        Map<Long, SchoolMajorVO> majorMap = new HashMap<>();
+        for (Long schoolId : schoolIds) {
+            SchoolVO school = schoolCatalogClient.findSchool(schoolId);
+            if (school != null) {
+                schoolMap.put(schoolId, school);
+            }
+            if (schoolsNeedingMajors.contains(schoolId)) {
+                for (SchoolMajorVO m : schoolCatalogClient.listMajors(schoolId)) {
+                    majorMap.putIfAbsent(m.getId(), m);
+                }
+            }
+        }
 
         return rows.stream()
-                .map(row -> {
-                    SchoolRow school = schoolMap.get(row.getSchoolId());
-                    MajorContext majorCtx = buildMajorContext(row.getMajorId(), majorMap, dictMap);
-                    return toVo(row, school, majorCtx);
-                })
+                .map(row -> toVo(row, schoolMap.get(row.getSchoolId()),
+                        row.getMajorId() == null ? null : majorMap.get(row.getMajorId())))
                 .toList();
     }
 
-    private UserTargetVO toVo(UserTarget row, SchoolRow school, MajorContext majorCtx) {
+    private UserTargetVO toVo(UserTarget row, SchoolVO school, SchoolMajorVO major) {
         UserTargetVO vo = new UserTargetVO();
         vo.setId(row.getId());
         vo.setUserId(row.getUserId());
@@ -140,63 +139,10 @@ public class UserTargetServiceImpl implements UserTargetService {
             vo.setSchoolCity(school.getCity());
             vo.setSchoolType(school.getType());
         }
-        if (majorCtx != null) {
-            vo.setMajorName(majorCtx.name());
-            vo.setMajorCategory(majorCtx.category());
+        if (major != null) {
+            vo.setMajorName(major.getName());
+            vo.setMajorCategory(major.getMajorCategory());
         }
         return vo;
-    }
-
-    private MajorContext resolveMajor(Long majorId) {
-        if (majorId == null) {
-            return null;
-        }
-        SchoolMajorRow major = schoolMajorRowMapper.selectById(majorId);
-        if (major == null) {
-            return null;
-        }
-        MajorDictRow dict = majorDictRowMapper.selectById(major.getMajorDictId());
-        if (dict == null) {
-            return null;
-        }
-        return new MajorContext(dict.getName(), dict.getMajorCategory());
-    }
-
-    private Map<Long, SchoolMajorRow> loadMajorMap(Set<Long> majorIds) {
-        if (majorIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return schoolMajorRowMapper.selectBatchIds(majorIds).stream()
-                .collect(Collectors.toMap(SchoolMajorRow::getId, Function.identity(), (a, b) -> a));
-    }
-
-    private Map<Long, MajorDictRow> loadDictMap(Set<Long> dictIds) {
-        if (dictIds.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        return majorDictRowMapper.selectBatchIds(dictIds).stream()
-                .collect(Collectors.toMap(MajorDictRow::getId, Function.identity(), (a, b) -> a));
-    }
-
-    private MajorContext buildMajorContext(
-            Long majorId,
-            Map<Long, SchoolMajorRow> majorMap,
-            Map<Long, MajorDictRow> dictMap
-    ) {
-        if (majorId == null) {
-            return null;
-        }
-        SchoolMajorRow major = majorMap.get(majorId);
-        if (major == null) {
-            return null;
-        }
-        MajorDictRow dict = dictMap.get(major.getMajorDictId());
-        if (dict == null) {
-            return null;
-        }
-        return new MajorContext(dict.getName(), dict.getMajorCategory());
-    }
-
-    private record MajorContext(String name, String category) {
     }
 }

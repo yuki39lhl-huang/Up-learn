@@ -1,8 +1,11 @@
 /**
- * 轻量 Markdown → HTML（前言弹框用）：标题、段落、粗体、引用、表格、列表。
- * 内容来自仓库静态 md，不做不可信用户输入场景。
+ * 轻量 Markdown → HTML：标题、段落、粗体、引用、表格、列表。
+ * 用于前言弹框与一点通对话；输入先转义，避免 XSS。
  */
+import { escapeHtml } from './html'
+
 export function renderGuideMarkdown(src: string): string {
+  if (!src) return ''
   const lines = src.replace(/\r\n/g, '\n').split('\n')
   const html: string[] = []
   let i = 0
@@ -40,28 +43,36 @@ export function renderGuideMarkdown(src: string): string {
       continue
     }
 
-    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+    if (trimmed.startsWith('|') && trimmed.includes('|', 1)) {
       const rows: string[][] = []
       while (i < lines.length && lines[i].trim().startsWith('|')) {
         const rowLine = lines[i].trim()
         const cells = rowLine
-          .slice(1, -1)
+          .replace(/^\|/, '')
+          .replace(/\|$/, '')
           .split('|')
           .map((c) => c.trim())
-        // 跳过对齐行 | :--- |
         if (!cells.every((c) => /^:?-+:?$/.test(c))) {
           rows.push(cells)
         }
         i++
       }
-      if (rows.length) {
+      if (rows.length === 1) {
+        // 流式中途只有表头时，先占位，避免裸竖线
+        html.push('<p>')
+        html.push(rows[0].map((c) => inline(c)).join(' · '))
+        html.push('</p>')
+      } else if (rows.length > 1) {
         const [head, ...body] = rows
+        const cols = head.length
         html.push('<table><thead><tr>')
         html.push(...head.map((c) => `<th>${inline(c)}</th>`))
         html.push('</tr></thead><tbody>')
         for (const row of body) {
           html.push('<tr>')
-          html.push(...row.map((c) => `<td>${inline(c)}</td>`))
+          for (let c = 0; c < cols; c++) {
+            html.push(`<td>${inline(row[c] ?? '')}</td>`)
+          }
           html.push('</tr>')
         }
         html.push('</tbody></table>')
@@ -113,12 +124,4 @@ function inline(text: string): string {
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>')
   s = s.replace(/\*(.+?)\*/g, '<em>$1</em>')
   return s
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
 }

@@ -1,5 +1,12 @@
 import request, { getData } from './request'
-import type { LoginVO, UserExamPreferenceVO, UserInfoVO, UserTargetVO } from '../types/api'
+import type {
+  LoginVO,
+  SaveUiPreferencePayload,
+  UserExamPreferenceVO,
+  UserInfoVO,
+  UserTargetVO,
+  UserUiPreferenceVO,
+} from '../types/api'
 
 export function sendLoginCode(email: string) {
   return getData(request.post('/user/login/send-code', { email }))
@@ -81,4 +88,22 @@ export function addUserTarget(payload: { schoolId: number; majorId?: number }) {
 
 export function removeUserTarget(id: number) {
   return getData<void>(request.delete(`/user/targets/${id}`))
+}
+
+export function fetchUiPreference() {
+  return getData<UserUiPreferenceVO>(request.get('/user/ui-preference'))
+}
+
+export function saveUiPreference(payload: SaveUiPreferencePayload) {
+  return getData<UserUiPreferenceVO>(request.put('/user/ui-preference', payload))
+}
+
+export function uploadUiWallpaper(file: File, target: 'shell' | 'panel' = 'shell') {
+  const form = new FormData()
+  form.append('file', file)
+  return getData<{ target: string; wallpaperUrl: string }>(
+    request.post(`/user/ui/wallpaper?target=${target}`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  )
 }

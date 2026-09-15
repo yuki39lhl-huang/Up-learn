@@ -2,8 +2,11 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import type { LoginVO, Result } from '../types/api'
 import { useAuthStore } from '../stores/auth'
 
+/** 网关前缀；axios 与手写 fetch（SSE）共用，避免多处硬编码 */
+export const API_BASE = '/api'
+
 const request = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE,
   timeout: 15000,
 })
 
@@ -25,7 +28,7 @@ async function ensureFreshAccessToken(): Promise<void> {
   }
   if (!refreshPromise) {
     refreshPromise = axios
-      .post<Result<LoginVO>>('/api/user/token/refresh', { refreshToken: auth.refreshToken })
+      .post<Result<LoginVO>>(`${API_BASE}/user/token/refresh`, { refreshToken: auth.refreshToken })
       .then((res) => {
         const body = res.data
         if (body.code !== 200 || !body.data) {

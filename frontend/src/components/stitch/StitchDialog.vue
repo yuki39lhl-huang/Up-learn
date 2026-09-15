@@ -125,14 +125,13 @@ function onConfirm() {
   position: relative;
   width: 100%;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--st-glass-bg);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow:
-    0 24px 48px rgb(15 23 42 / 14%),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--st-glass-border);
+  box-shadow: var(--st-glass-shadow);
   overflow: visible;
+  color: var(--st-on-surface);
 }
 
 .stitch-dialog__glow {

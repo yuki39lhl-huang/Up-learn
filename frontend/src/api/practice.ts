@@ -122,6 +122,11 @@ export function resetRandomPractice(scope: 'all' | 'single', subject?: string) {
   )
 }
 
-export function fetchAnswerHistory(params?: { pageNo?: number; pageSize?: number }) {
+export function fetchAnswerHistory(params?: {
+  pageNo?: number
+  pageSize?: number
+  /** random | daily；刷题面板只查 random，与清空重刷范围一致 */
+  source?: string
+}) {
   return getData<PageDTO<AnswerHistoryVO>>(request.get('/practice/history', { params }))
 }

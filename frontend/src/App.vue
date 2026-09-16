@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElConfigProvider, ElMessage } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
@@ -31,6 +31,13 @@ watch(
   },
   { immediate: true },
 )
+
+/** OSS 签名 URL 2h 过期；页签切回前台时按需续签，避免挂机后壁纸裂图 */
+function onVisibilityChange() {
+  if (document.visibilityState === 'visible') ui.ensureFreshWallpapers()
+}
+onMounted(() => document.addEventListener('visibilitychange', onVisibilityChange))
+onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisibilityChange))
 
 async function handleLogout() {
   await auth.signOut()

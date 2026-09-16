@@ -87,12 +87,29 @@ function writeLocal(state: UiPrefsState) {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(state))
 }
 
-/** 签名 URL 刷新时若对象路径相同则保留旧展示地址，避免壁纸闪黑重载 */
+const stripQuery = (u: string) => u.split('?')[0]
+
+/** OSS 签名 URL 的过期时间（毫秒）；非签名地址返回 null */
+function signedExpiresAt(url: string): number | null {
+  const m = url.match(/[?&]Expires=(\d+)/)
+  return m ? Number(m[1]) * 1000 : null
+}
+
+/** 签名仍有效（留 60s 余量）；非签名地址视为永久有效 */
+function isDisplayUrlUsable(url: string): boolean {
+  const exp = signedExpiresAt(url)
+  return exp == null || exp - Date.now() > 60_000
+}
+
+/**
+ * 签名 URL 刷新时若对象路径相同且旧签名仍有效，则暂留旧地址避免壁纸闪黑；
+ * 旧签名已过期则必须换新，否则会一直裂图（2h presign 过后再打开页面即触发）。
+ */
 function keepDisplayUrl(prev: string | null, next: string | null | undefined): string | null {
   if (!next) return null
   if (!prev) return next
-  const strip = (u: string) => u.split('?')[0]
-  return strip(prev) === strip(next) ? prev : next
+  if (stripQuery(prev) !== stripQuery(next)) return next
+  return isDisplayUrlUsable(prev) ? prev : next
 }
 
 function fromVo(vo: UserUiPreferenceVO, prev?: UiPrefsState): UiPrefsState {
@@ -152,6 +169,27 @@ export const useUiPrefsStore = defineStore('uiPrefs', () => {
     applyToDocument()
   }
 
+  type WallpaperField = 'wallpaperUrl' | 'panelWallpaperUrl'
+
+  /**
+   * 后端返回了同一对象的新签名但当前仍在用旧地址时，后台预载新图，
+   * 加载完成后无感切换，避免下次进入页面时旧签名已过期而裂图。
+   */
+  function refreshSignedUrl(field: WallpaperField, fresh: string | null | undefined) {
+    const current = state.value[field]
+    if (!fresh || !current || current === fresh) return
+    if (stripQuery(current) !== stripQuery(fresh)) return
+    const img = new Image()
+    img.onload = () => {
+      // 期间用户可能换图/清空；只在仍指向同一对象时替换
+      const now = state.value[field]
+      if (now && stripQuery(now) === stripQuery(fresh)) {
+        patchLocal({ [field]: fresh } as Partial<UiPrefsState>)
+      }
+    }
+    img.src = fresh
+  }
+
   async function loadRemote() {
     applyToDocument()
     const auth = useAuthStore()
@@ -163,8 +201,18 @@ export const useUiPrefsStore = defineStore('uiPrefs', () => {
       state.value = fromVo(vo, state.value)
       writeLocal(state.value)
       applyToDocument()
+      refreshSignedUrl('wallpaperUrl', vo.wallpaperUrl)
+      refreshSignedUrl('panelWallpaperUrl', vo.panelWallpaperUrl)
     } catch {
       /* keep local */
+    }
+  }
+
+  /** 页签长时间挂起后回到前台：若任一壁纸签名已到期/临期，重新拉取一次 */
+  function ensureFreshWallpapers() {
+    const urls = [state.value.wallpaperUrl, state.value.panelWallpaperUrl]
+    if (urls.some((u) => u && !isDisplayUrlUsable(u))) {
+      void loadRemote()
     }
   }
 
@@ -208,6 +256,8 @@ export const useUiPrefsStore = defineStore('uiPrefs', () => {
     state.value = next
     writeLocal(state.value)
     applyToDocument()
+    refreshSignedUrl('wallpaperUrl', vo.wallpaperUrl)
+    refreshSignedUrl('panelWallpaperUrl', vo.panelWallpaperUrl)
     return state.value
   }
 
@@ -247,6 +297,7 @@ export const useUiPrefsStore = defineStore('uiPrefs', () => {
     tr,
     patchLocal,
     loadRemote,
+    ensureFreshWallpapers,
     persist,
     toggleTheme,
     uploadWallpaper,

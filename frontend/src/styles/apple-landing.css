@@ -1,63 +1,49 @@
 /**
- * Apple-like 落地页样式
- * 对齐 Stitch「升学通 · 官网版 (全功能集成)」
+ * 官网落地页 token — Academic Utility Console（对齐 Stitch，非胶囊营销风）
  */
 :root {
-  --apple-bg: #ffffff;
-  --apple-bg-muted: #f5f5f7;
-  --apple-bg-soft: #fafafc;
-  --apple-text: #1d1d1f;
-  --apple-text-muted: #86868b;
-  --apple-blue: #0071e3;
-  --apple-blue-soft: rgb(0 113 227 / 10%);
-  --apple-green: #34c759;
-  --apple-green-soft: rgb(52 199 89 / 12%);
-  --apple-orange: #ff9500;
-  --apple-orange-soft: rgb(255 149 0 / 12%);
-  --apple-border: #ededf2;
+  --apple-bg: #f9f9ff;
+  --apple-bg-muted: #f0f4f0;
+  --apple-text: #151c27;
+  --apple-text-muted: #3f493f;
+  --apple-border: #e1e7e1;
+  --apple-divider: #e1e7e1;
+  --apple-nav-bg: color-mix(in srgb, #ffffff 94%, transparent);
   --apple-surface: #ffffff;
-  --apple-nav-bg: rgb(255 255 255 / 82%);
-  --apple-hero-grad-start: #ffffff;
-  --apple-divider: #f0f0f5;
-  --apple-chip-bg: #f5f5f7;
-  --apple-input-border: #d2d2d7;
-  --apple-stats-inner: rgb(255 255 255 / 94%);
-  --apple-stats-border: rgb(255 255 255 / 80%);
-  --apple-metric-bg: rgb(245 245 247 / 80%);
-  --apple-option-selected-bg: rgb(0 113 227 / 6%);
-  --apple-option-correct-bg: rgb(52 199 89 / 8%);
-  --apple-radius-lg: 20px;
-  --apple-radius-md: 14px;
-  --apple-radius-sm: 10px;
-  --apple-shadow: 0 8px 32px rgb(0 0 0 / 6%);
-  --apple-shadow-sm: 0 2px 12px rgb(0 0 0 / 4%);
-  --apple-max: 1120px;
+  --apple-btn-primary-bg: #006e2f;
+  --apple-btn-primary-fg: #ffffff;
+  --apple-btn-primary-hover: #005725;
+  --apple-blue: #0058be;
+  --apple-green-soft: rgb(0 110 47 / 10%);
+  --apple-blue-soft: #e6f0fa;
+  --apple-radius: 8px;
+  --apple-radius-lg: 12px;
+  --apple-max: 1240px;
+  --apple-shadow: 0 1px 2px rgb(21 28 39 / 4%);
+  --apple-shadow-lift: 0 12px 40px rgb(0 110 47 / 10%), 0 2px 8px rgb(0 0 0 / 3%);
+
+  --landing-font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --landing-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --landing-accent: #006e2f;
+  --landing-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html[data-theme='dark'] {
   --apple-bg: #0f1218;
   --apple-bg-muted: #171c26;
-  --apple-bg-soft: #141820;
   --apple-text: #e8edf7;
   --apple-text-muted: #a8b3c7;
-  --apple-blue: #5aa9ff;
-  --apple-blue-soft: rgb(90 169 255 / 14%);
-  --apple-green: #4ade80;
-  --apple-green-soft: rgb(74 222 128 / 14%);
-  --apple-orange: #fb923c;
-  --apple-orange-soft: rgb(251 146 60 / 14%);
-  --apple-border: rgba(148, 163, 184, 0.14);
+  --apple-border: rgb(148 163 184 / 16%);
+  --apple-divider: rgb(148 163 184 / 12%);
+  --apple-nav-bg: color-mix(in srgb, #0f1218 92%, transparent);
   --apple-surface: #1a1f2a;
-  --apple-nav-bg: rgb(15 18 24 / 86%);
-  --apple-hero-grad-start: #0f1218;
-  --apple-divider: rgba(148, 163, 184, 0.12);
-  --apple-chip-bg: #232a38;
-  --apple-input-border: rgba(148, 163, 184, 0.22);
-  --apple-stats-inner: rgba(26, 31, 42, 0.92);
-  --apple-stats-border: rgba(148, 163, 184, 0.14);
-  --apple-metric-bg: rgba(35, 42, 56, 0.8);
-  --apple-option-selected-bg: rgb(90 169 255 / 12%);
-  --apple-option-correct-bg: rgb(74 222 128 / 12%);
-  --apple-shadow: 0 8px 32px rgb(0 0 0 / 40%);
-  --apple-shadow-sm: 0 2px 12px rgb(0 0 0 / 28%);
+  --apple-btn-primary-bg: #22c55e;
+  --apple-btn-primary-fg: #052e16;
+  --apple-btn-primary-hover: #4ade80;
+  --apple-blue: #7db4ff;
+  --apple-green-soft: rgb(74 222 128 / 14%);
+  --apple-blue-soft: rgb(125 180 255 / 14%);
+  --apple-shadow: 0 1px 2px rgb(0 0 0 / 28%);
+  --apple-shadow-lift: 0 16px 48px rgb(0 0 0 / 45%);
+  --landing-accent: #4ade80;
 }

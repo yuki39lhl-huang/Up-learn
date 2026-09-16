@@ -1,0 +1,34 @@
+/* 前言 / 试卷预览弹层：共用过渡（两组件 class 名一致） */
+.preview-dlg-enter-active,
+.preview-dlg-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.preview-dlg-enter-active .preview-dlg__panel,
+.preview-dlg-leave-active .preview-dlg__panel {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.preview-dlg-enter-from,
+.preview-dlg-leave-to {
+  opacity: 0;
+}
+
+.preview-dlg-enter-from .preview-dlg__panel,
+.preview-dlg-leave-to .preview-dlg__panel {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+}
+
+/* 卷面 / 预览内 KaTeX（全局样式，勿用 :deep） */
+.exam-sheet .katex,
+.preview-sheet .katex,
+.exam-sheet .math-text,
+.preview-sheet .math-text {
+  color: var(--ul-doc-katex-fg);
+}
+
+.exam-sheet .katex .mord,
+.preview-sheet .katex .mord {
+  color: inherit;
+}

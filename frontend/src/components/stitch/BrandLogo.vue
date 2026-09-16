@@ -74,6 +74,6 @@ const textSize = computed(() => Math.round(props.size * (props.variant === 'land
 
 .brand-logo--landing .brand-logo__text {
   letter-spacing: 0.08em;
-  color: var(--apple-text, #1d1d1f);
+  color: var(--apple-text, var(--st-on-surface, #151c27));
 }
 </style>

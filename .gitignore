@@ -5,6 +5,9 @@
 **/dist-ssr/
 build/
 
+# Impeccable clone scratch (manual install fallback)
+.tmp-impeccable/
+
 # IDE / OS
 .idea/
 *.iml

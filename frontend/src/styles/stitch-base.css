@@ -1,6 +1,7 @@
 @import './stitch-tokens.css';
 @import './stitch-ep-theme.css';
 @import './stitch-content-emphasis.css';
+@import './preview-dlg.css';
 
 * {
   box-sizing: border-box;

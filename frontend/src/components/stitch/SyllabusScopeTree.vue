@@ -43,9 +43,9 @@ export default defineComponent({
 
 .syllabus-block--highlight {
   padding: 12px 14px;
-  border-left: 3px solid #0f766e;
+  border-left: 3px solid var(--st-primary);
   border-radius: 0 8px 8px 0;
-  background: rgba(15, 118, 110, 0.06);
+  background: color-mix(in srgb, var(--st-primary) 8%, transparent);
 }
 
 .syllabus-block__heading {
@@ -59,7 +59,7 @@ export default defineComponent({
   margin: 0 0 8px;
   font-size: 14px;
   line-height: 1.75;
-  color: #334155;
+  color: var(--st-on-surface-variant);
 }
 
 .syllabus-block__items {
@@ -67,7 +67,7 @@ export default defineComponent({
   padding-left: 2.2em;
   font-size: 14px;
   line-height: 1.7;
-  color: #334155;
+  color: var(--st-on-surface-variant);
 }
 
 .syllabus-block__items li + li {

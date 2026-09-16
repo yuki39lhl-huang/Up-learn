@@ -8,7 +8,8 @@ import { fetchPaperDetail } from '../api/papers'
 import type { PaperDetailVO } from '../types/api'
 import { optionBody, optionLetter } from './option'
 import { buildSheetSections, displayQuestionNo, sortBySeq } from './paperSheet'
-import { escapeHtml, renderMathHtml } from './renderMath'
+import { escapeHtml } from './html'
+import { renderMathHtml } from './renderMath'
 
 const SHEET_WIDTH = 794
 

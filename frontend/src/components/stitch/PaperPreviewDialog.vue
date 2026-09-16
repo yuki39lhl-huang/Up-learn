@@ -194,7 +194,7 @@ function onDownload() {
   max-height: min(88vh, 920px);
   display: flex;
   flex-direction: column;
-  background: #f3f1ec;
+  background: var(--ul-doc-dlg-bg);
   border-radius: 16px;
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.22);
   overflow: hidden;
@@ -208,7 +208,7 @@ function onDownload() {
   gap: 12px;
   padding: 14px 16px;
   background: var(--st-surface);
-  border-bottom: 1px solid #e2ddd4;
+  border-bottom: 1px solid var(--ul-doc-dlg-border);
 }
 
 .preview-dlg__eyebrow {
@@ -261,11 +261,11 @@ function onDownload() {
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
-  color: #666;
+  color: var(--st-on-surface-variant);
 }
 
 .preview-dlg__x:hover {
-  background: #f0eee8;
+  background: color-mix(in srgb, var(--st-on-surface) 8%, transparent);
 }
 
 .preview-dlg__scroll {
@@ -273,6 +273,7 @@ function onDownload() {
   min-height: 0;
   overflow-y: auto;
   padding: 16px;
+  background: var(--ul-doc-dlg-bg);
   /* 给 loading 占位，避免空内容时视觉塌缩 */
   display: flex;
   flex-direction: column;
@@ -285,13 +286,14 @@ function onDownload() {
 .preview-empty {
   margin: 48px 0;
   text-align: center;
-  color: #666;
+  color: var(--ul-doc-sheet-subtle);
 }
 
 .preview-sheet {
-  background: var(--st-surface);
+  background: var(--ul-doc-sheet-bg);
+  color: var(--ul-doc-sheet-fg);
   padding: 24px 28px 32px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--ul-doc-sheet-border);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
@@ -299,7 +301,7 @@ function onDownload() {
   text-align: center;
   margin-bottom: 18px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #222;
+  border-bottom: 1px solid var(--ul-doc-sheet-head-border);
 }
 
 .preview-sheet__head h1 {
@@ -311,7 +313,7 @@ function onDownload() {
 .preview-sheet__head p {
   margin: 6px 0 0;
   font-size: 13px;
-  color: #444;
+  color: var(--ul-doc-sheet-muted);
 }
 
 .preview-sec {
@@ -327,8 +329,8 @@ function onDownload() {
 .preview-q--material {
   margin-bottom: 16px;
   padding: 12px 14px;
-  background: #faf9f6;
-  border: 1px solid #e5e1d8;
+  background: var(--ul-doc-material-bg);
+  border: 1px solid var(--ul-doc-material-border);
   border-radius: 8px;
 }
 
@@ -382,7 +384,7 @@ function onDownload() {
 .preview-q__hint {
   margin: 0 0 0 1.3em;
   font-size: 12px;
-  color: #888;
+  color: var(--ul-doc-sheet-subtle);
 }
 
 .preview-q__hint--missing {
@@ -396,31 +398,10 @@ function onDownload() {
 .preview-sheet__foot {
   margin-top: 20px;
   padding-top: 10px;
-  border-top: 1px dashed #ccc;
+  border-top: 1px dashed var(--ul-doc-sheet-dash);
   text-align: center;
   font-size: 11px;
-  color: #999;
+  color: var(--ul-doc-sheet-foot);
 }
 
-.preview-dlg-enter-active,
-.preview-dlg-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.preview-dlg-enter-active .preview-dlg__panel,
-.preview-dlg-leave-active .preview-dlg__panel {
-  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
-}
-
-.preview-dlg-enter-from,
-.preview-dlg-leave-to {
-  opacity: 0;
-}
-
-.preview-dlg-enter-from .preview-dlg__panel,
-.preview-dlg-leave-to .preview-dlg__panel {
-  /* 仅位移淡入，避免 scale 叠加内容增长像拉伸 */
-  transform: translateY(14px);
-  opacity: 0;
-}
 </style>

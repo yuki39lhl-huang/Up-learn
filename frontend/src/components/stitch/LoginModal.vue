@@ -186,11 +186,13 @@ function onCodeInput(e: Event) {
   max-width: 420px;
   padding: 32px 28px 28px;
   border-radius: 24px;
+  border: 1px solid var(--st-outline-variant);
   background: var(--st-surface);
   box-shadow:
     0 24px 48px rgb(15 23 42 / 18%),
-    0 0 0 1px rgb(255 255 255 / 60%) inset;
+    inset 0 1px 0 var(--st-glass-inset);
   overflow: hidden;
+  color: var(--st-on-surface);
 }
 
 .login-modal__glow {
@@ -201,9 +203,9 @@ function onCodeInput(e: Event) {
   height: 72px;
   background: linear-gradient(
     135deg,
-    rgb(196 181 253 / 55%) 0%,
-    rgb(251 207 232 / 50%) 45%,
-    rgb(191 219 254 / 55%) 100%
+    rgb(196 181 253 / 40%) 0%,
+    rgb(251 207 232 / 35%) 45%,
+    rgb(191 219 254 / 40%) 100%
   );
   filter: blur(8px);
   pointer-events: none;
@@ -216,18 +218,18 @@ function onCodeInput(e: Event) {
   z-index: 1;
   width: 32px;
   height: 32px;
-  border: none;
+  border: 1px solid var(--st-outline-variant);
   border-radius: 999px;
-  background: var(--st-glass-bg);
+  background: var(--st-surface-container);
   color: var(--st-on-surface-variant);
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .login-modal__close:hover {
-  background: var(--st-surface-container);
+  background: var(--st-surface-container-low);
   color: var(--st-on-surface);
 }
 
@@ -251,7 +253,7 @@ function onCodeInput(e: Event) {
   position: relative;
   margin: 0 0 18px;
   font-size: 14px;
-  color: #64748b;
+  color: var(--st-on-surface-variant);
   text-align: center;
 }
 
@@ -263,7 +265,8 @@ function onCodeInput(e: Event) {
   margin-bottom: 18px;
   padding: 4px;
   border-radius: 12px;
-  background: #f1f5f9;
+  background: var(--st-surface-container-low);
+  border: 1px solid var(--st-outline-variant);
 }
 
 .login-tabs__item {
@@ -273,14 +276,15 @@ function onCodeInput(e: Event) {
   background: transparent;
   font-size: 13px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--st-on-surface-variant);
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .login-tabs__item--active {
-  background: var(--st-surface);
+  background: var(--st-surface-container);
   color: var(--st-on-surface);
-  box-shadow: 0 1px 2px rgb(15 23 42 / 8%);
+  box-shadow: var(--st-shadow-card);
 }
 
 .login-form {
@@ -299,25 +303,27 @@ function onCodeInput(e: Event) {
 .login-field__label {
   font-size: 13px;
   font-weight: 500;
-  color: #334155;
+  color: var(--st-on-surface);
 }
 
 .login-field__hint {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--st-on-surface-variant);
   line-height: 1.4;
+  opacity: 0.85;
 }
 
 .login-field__input {
   width: 100%;
   height: 48px;
   padding: 0 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--st-outline-variant);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--st-surface-container-low);
   font-size: 15px;
   color: var(--st-on-surface);
   outline: none;
+  color-scheme: inherit;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
@@ -325,13 +331,14 @@ function onCodeInput(e: Event) {
 }
 
 .login-field__input::placeholder {
-  color: #94a3b8;
+  color: var(--st-on-surface-variant);
+  opacity: 0.75;
 }
 
 .login-field__input:focus {
-  border-color: #cbd5e1;
+  border-color: var(--st-primary);
   background: var(--st-surface);
-  box-shadow: 0 0 0 3px rgb(148 163 184 / 18%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--st-primary) 22%, transparent);
 }
 
 .login-code-row {
@@ -348,19 +355,20 @@ function onCodeInput(e: Event) {
   flex-shrink: 0;
   height: 48px;
   padding: 0 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--st-outline-variant);
   border-radius: 12px;
-  background: var(--st-surface);
+  background: var(--st-surface-container);
   font-size: 13px;
   font-weight: 500;
-  color: #334155;
+  color: var(--st-on-surface);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .login-code-btn:hover:not(:disabled) {
-  background: #f8fafc;
+  background: var(--st-surface-container-low);
+  border-color: var(--st-outline);
 }
 
 .login-code-btn:disabled {
@@ -373,21 +381,52 @@ function onCodeInput(e: Event) {
   height: 48px;
   border: none;
   border-radius: 999px;
-  background: #0f172a;
-  color: #fff;
+  background: var(--st-primary);
+  color: var(--st-on-primary);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, filter 0.15s ease;
 }
 
 .login-submit:hover:not(:disabled) {
-  opacity: 0.92;
+  filter: brightness(1.06);
 }
 
 .login-submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+html[data-theme='dark'] .login-overlay {
+  background: rgb(0 0 0 / 62%);
+}
+
+html[data-theme='dark'] .login-modal {
+  box-shadow: 0 24px 56px rgb(0 0 0 / 48%);
+}
+
+html[data-theme='dark'] .login-modal__glow {
+  background: linear-gradient(
+    135deg,
+    rgb(74 222 128 / 14%) 0%,
+    rgb(125 180 255 / 12%) 50%,
+    rgb(74 222 128 / 8%) 100%
+  );
+  opacity: 0.85;
+}
+
+html[data-theme='dark'] .login-tabs__item--active {
+  background: var(--st-surface);
+}
+
+html[data-theme='dark'] .login-field__input:-webkit-autofill,
+html[data-theme='dark'] .login-field__input:-webkit-autofill:hover,
+html[data-theme='dark'] .login-field__input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--st-on-surface);
+  caret-color: var(--st-on-surface);
+  box-shadow: 0 0 0 1000px var(--st-surface-container-low) inset;
+  transition: background-color 99999s ease-out;
 }
 
 .login-fade-enter-active,

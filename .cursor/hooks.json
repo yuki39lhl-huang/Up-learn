@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "cmd /c \"if exist .cursor\\skills\\impeccable\\scripts\\impeccable.cmd (.cursor\\skills\\impeccable\\scripts\\impeccable.cmd hook-before-edit) else exit 0\"",
+        "timeout": 5
+      }
+    ]
+  }
+}

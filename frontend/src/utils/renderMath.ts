@@ -6,8 +6,6 @@ import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import { escapeHtml } from './html'
 
-export { escapeHtml }
-
 const MATH_RE = /\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g
 
 export interface RenderMathOptions {

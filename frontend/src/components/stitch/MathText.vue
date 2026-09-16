@@ -18,6 +18,11 @@ const html = computed(() => renderMathHtml(props.text ?? '', { lineBreaks: true 
 .math-text {
   line-height: 1.65;
   word-break: break-word;
+  color: inherit;
+}
+.math-text :deep(.katex),
+.math-text :deep(.katex .mord) {
+  color: inherit;
 }
 .math-text :deep(.katex-display) {
   margin: 0.6em 0;

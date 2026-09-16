@@ -219,7 +219,7 @@
 }
 
 .gmail-nav__item:hover {
-  background: rgb(0 0 0 / 5%);
+  background: color-mix(in srgb, var(--st-on-surface) 6%, transparent);
 }
 
 .gmail-nav__item--active {

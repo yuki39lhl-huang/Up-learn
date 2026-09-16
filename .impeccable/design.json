@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-16T16:30:00+08:00",
+  "title": "Design System: 升学通 (up-learn)",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Forest Academic Green",
+        "canonical": "#006e2f",
+        "tonalRamp": [
+          "#003816",
+          "#004f20",
+          "#006e2f",
+          "#1a8a45",
+          "#3aa85f",
+          "#6bc488",
+          "#a8dfb8",
+          "#e6f6eb"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Forest Green Hover",
+        "canonical": "#005725",
+        "tonalRamp": [
+          "#002a12",
+          "#003f1a",
+          "#005725",
+          "#0f7340",
+          "#2e9160",
+          "#5bb088",
+          "#9ad4b4",
+          "#e3f4eb"
+        ]
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "Forest Green Soft",
+        "canonical": "rgb(0 110 47 / 10%)",
+        "tonalRamp": [
+          "rgb(0 110 47 / 28%)",
+          "rgb(0 110 47 / 22%)",
+          "rgb(0 110 47 / 16%)",
+          "rgb(0 110 47 / 12%)",
+          "rgb(0 110 47 / 10%)",
+          "rgb(0 110 47 / 7%)",
+          "rgb(0 110 47 / 4%)",
+          "rgb(0 110 47 / 2%)"
+        ]
+      },
+      "primary-on": {
+        "role": "neutral",
+        "displayName": "On Primary",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#d0d0d0",
+          "#e0e0e0",
+          "#ebebeb",
+          "#f2f2f2",
+          "#f7f7f7",
+          "#fafafa",
+          "#fdfdfd",
+          "#ffffff"
+        ]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Admission Blue",
+        "canonical": "#0058be",
+        "tonalRamp": [
+          "#002a5c",
+          "#003f8a",
+          "#0058be",
+          "#1a72d6",
+          "#3d8fe8",
+          "#6cadee",
+          "#a8cdf6",
+          "#e6f0fa"
+        ]
+      },
+      "secondary-soft": {
+        "role": "secondary",
+        "displayName": "Admission Blue Soft",
+        "canonical": "#e6f0fa",
+        "tonalRamp": [
+          "#9bb8de",
+          "#b3cae8",
+          "#c7d8f0",
+          "#d5e3f5",
+          "#e6f0fa",
+          "#eef5fc",
+          "#f5f9fd",
+          "#fbfdfe"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Cool Paper",
+        "canonical": "#f9f9ff",
+        "tonalRamp": [
+          "#c8c8d6",
+          "#d8d8e6",
+          "#e4e4f0",
+          "#ececf6",
+          "#f2f2f9",
+          "#f6f6fb",
+          "#f9f9ff",
+          "#fcfcff"
+        ]
+      },
+      "bg-muted": {
+        "role": "neutral",
+        "displayName": "Muted Grove",
+        "canonical": "#f0f4f0",
+        "tonalRamp": [
+          "#b8c4b8",
+          "#cdd6cd",
+          "#dbe3db",
+          "#e4ebe4",
+          "#eaf0ea",
+          "#f0f4f0",
+          "#f5f8f5",
+          "#fafbfa"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#d0d0d0",
+          "#e0e0e0",
+          "#ebebeb",
+          "#f2f2f2",
+          "#f7f7f7",
+          "#fafafa",
+          "#fdfdfd",
+          "#ffffff"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#151c27",
+        "tonalRamp": [
+          "#0a0e14",
+          "#151c27",
+          "#2a3444",
+          "#455064",
+          "#6a768a",
+          "#95a0b0",
+          "#c4cad4",
+          "#e8ebf0"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#3d4a3d",
+        "tonalRamp": [
+          "#1f271f",
+          "#3d4a3d",
+          "#556355",
+          "#6f7e6f",
+          "#8f9c8f",
+          "#b3bdb3",
+          "#d4dbd4",
+          "#eef1ee"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Hairline Border",
+        "canonical": "#e1e7e1",
+        "tonalRamp": [
+          "#8a948a",
+          "#a8b2a8",
+          "#c0c8c0",
+          "#d0d8d0",
+          "#e1e7e1",
+          "#e9eee9",
+          "#f1f4f1",
+          "#f7f9f7"
+        ]
+      },
+      "divider": {
+        "role": "neutral",
+        "displayName": "Hairline Divider",
+        "canonical": "#e1e7e1",
+        "tonalRamp": [
+          "#8a948a",
+          "#a8b2a8",
+          "#c0c8c0",
+          "#d0d8d0",
+          "#e1e7e1",
+          "#e9eee9",
+          "#f1f4f1",
+          "#f7f9f7"
+        ]
+      },
+      "nav-bg": {
+        "role": "neutral",
+        "displayName": "Nav Frost",
+        "canonical": "color-mix(in srgb, #ffffff 92%, transparent)",
+        "tonalRamp": [
+          "color-mix(in srgb, #ffffff 70%, transparent)",
+          "color-mix(in srgb, #ffffff 78%, transparent)",
+          "color-mix(in srgb, #ffffff 84%, transparent)",
+          "color-mix(in srgb, #ffffff 88%, transparent)",
+          "color-mix(in srgb, #ffffff 92%, transparent)",
+          "color-mix(in srgb, #ffffff 95%, transparent)",
+          "color-mix(in srgb, #ffffff 97%, transparent)",
+          "color-mix(in srgb, #ffffff 99%, transparent)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "官网 hero 主标题；字重 700，紧字距。"
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "区块标题（lp-section__title）。"
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "步骤卡与列表主名。"
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "导语与说明文；hero lead 限宽约 32rem。"
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "导航链接、按钮、筛选芯片。"
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "控制台条目标题、旅程步骤号等元数据。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "apple-shadow",
+        "value": "0 2px 8px rgb(0 0 0 / 4%)",
+        "purpose": "Ambient lift for step cards and light surfaces on hover."
+      },
+      {
+        "name": "apple-shadow-lift",
+        "value": "0 8px 24px rgb(0 110 47 / 8%), 0 2px 6px rgb(0 0 0 / 2%)",
+        "purpose": "Focal product chrome — hero console preview frame."
+      },
+      {
+        "name": "btn-primary-glow",
+        "value": "0 4px 14px rgb(0 110 47 / 22%)",
+        "purpose": "Primary CTA resting glow; deepens on hover."
+      }
+    ],
+    "motion": [
+      {
+        "name": "landing-ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Standard landing transitions and reveal animations."
+      },
+      {
+        "name": "lp-rise",
+        "value": "0.7s cubic-bezier(0.16, 1, 0.3, 1) translateY(18px)→0 + fade",
+        "purpose": "Hero entrance for copy and console visual."
+      },
+      {
+        "name": "prefers-reduced-motion",
+        "value": "reduce → animation/transform none",
+        "purpose": "Disable rise/reveal/button lift when user prefers reduced motion."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "journey", "value": "800px" },
+      { "name": "nav-links", "value": "900px" },
+      { "name": "hero-split", "value": "960px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "主 CTA 胶囊按钮；绿色稀有且有目的。",
+      "html": "<button type=\"button\" class=\"ds-btn-primary\">进入控制台</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: 0 1.25rem; border: none; border-radius: 999px; background: var(--apple-btn-primary-bg, #006e2f); color: var(--apple-btn-primary-fg, #ffffff); font-family: Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.01em; box-shadow: 0 4px 14px rgb(0 110 47 / 22%); cursor: pointer; transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s; } .ds-btn-primary:hover { background: var(--apple-btn-primary-hover, #005725); box-shadow: 0 8px 22px rgb(0 110 47 / 28%); transform: translateY(-2px); } .ds-btn-primary:focus-visible { outline: 2px solid #006e2f; outline-offset: 3px; } .ds-btn-primary:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "次级/幽灵胶囊按钮；hover 软绿底。",
+      "html": "<button type=\"button\" class=\"ds-btn-ghost\">查看招生预览</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: 0 1.25rem; border: 1px solid var(--apple-border, #e1e7e1); border-radius: 999px; background: transparent; color: var(--apple-text, #151c27); font-family: Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 0.9375rem; font-weight: 600; cursor: pointer; transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s, color 0.2s, background 0.2s; } .ds-btn-ghost:hover { border-color: var(--landing-accent, #006e2f); color: var(--landing-accent, #006e2f); background: var(--apple-green-soft, rgb(0 110 47 / 10%)); transform: translateY(-2px); } .ds-btn-ghost:focus-visible { outline: 2px solid #006e2f; outline-offset: 3px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "筛选事实芯片；active 用主绿软底。",
+      "html": "<div class=\"ds-chip-row\"><span class=\"ds-chip\">广东</span><span class=\"ds-chip ds-chip--active\">公办优先</span></div>",
+      "css": ".ds-chip-row { display: flex; flex-wrap: wrap; gap: 0.65rem; } .ds-chip { display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 0.85rem; border: 1px solid var(--apple-border, #e1e7e1); border-radius: 6px; background: var(--apple-surface, #ffffff); font-family: Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 0.875rem; color: var(--apple-text-muted, #3d4a3d); } .ds-chip--active { border-color: var(--landing-accent, #006e2f); color: var(--landing-accent, #006e2f); background: var(--apple-green-soft, rgb(0 110 47 / 10%)); }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "控制台预览搜索条；浅纸底软角。",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field__label\">搜索</span><input class=\"ds-input-search\" type=\"search\" placeholder=\"搜索院校 / 专业…\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 0.4rem; max-width: 20rem; } .ds-field__label { font-family: Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--apple-text-muted, #3d4a3d); } .ds-input-search { min-height: 2.25rem; padding: 0 0.75rem; border: 1px solid var(--apple-border, #e1e7e1); border-radius: 6px; background: var(--apple-bg, #f9f9ff); color: var(--apple-text, #151c27); font-family: Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 0.8125rem; } .ds-input-search:focus-visible { outline: 2px solid #006e2f; outline-offset: 2px; border-color: #006e2f; } .ds-input-search::placeholder { color: var(--apple-text-muted, #3d4a3d); }"
+    },
+    {
+      "name": "Landing Nav",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "粘性顶栏：单枚 BrandLogo + 锚点链接 + 主 CTA。",
+      "html": "<header class=\"ds-nav\"><div class=\"ds-nav__inner\"><span class=\"ds-nav__brand\" role=\"img\" aria-label=\"升学通\"><svg class=\"ds-nav__mark\" width=\"28\" height=\"28\" viewBox=\"0 0 28 28\" aria-hidden=\"true\"><rect width=\"28\" height=\"28\" rx=\"6\" fill=\"#006e2f\"/><path d=\"M8 18V10h3.2c1.7 0 2.8.9 2.8 2.3 0 .9-.5 1.6-1.3 2l1.6 3.7h-2.1l-1.4-3.3H10V18H8zm2-5h1.1c.7 0 1.1-.3 1.1-.9s-.4-.9-1.1-.9H10V13z\" fill=\"#fff\"/></svg><span class=\"ds-nav__text\">升学通</span></span><nav class=\"ds-nav__links\" aria-label=\"页面导航\"><a class=\"ds-nav__link\" href=\"#school\">招生查询</a><a class=\"ds-nav__link\" href=\"#papers\">历年真题</a></nav><button type=\"button\" class=\"ds-nav__cta\">登录 / 注册</button></div></header>",
+      "css": ".ds-nav { border-bottom: 1px solid var(--apple-divider, #e1e7e1); background: color-mix(in srgb, #ffffff 92%, transparent); backdrop-filter: saturate(180%) blur(16px); } .ds-nav__inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.75rem; max-width: 1120px; margin: 0 auto; padding: 0 1.25rem; } .ds-nav__brand { display: inline-flex; align-items: center; gap: 10px; } .ds-nav__mark { display: block; flex-shrink: 0; } .ds-nav__text { font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; font-weight: 650; font-size: 17px; letter-spacing: 0.08em; color: var(--apple-text, #151c27); } .ds-nav__links { display: flex; gap: 1.75rem; } .ds-nav__link { font-family: Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 0.875rem; font-weight: 500; color: var(--apple-text-muted, #3d4a3d); text-decoration: none; transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1); } .ds-nav__link:hover { color: var(--landing-accent, #006e2f); } .ds-nav__link:focus-visible { outline: 2px solid #006e2f; outline-offset: 3px; } .ds-nav__cta { min-height: 2.25rem; padding: 0 1rem; border: none; border-radius: 999px; background: #006e2f; color: #fff; font-size: 0.8125rem; font-weight: 600; cursor: pointer; } .ds-nav__cta:hover { background: #005725; } .ds-nav__cta:focus-visible { outline: 2px solid #006e2f; outline-offset: 3px; }"
+    },
+    {
+      "name": "Data Table Shell",
+      "kind": "card",
+      "refersTo": null,
+      "description": "招生数据表壳；表格优先于装饰卡片网格。",
+      "html": "<div class=\"ds-table-wrap\"><table class=\"ds-table\"><thead><tr><th>院校</th><th>类型</th><th>专业数</th></tr></thead><tbody><tr><td><div class=\"ds-table__name\">示例大学</div><div class=\"ds-table__muted\">广州</div></td><td><span class=\"ds-table__tag\">公办</span></td><td class=\"ds-table__muted\">12</td></tr><tr><td><div class=\"ds-table__name\">示例学院</div><div class=\"ds-table__muted\">深圳</div></td><td><span class=\"ds-table__tag\">公办</span></td><td class=\"ds-table__muted\">8</td></tr></tbody></table></div>",
+      "css": ".ds-table-wrap { border: 1px solid var(--apple-border, #e1e7e1); border-radius: 8px; background: var(--apple-surface, #ffffff); overflow: auto; } .ds-table { width: 100%; border-collapse: collapse; font-family: Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 0.875rem; } .ds-table th { text-align: left; padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--apple-text-muted, #3d4a3d); background: var(--apple-bg-muted, #f0f4f0); border-bottom: 1px solid var(--apple-divider, #e1e7e1); } .ds-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--apple-divider, #e1e7e1); vertical-align: middle; color: var(--apple-text, #151c27); } .ds-table tr:last-child td { border-bottom: none; } .ds-table__name { font-weight: 600; } .ds-table__muted { color: var(--apple-text-muted, #3d4a3d); font-size: 0.8125rem; } .ds-table__tag { display: inline-flex; padding: 0.15rem 0.45rem; border-radius: 4px; background: var(--apple-green-soft, rgb(0 110 47 / 10%)); color: var(--landing-accent, #006e2f); font-size: 0.6875rem; font-weight: 600; }"
+    },
+    {
+      "name": "Console Preview Frame",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "首屏 Academic Utility Console 产品框签名。",
+      "html": "<div class=\"ds-console\"><div class=\"ds-console__bar\"><div class=\"ds-console__dots\" aria-hidden=\"true\"><span></span><span></span><span></span></div><span class=\"ds-console__title\">Admission Preview · 广东 2026</span></div><div class=\"ds-console__body\"><div class=\"ds-console__toolbar\"><span class=\"ds-console__search\">搜索院校 / 专业…</span><span class=\"ds-console__chip\">公办优先</span></div><p class=\"ds-console__note\">真实院校表预览 · 完整筛选请进入控制台</p></div></div>",
+      "css": ".ds-console { border: 1px solid var(--apple-border, #e1e7e1); border-radius: 12px; background: var(--apple-surface, #ffffff); box-shadow: 0 8px 24px rgb(0 110 47 / 8%), 0 2px 6px rgb(0 0 0 / 2%); overflow: hidden; max-width: 28rem; } .ds-console__bar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--apple-divider, #e1e7e1); background: var(--apple-bg-muted, #f0f4f0); } .ds-console__dots { display: flex; gap: 0.35rem; } .ds-console__dots span { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--apple-border, #e1e7e1); } .ds-console__dots span:nth-child(1) { background: #ff5f57; } .ds-console__dots span:nth-child(2) { background: #febc2e; } .ds-console__dots span:nth-child(3) { background: #28c840; } .ds-console__title { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.6875rem; letter-spacing: 0.04em; color: var(--apple-text-muted, #3d4a3d); text-transform: uppercase; } .ds-console__body { padding: 0.85rem; } .ds-console__toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; } .ds-console__search { flex: 1 1 10rem; min-height: 2.25rem; display: inline-flex; align-items: center; padding: 0 0.75rem; border: 1px solid var(--apple-border, #e1e7e1); border-radius: 6px; background: var(--apple-bg, #f9f9ff); color: var(--apple-text-muted, #3d4a3d); font-size: 0.8125rem; } .ds-console__chip { display: inline-flex; align-items: center; min-height: 2.25rem; padding: 0 0.7rem; border: 1px solid var(--apple-border, #e1e7e1); border-radius: 6px; background: var(--apple-bg, #f9f9ff); font-size: 0.75rem; color: var(--apple-text-muted, #3d4a3d); } .ds-console__note { margin: 0; font-size: 0.8125rem; color: var(--apple-text-muted, #3d4a3d); }"
+    },
+    {
+      "name": "Journey Step Card",
+      "kind": "card",
+      "refersTo": null,
+      "description": "备考路径步骤卡；mono 序号 + 轻 hover 抬升。",
+      "html": "<article class=\"ds-step\"><span class=\"ds-step__num\">01</span><h3 class=\"ds-step__title\">查招生</h3><p class=\"ds-step__text\">按省份与院校类型筛选，用真实招录数据做决策。</p></article>",
+      "css": ".ds-step { padding: 1.5rem 1.35rem; border: 1px solid var(--apple-border, #e1e7e1); border-radius: 8px; background: var(--apple-surface, #ffffff); max-width: 18rem; transition: border-color 0.25s, box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); } .ds-step:hover { border-color: color-mix(in srgb, #006e2f 45%, #e1e7e1); box-shadow: 0 2px 8px rgb(0 0 0 / 4%); transform: translateY(-2px); } .ds-step__num { display: block; margin-bottom: 0.85rem; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; color: var(--landing-accent, #006e2f); } .ds-step__title { margin: 0; font-family: Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.02em; color: var(--apple-text, #151c27); } .ds-step__text { margin: 0.55rem 0 0; font-size: 0.875rem; line-height: 1.55; color: var(--apple-text-muted, #3d4a3d); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Academic Utility Console",
+    "overview": "升学通的视觉世界是一台冷静、可读的学术控制台：官网用同一套绿色学术语汇说服考生进入产品，控制台用表格、筛选与卷面完成真实备考作业。气质务实、清晰、工具向——像备考说明书，不像培训机构海报。密度中等偏紧：信息优先于装饰，表面以浅纸色与白底分层，强调色只在决策点出现。\n\n品牌资产固定：中文主名「升学通」、BrandLogo（logo-mark.png + 字标）。已确认的视觉拒绝包括：假 KPI / 伪社会证明、首屏重复 Logo、用装饰卡片网格替代数据表、以及把主绿铺满整屏。",
+    "keyCharacteristics": [
+      "浅色学术控制台：冷纸白底 + 稀有森林绿主色 + 次级招生蓝",
+      "Inter + 中文无衬线；JetBrains Mono 用于步骤号与控制台元数据",
+      "容器上限 1120px；区块节奏清晰，一节一事",
+      "阴影克制（ambient → lift）；动效用 cubic-bezier(0.16, 1, 0.3, 1) 并尊重 prefers-reduced-motion",
+      "数据面优先表格与筛选，而非营销卡片秀"
+    ],
+    "rules": [
+      {
+        "name": "The Rare Green Rule",
+        "body": "主绿在任一屏幕上只占决策点（主 CTA、选中态、关键链接），其稀有性即权威感。",
+        "section": "colors"
+      },
+      {
+        "name": "The Honest Data Rule",
+        "body": "颜色不用于伪造信任条或 KPI；空态用中性文案说明服务未就绪即可。",
+        "section": "colors"
+      },
+      {
+        "name": "The Tool Type Rule",
+        "body": "标题靠字重与字距表达层级，不靠装饰字体或全大写口号墙。",
+        "section": "typography"
+      },
+      {
+        "name": "The One Job Section Rule",
+        "body": "每个区块一件事：一个标题、一句说明、一组真实控件或数据。",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "静止表面扁平；阴影响应状态或标记唯一产品焦点，不作装饰堆叠。",
+        "section": "elevation"
+      },
+      {
+        "name": "The Capsule CTA Rule",
+        "body": "主/次按钮与主题切换用全圆角；数据芯片与输入保持小圆角，避免「一切都是 pill」。",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do 把主绿留给主 CTA、选中筛选与关键操作（Rare Green）。",
+      "Do 用表格与筛选呈现招生/真题数据；空态诚实说明。",
+      "Do 官网顶栏只放一枚 Logo；容器对齐 1120px。",
+      "Do 动效使用 --landing-ease，并尊重 prefers-reduced-motion。",
+      "Do 复用 BrandLogo 与现有 /brand/logo-mark.png，不擅自换标。"
+    ],
+    "donts": [
+      "Don't 编造 KPI、通过率、名师背书或客户评价条。",
+      "Don't 在 hero 正文区再堆第二枚同等 Logo。",
+      "Don't 用装饰性卡片网格替代可扫读的数据表。",
+      "Don't 把主绿铺成大面积背景或彩虹渐变主题。",
+      "Don't 引入与 Academic Utility Console 无关的视觉世界（紫霓虹、报纸排版、厚重新拟态等）。"
+    ]
+  }
+}

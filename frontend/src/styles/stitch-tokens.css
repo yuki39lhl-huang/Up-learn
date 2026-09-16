@@ -26,7 +26,8 @@
   /* 控制台壳 / 主面板（可透明） */
   --gmail-shell-bg: #f0f4f9;
   --ul-panel-rgb: 255 255 255;
-  --ul-nav-active-bg: #d3e3fd;
+  /* 侧栏选中：浅透明强调，避免 #d3e3fd 实色在壁纸/毛玻璃上过于刺眼 */
+  --ul-nav-active-bg: rgb(0 88 190 / 9%);
   --ul-shell-bg-image: none;
   --ul-shell-bg-size: cover;
   --ul-shell-bg-opacity: 100;
@@ -58,6 +59,60 @@
   --el-color-success: var(--st-primary-container);
   --el-border-radius-base: var(--st-radius-sm);
   --el-font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  /* 卷面 / 试卷预览 / 报考前言（纸质感，浅色模式偏暖灰） */
+  --ul-doc-page-bg: #e8e6e1;
+  --ul-doc-dlg-bg: #f3f1ec;
+  --ul-doc-dlg-border: #e2ddd4;
+  --ul-doc-sheet-bg: #ffffff;
+  --ul-doc-sheet-fg: #1a1a1a;
+  --ul-doc-sheet-muted: #444444;
+  --ul-doc-sheet-subtle: var(--ul-doc-sheet-muted);
+  --ul-doc-sheet-foot: var(--ul-doc-sheet-muted);
+  --ul-doc-sheet-border: #dddddd;
+  --ul-doc-sheet-head-border: #222222;
+  --ul-doc-sheet-dash: #cccccc;
+  --ul-doc-material-bg: #faf9f6;
+  --ul-doc-material-border: #e5e1d8;
+  --ul-doc-blank-bg: #f7f5f1;
+  --ul-doc-input-border: #cfc9be;
+  --ul-doc-bar-border: #d8d4cc;
+  --ul-doc-guide-tab-bg: #f7f5f0;
+  --ul-doc-md-fg: #334155;
+  --ul-doc-md-heading: #1e293b;
+  --ul-doc-md-table-border: #e2e8f0;
+  --ul-doc-md-table-head: #eef2ef;
+  --ul-doc-blockquote-bg: rgba(61, 107, 79, 0.08);
+  --ul-doc-blockquote-fg: var(--ul-doc-md-fg);
+  --ul-doc-blockquote-strong: var(--ul-doc-md-heading);
+  --ul-doc-opt-ok-bg: #e8f6ee;
+  --ul-doc-opt-bad-bg: #fdecea;
+  --ul-doc-katex-fg: var(--ul-doc-sheet-fg);
+  --ul-doc-blank-hint: var(--ul-doc-sheet-muted);
+
+  /* 作答页顶栏 / 得分 / 弹窗（与卷面 token 分离，便于深色对比） */
+  --ul-exam-btn-fg: var(--ul-doc-sheet-fg);
+  --ul-exam-btn-border: var(--ul-doc-input-border);
+  --ul-exam-btn-bg: var(--st-surface);
+  --ul-exam-btn-primary-bg: #3d6b4f;
+  --ul-exam-btn-primary-fg: #ffffff;
+  --ul-exam-score-bg: #e7efe9;
+  --ul-exam-score-label: #4a6b55;
+  --ul-exam-score-value: #2f5a3f;
+  --ul-exam-score-sub: #5a6a5e;
+  --ul-exam-accent: #3d6b4f;
+  --ul-exam-warn: #9a6b2f;
+  --ul-exam-warn-fg: #8a6d3b;
+  --ul-exam-warn-border: #e0c98a;
+  --ul-exam-judge-ok: #1b7f4a;
+  --ul-exam-judge-bad: #b42318;
+  --ul-exam-timer-urgent: #b42318;
+  --ul-exam-ai-bg: #f3f6f4;
+  --ul-exam-ai-score: var(--ul-exam-accent);
+  --ul-exam-ai-fg: #3a4a3e;
+  --ul-exam-opt-picked: rgb(61 107 79 / 12%);
+  --ul-exam-focus-ring: rgb(61 107 79 / 35%);
+  --ul-exam-timer-hover: #f0eee8;
 
   color-scheme: light;
 }
@@ -114,6 +169,58 @@ html[data-theme='dark'] {
   --el-fill-color-light: var(--st-surface-container-low);
   --el-fill-color: var(--st-surface-container);
   --el-mask-color: rgb(0 0 0 / 55%);
+
+  --ul-doc-page-bg: var(--st-bg);
+  --ul-doc-dlg-bg: var(--st-surface-container);
+  --ul-doc-dlg-border: var(--st-outline-variant);
+  --ul-doc-sheet-bg: #222833;
+  --ul-doc-sheet-fg: var(--st-on-surface);
+  --ul-doc-sheet-muted: var(--st-on-surface-variant);
+  --ul-doc-sheet-subtle: var(--ul-doc-sheet-muted);
+  --ul-doc-sheet-foot: var(--ul-doc-sheet-muted);
+  --ul-doc-sheet-border: var(--st-outline-variant);
+  --ul-doc-sheet-head-border: var(--st-outline);
+  --ul-doc-sheet-dash: var(--st-outline-variant);
+  --ul-doc-material-bg: rgb(255 255 255 / 4%);
+  --ul-doc-material-border: var(--st-outline-variant);
+  --ul-doc-blank-bg: rgb(255 255 255 / 6%);
+  --ul-doc-input-border: var(--st-outline-variant);
+  --ul-doc-bar-border: var(--st-outline-variant);
+  --ul-doc-guide-tab-bg: var(--st-surface-container);
+  --ul-doc-md-fg: var(--st-on-surface-variant);
+  --ul-doc-md-heading: var(--st-on-surface);
+  --ul-doc-md-table-border: var(--st-outline-variant);
+  --ul-doc-md-table-head: var(--st-surface-container-low);
+  --ul-doc-blockquote-bg: rgb(74 222 128 / 10%);
+  --ul-doc-blockquote-fg: var(--ul-doc-md-fg);
+  --ul-doc-blockquote-strong: var(--ul-doc-md-heading);
+  --ul-doc-opt-ok-bg: rgb(74 222 128 / 14%);
+  --ul-doc-opt-bad-bg: rgb(248 113 113 / 14%);
+  --ul-doc-katex-fg: var(--ul-doc-sheet-fg);
+  --ul-doc-blank-hint: var(--st-on-surface);
+
+  --ul-exam-btn-fg: var(--st-on-surface);
+  --ul-exam-btn-border: var(--st-outline-variant);
+  --ul-exam-btn-bg: var(--st-surface-container);
+  --ul-exam-btn-primary-bg: var(--st-primary-container);
+  --ul-exam-btn-primary-fg: #ffffff;
+  --ul-exam-score-bg: rgb(74 222 128 / 14%);
+  --ul-exam-score-label: var(--st-primary);
+  --ul-exam-score-value: var(--st-on-surface);
+  --ul-exam-score-sub: var(--st-on-surface-variant);
+  --ul-exam-accent: var(--st-primary);
+  --ul-exam-warn: var(--st-tertiary);
+  --ul-exam-warn-fg: var(--st-tertiary);
+  --ul-exam-warn-border: color-mix(in srgb, var(--st-tertiary) 45%, var(--st-outline-variant));
+  --ul-exam-judge-ok: var(--st-primary);
+  --ul-exam-judge-bad: #f87171;
+  --ul-exam-timer-urgent: #f87171;
+  --ul-exam-ai-bg: var(--st-surface-container);
+  --ul-exam-ai-score: var(--st-primary);
+  --ul-exam-ai-fg: var(--st-on-surface-variant);
+  --ul-exam-opt-picked: rgb(74 222 128 / 14%);
+  --ul-exam-focus-ring: rgb(74 222 128 / 35%);
+  --ul-exam-timer-hover: rgb(255 255 255 / 8%);
 
   color-scheme: dark;
 }

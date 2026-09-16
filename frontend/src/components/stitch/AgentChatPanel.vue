@@ -256,9 +256,10 @@ onMounted(async () => {
 }
 
 .agent-chat__row--user .agent-chat__bubble {
-  background: var(--st-primary-container, #e6f0ff);
-  color: var(--st-on-primary-container, #001d35);
-  border-bottom-right-radius: 4px;
+  background: transparent;
+  border: none;
+  padding: 6px 4px;
+  color: var(--st-on-surface);
 }
 
 .agent-chat__row--assistant .agent-chat__bubble {

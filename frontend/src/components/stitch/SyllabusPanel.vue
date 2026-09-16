@@ -348,8 +348,8 @@ onMounted(() => {
   font-size: 11px;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(15, 118, 110, 0.1);
-  color: #0f766e;
+  background: color-mix(in srgb, var(--st-primary) 12%, transparent);
+  color: var(--st-primary);
 }
 
 .syllabus-year__empty {
@@ -370,7 +370,7 @@ onMounted(() => {
   border: 1px solid color-mix(in srgb, var(--st-on-surface) 12%, transparent);
   border-radius: 8px;
   background: var(--st-surface);
-  color: #0f766e;
+  color: var(--st-primary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -378,8 +378,8 @@ onMounted(() => {
 }
 
 .syllabus-subjects-toggle:hover:not(:disabled) {
-  border-color: rgba(15, 118, 110, 0.45);
-  background: rgba(15, 118, 110, 0.06);
+  border-color: color-mix(in srgb, var(--st-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--st-primary) 8%, transparent);
 }
 
 .syllabus-subjects-toggle:disabled {
@@ -446,14 +446,14 @@ onMounted(() => {
 }
 
 .syllabus-subject-chip:hover {
-  border-color: rgba(15, 118, 110, 0.45);
-  color: #0f766e;
+  border-color: color-mix(in srgb, var(--st-primary) 45%, transparent);
+  color: var(--st-primary);
 }
 
 .syllabus-subject-chip.is-active {
-  border-color: #0f766e;
-  background: rgba(15, 118, 110, 0.08);
-  color: #0f766e;
+  border-color: var(--st-primary);
+  background: color-mix(in srgb, var(--st-primary) 10%, transparent);
+  color: var(--st-primary);
   font-weight: 600;
 }
 
@@ -489,10 +489,10 @@ onMounted(() => {
   align-items: center;
   height: 32px;
   padding: 0 14px;
-  border: 1px solid #0f766e;
+  border: 1px solid var(--st-primary);
   border-radius: 999px;
-  background: rgba(15, 118, 110, 0.08);
-  color: #0f766e;
+  background: color-mix(in srgb, var(--st-primary) 10%, transparent);
+  color: var(--st-primary);
   font-size: 14px;
   font-weight: 650;
   line-height: 1;
@@ -526,8 +526,8 @@ onMounted(() => {
 }
 
 .syllabus-tab.is-active {
-  border-bottom-color: #0f766e;
-  color: #0f766e;
+  border-bottom-color: var(--st-primary);
+  color: var(--st-primary);
   font-weight: 600;
 }
 

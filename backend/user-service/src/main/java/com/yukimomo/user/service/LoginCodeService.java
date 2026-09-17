@@ -5,6 +5,7 @@ import com.yukimomo.common.exception.BizException;
 import com.yukimomo.common.exception.ErrorCode;
 import com.yukimomo.user.config.UlLoginProperties;
 import com.yukimomo.user.constant.UserRedisConstants;
+import com.yukimomo.user.mq.LoginCodePublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -14,7 +15,7 @@ import java.time.Duration;
 import java.util.Locale;
 
 /**
- * 登录 / 重置密码邮箱验证码：Redis 存储 + 发送（开发环境打日志）。
+ * 登录 / 重置密码邮箱验证码：Redis 存储 + 发送（MQ 异步或同步降级）。
  */
 @Slf4j
 @Service
@@ -23,6 +24,7 @@ public class LoginCodeService {
 
     private final StringRedisTemplate stringRedisTemplate;
     private final UlLoginProperties loginProperties;
+    private final LoginCodePublisher loginCodePublisher;
 
     public void sendCode(String email) {
         sendCodeInternal(
@@ -65,7 +67,9 @@ public class LoginCodeService {
                 sendKey,
                 "1",
                 Duration.ofSeconds(loginProperties.getSendIntervalSeconds()));
-        dispatchCode(normalizedEmail, code, scene);
+        if (!loginCodePublisher.tryPublish(normalizedEmail, code, scene)) {
+            dispatchCodeSync(normalizedEmail, code, scene);
+        }
     }
 
     private void verifyAndConsumeInternal(String email, String code, String codePrefix) {
@@ -78,7 +82,7 @@ public class LoginCodeService {
         stringRedisTemplate.delete(codeKey);
     }
 
-    private void dispatchCode(String email, String code, String scene) {
+    private void dispatchCodeSync(String email, String code, String scene) {
         if (loginProperties.isDevLogCode()) {
             log.info("【开发模式】邮箱 {} {}验证码: {}（{} 秒内有效）",
                     email, scene, code, loginProperties.getCodeTtlSeconds());

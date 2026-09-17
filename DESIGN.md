@@ -1,7 +1,8 @@
 ---
 name: 升学通 (up-learn)
-description: Academic Utility Console — 绿色学术控制台，官网说服、控制台交付。
+description: 双层视觉 — 官网 Agent Liftoff（黑底 Antigravity 语法）+ 控制台 Academic Utility Console（绿色学术作业台）。
 colors:
+  # 控制台 / Operate（主系统）
   primary: "#006e2f"
   primary-hover: "#005725"
   primary-soft: "rgb(0 110 47 / 10%)"
@@ -16,27 +17,34 @@ colors:
   border: "#e1e7e1"
   divider: "#e1e7e1"
   nav-bg: "color-mix(in srgb, #ffffff 92%, transparent)"
+  # 官网 / Persuade（Agent Liftoff，scoped 于 .landing-page）
+  landing-bg: "#000000"
+  landing-surface: "#121212"
+  landing-text: "#f3f3f3"
+  landing-muted: "#a3a3a3"
+  landing-cta-bg: "#f5f5f5"
+  landing-cta-fg: "#0a0a0a"
 typography:
   display:
-    fontFamily: "Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-    fontSize: "clamp(2.25rem, 5vw, 3.5rem)"
-    fontWeight: 700
-    lineHeight: 1.08
+    fontFamily: "Figtree, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+    fontSize: "clamp(2.25rem, 7vw, 4.25rem)"
+    fontWeight: 500
+    lineHeight: 1.12
     letterSpacing: "-0.04em"
   headline:
-    fontFamily: "Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+    fontFamily: "Figtree, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
     fontSize: "clamp(1.5rem, 3vw, 2rem)"
     fontWeight: 700
     lineHeight: 1.2
     letterSpacing: "-0.03em"
   title:
-    fontFamily: "Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+    fontFamily: "Figtree, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
     fontSize: "1.0625rem"
     fontWeight: 700
     lineHeight: 1.35
     letterSpacing: "-0.02em"
   body:
-    fontFamily: "Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+    fontFamily: "Figtree, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.65
@@ -120,18 +128,16 @@ components:
 
 ## Overview
 
-**Creative North Star: "Academic Utility Console"**
+**Creative North Star: dual surface — "Agent Liftoff" (marketing) + "Academic Utility Console" (workbench)**
 
-升学通的视觉世界是一台冷静、可读的学术控制台：官网用同一套绿色学术语汇说服考生进入产品，控制台用表格、筛选与卷面完成真实备考作业。气质务实、清晰、工具向——像备考说明书，不像培训机构海报。密度中等偏紧：信息优先于装饰，表面以浅纸色与白底分层，强调色只在决策点出现。
+官网 `/home` 采用用户选定的 Antigravity 语法：**近纯黑全屏、居中打字标题、彩虹光标、稀疏多色粒子、白底主 CTA**；滚下去才是真实招生表与刷题入口。控制台 `/console` 仍为冷静可读的绿色学术作业台（表格、筛选、卷面），气质务实、工具向。
 
-品牌资产固定：中文主名「升学通」、`BrandLogo`（`logo-mark.png` + 字标）。已确认的视觉拒绝包括：假 KPI / 伪社会证明、首屏重复 Logo、用装饰卡片网格替代数据表、以及把主绿铺满整屏。
+品牌资产固定：中文主名「升学通」、`BrandLogo`。已确认拒绝：假 KPI、首屏重复 Logo、用装饰卡片替代数据表。
 
 **Key Characteristics:**
-- 浅色学术控制台：冷纸白底 + 稀有森林绿主色 + 次级招生蓝
-- Inter + 中文无衬线；JetBrains Mono 用于步骤号与控制台元数据
-- 容器上限 1120px；区块节奏清晰，一节一事
-- 阴影克制（ambient → lift）；动效用 `cubic-bezier(0.16, 1, 0.3, 1)` 并尊重 `prefers-reduced-motion`
-- 数据面优先表格与筛选，而非营销卡片秀
+- 官网：黑场 `#000` + Figtree/中文无衬线大标题 + 彩虹竖光标 + Canvas 粒子
+- 控制台：冷纸白底 + 稀有森林绿主色 + 次级招生蓝（Stitch / Element Plus）
+- 动效尊重 `prefers-reduced-motion`；官网 token 锁定在 `.landing-page`，不污染控制台主题
 
 ## Colors
 
@@ -252,5 +258,5 @@ components:
 - **Don't** 编造 KPI、通过率、名师背书或客户评价条。
 - **Don't** 在 hero 正文区再堆第二枚同等 Logo。
 - **Don't** 用装饰性卡片网格替代可扫读的数据表。
-- **Don't** 把主绿铺成大面积背景或彩虹渐变主题。
-- **Don't** 引入与 Academic Utility Console 无关的视觉世界（紫霓虹、报纸排版、厚重新拟态等）。
+- **Don't** 把官网黑场 token 泄漏进控制台作业层；控制台仍走 Academic Utility Console 绿系。
+- **Don't** 在控制台照搬 Antigravity 全屏粒子 / 自定义光标（干扰作业）。

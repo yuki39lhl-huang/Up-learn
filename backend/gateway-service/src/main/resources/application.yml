@@ -17,6 +17,13 @@ spring:
         ephemeral: true
         # 本机 IDEA 默认 127.0.0.1；Docker 部署可设环境变量 NACOS_REGISTER_IP 覆盖
         ip: ${NACOS_REGISTER_IP:127.0.0.1}
+    sentinel:
+      transport:
+        # ul-sentinel 宿主机映射 8718 → 容器 8858
+        dashboard: localhost:8718
+        port: 8719
+      eager: true
+      web-context-unify: true
     gateway:
       server:
         webmvc:

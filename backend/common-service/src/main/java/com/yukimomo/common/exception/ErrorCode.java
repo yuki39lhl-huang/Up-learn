@@ -24,6 +24,8 @@ public enum ErrorCode {
     BAD_REQUEST(400, "请求参数错误"),
     /** 未登录或 Token 无效/过期 */
     UNAUTHORIZED(401, "未登录或令牌无效"),
+    /** 限流/熔断拒绝（Sentinel） */
+    TOO_MANY_REQUESTS(429, "请求过于频繁，请稍后再试"),
     /** 未预期的服务器错误 */
     INTERNAL_ERROR(500, "系统繁忙，请稍后再试"),
 

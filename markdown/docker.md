@@ -36,6 +36,9 @@ docker network ls | grep ul-net
       redis.conf
       sentinel.conf
     master/ slave1/ slave2/ slave3/
+  phase2/          # 二期：RabbitMQ / ES / Kibana / Sentinel / Seata
+    compose.yml    # 来自仓库 docker/compose.phase2.yml
+    rabbitmq/ es/ kibana/ sentinel/ seata/
 ```
 
 ---
@@ -412,10 +415,61 @@ docker exec ul-redis-master redis-cli -h host.docker.internal -p 6380 ping 2>/de
 | ul-nacos 控制台 | **8088** | 浏览器用这个 |
 | ul-redis 主 | **6380** | |
 | ul-redis 哨兵 | **26380–26382** | |
+| ul-rabbitmq | **5672** / 管理台 **15672** | 二期 · 用户 `uplearn`/`1234` |
+| ul-elasticsearch | **9200** | 二期 |
+| ul-kibana | **5601** | 二期 |
+| ul-sentinel | **8718** | 二期 Dashboard（容器内 8858） |
+| ul-seata | **8091** / **7091** | 二期 · 本机 file 存储 |
 
 ---
 
-## 5. 后续补充模板（每加一个中间件复制一节）
+## 5. 二期中间件（RabbitMQ / ES / Kibana / Sentinel / Seata）
+
+> 仓库 Compose：[docker/compose.phase2.yml](../docker/compose.phase2.yml)、说明 [docker/README.md](../docker/README.md)。  
+> 实机目录：`/root/up-learn/phase2/`。**社区不做。**  
+> **按需启动**：ES / Sentinel / Kibana / Seata / RabbitMQ 不要与一期长期全开（易把 Docker 卡死）；用到再 `up -d <服务名>`，用完 `stop` / `rm -f`。业务接入另开任务。
+
+| 项 | 值 |
+|---|---|
+| 网段 | **`ul-net`**（external，与一期共用） |
+| 编排 | `docker compose -f /root/up-learn/phase2/compose.yml` |
+| RabbitMQ | `rabbitmq:3.13-management` · `ul-rabbitmq` |
+| Elasticsearch | `elasticsearch:9.2.8` · 单节点 · 安全关闭 · 堆 512m |
+| Kibana | `kibana:9.2.8` · 连 `ul-elasticsearch:9200` |
+| Sentinel Dashboard | `bladex/sentinel-dashboard:1.8.9` · 宿主机 **8718** |
+| Seata | `seataio/seata-server:2.5.0` · `STORE_MODE=file` |
+
+### 建目录 / 启动
+
+```bash
+sudo mkdir -p /root/up-learn/phase2/{rabbitmq/data,es/data,kibana,sentinel,seata/logs}
+# 将仓库 docker/compose.phase2.yml 拷为 /root/up-learn/phase2/compose.yml
+sudo chown -R 1000:1000 /root/up-learn/phase2/es/data
+cd /root/up-learn/phase2
+sudo docker compose -f compose.yml up -d
+sudo docker compose -f compose.yml ps
+```
+
+### 自检
+
+```bash
+curl -fsS http://127.0.0.1:15672 >/dev/null && echo rabbitmq_ui_ok
+curl -fsS http://127.0.0.1:9200 | head
+curl -fsS http://127.0.0.1:5601/api/status | head
+curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8718
+docker exec ul-rabbitmq rabbitmq-diagnostics -q ping
+```
+
+### 备注（踩坑）
+
+- ES 数据目录属主常需 **uid 1000**，否则容器反复重启。
+- Docker Desktop 内存建议 ≥ **4GB**；ES OOM 时先降堆或加内存。
+- Sentinel 控制台端口避开 Nacos **8858**，映射为宿主机 **8718**。
+- Seata 先 file 模式，**未接业务**；上 Seata 前确认确有跨服务本地事务需求。
+
+---
+
+## 6. 后续补充模板（每加一个中间件复制一节）
 
 ```markdown
 ## N. <组件名> <版本>
@@ -434,10 +488,10 @@ docker exec ul-redis-master redis-cli -h host.docker.internal -p 6380 ping 2>/de
 ### 备注（踩坑）
 ```
 
-**已规划、尚未落容器（见基线）：** Sentinel Dashboard、Seata、RabbitMQ、Elasticsearch/Kibana 等 → 创建后按上表追加到本文件。
+**上线前仍暂缓：** Nginx / Filebeat / Prometheus+Grafana（见分期计划 §三）。
 
 ---
 
-## 6. 与基线关系
+## 7. 与基线关系
 
 版本与选型以 [`技术栈基线备忘.md`](./技术栈基线备忘.md) §四为准；本文只记录 **本机实际怎么建、怎么连**。若端口或镜像与基线有出入，以本文「当前实机」为准，并回写基线备注。

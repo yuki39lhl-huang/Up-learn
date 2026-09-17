@@ -16,4 +16,6 @@ public class UlLoginProperties {
     private int sendIntervalSeconds = 60;
     /** 开发模式：验证码仅打日志，不真实发邮件 */
     private boolean devLogCode = true;
+    /** 是否经 RabbitMQ 异步投递验证码；MQ 不可用时自动降级同步 */
+    private boolean mqEnabled = true;
 }

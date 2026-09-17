@@ -28,6 +28,11 @@ spring:
       # 端口/host 见 application-{profile}.yml 的 ul.redis.*
       host: ${ul.redis.host}
       port: ${ul.redis.port}
+  rabbitmq:
+    host: ${ul.rabbitmq.host:localhost}
+    port: ${ul.rabbitmq.port:5672}
+    username: ${ul.rabbitmq.username:uplearn}
+    password: ${ul.rabbitmq.password:1234}
 
 # MyBatis-Plus（3.5+ 通用枚举默认可不配 default-enum-type-handler）
 mybatis-plus:
@@ -74,6 +79,13 @@ ul:
     send-interval-seconds: 60
     # 开发环境 true：验证码打日志，不真实发邮件
     dev-log-code: true
+    # 经 RabbitMQ 异步投递；MQ 不可用时降级同步日志
+    mq-enabled: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: uplearn
+    password: "1234"
   oss:
     enabled: false
     endpoint: oss-cn-beijing.aliyuncs.com

@@ -11,6 +11,7 @@ import com.yukimomo.school.dto.SchoolQuery;
 import com.yukimomo.school.entity.MajorDict;
 import com.yukimomo.school.entity.School;
 import com.yukimomo.school.entity.SchoolMajor;
+import com.yukimomo.school.es.SchoolSearchService;
 import com.yukimomo.school.mapper.MajorDictMapper;
 import com.yukimomo.school.mapper.SchoolMajorMapper;
 import com.yukimomo.school.mapper.SchoolMapper;
@@ -19,11 +20,13 @@ import com.yukimomo.school.vo.MajorOptionVO;
 import com.yukimomo.school.vo.MajorVO;
 import com.yukimomo.school.vo.SchoolVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,9 +44,11 @@ public class SchoolServiceImpl implements SchoolService {
     private final SchoolMapper schoolMapper;
     private final MajorDictMapper majorDictMapper;
     private final SchoolMajorMapper schoolMajorMapper;
+    private final ObjectProvider<SchoolSearchService> schoolSearchService;
 
     /**
      * 组装院校条件并分页；若有专业相关筛选，先经 {@link #resolveSchoolIdsByMajorFilter} 得到 schoolId 集合。
+     * {@code kw} 优先走 ES，失败或未启用时回落 MySQL LIKE。
      */
     @Override
     public PageDTO<SchoolVO> listSchools(SchoolQuery query) {
@@ -54,10 +59,16 @@ public class SchoolServiceImpl implements SchoolService {
         if (schoolIdsByMajorFilter != null && schoolIdsByMajorFilter.isEmpty()) {
             return PageDTO.empty();
         }
+
+        Set<Long> schoolIdsByKw = resolveSchoolIdsByKeyword(q.getKw());
+        if (schoolIdsByKw != null && schoolIdsByKw.isEmpty()) {
+            return PageDTO.empty();
+        }
+
         //创建一个LambdaQueryWrapper对象，用于构建查询条件
         LambdaQueryWrapper<School> wrapper = new LambdaQueryWrapper<>();
-        //如果q.getKw()不为空，则添加like查询条件，查询院校名称中包含q.getKw().trim()的记录
-        if (StringUtils.hasText(q.getKw())) {
+        // ES 未命中/未启用时：用 MySQL LIKE；ES 命中时用 IN，避免重复 LIKE
+        if (schoolIdsByKw == null && StringUtils.hasText(q.getKw())) {
             wrapper.like(School::getName, q.getKw().trim());
         }
         if (StringUtils.hasText(q.getProvince())) {
@@ -68,6 +79,9 @@ public class SchoolServiceImpl implements SchoolService {
         }
         if (schoolIdsByMajorFilter != null) {
             wrapper.in(School::getId, schoolIdsByMajorFilter);
+        }
+        if (schoolIdsByKw != null) {
+            wrapper.in(School::getId, schoolIdsByKw);
         }
         // 优先公办：排序靠前，不排除民办
         if (Boolean.TRUE.equals(q.getPreferPublic())) {
@@ -85,6 +99,24 @@ public class SchoolServiceImpl implements SchoolService {
         dto.setPages(page.getPages());
         dto.setList(list);
         return dto;
+    }
+
+    /**
+     * @return null=走 MySQL LIKE；empty=无命中；非空=ES 命中的 id（保序）
+     */
+    private Set<Long> resolveSchoolIdsByKeyword(String kw) {
+        if (!StringUtils.hasText(kw)) {
+            return null;
+        }
+        SchoolSearchService searchService = schoolSearchService.getIfAvailable();
+        if (searchService == null || !searchService.isAvailable()) {
+            return null;
+        }
+        List<Long> ids = searchService.searchIdsByKeyword(kw);
+        if (ids == null) {
+            return null;
+        }
+        return new LinkedHashSet<>(ids);
     }
 
     /** 按 school.id 查院校；不存在抛 SCHOOL_NOT_FOUND。 */

@@ -1,0 +1,120 @@
+# up-learn 二期中间件（按需启动，不要和一期长期同开）
+#
+# 一期常驻：ul-mysql / ul-nacos / Redis 主从哨兵
+# 二期本文件：RabbitMQ / ES / Kibana / Sentinel / Seata —— 内存占用大，默认不要全开
+#
+# 推荐按需单开：
+#   docker compose -f compose.phase2.yml up -d ul-rabbitmq
+#   docker compose -f compose.phase2.yml up -d ul-elasticsearch
+#   docker compose -f compose.phase2.yml --profile kibana up -d ul-kibana
+#   docker compose -f compose.phase2.yml up -d ul-sentinel
+#   docker compose -f compose.phase2.yml up -d ul-seata
+# 用完关掉：
+#   docker compose -f compose.phase2.yml stop
+#   或 docker rm -f ul-kibana ul-elasticsearch ul-seata ul-sentinel ul-rabbitmq
+#
+# 版本对齐 markdown/技术栈基线备忘.md §四
+
+name: ul-phase2
+
+services:
+  ul-rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: ul-rabbitmq
+    restart: "no"
+    networks: [ul-net]
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: uplearn
+      RABBITMQ_DEFAULT_PASS: "1234"
+      TZ: Asia/Shanghai
+    volumes:
+      - ./rabbitmq/data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 40s
+
+  ul-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.8
+    container_name: ul-elasticsearch
+    restart: "no"
+    networks: [ul-net]
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      xpack.security.http.ssl.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      TZ: Asia/Shanghai
+    volumes:
+      - ./es/data:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9200 >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 12
+      start_period: 60s
+
+  ul-kibana:
+    image: docker.elastic.co/kibana/kibana:9.2.8
+    container_name: ul-kibana
+    restart: "no"
+    profiles: ["kibana"]
+    networks: [ul-net]
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://ul-elasticsearch:9200
+      XPACK_SECURITY_ENABLED: "false"
+      TZ: Asia/Shanghai
+    depends_on:
+      ul-elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:5601/api/status >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 90s
+
+  ul-sentinel:
+    image: bladex/sentinel-dashboard:1.8.9
+    container_name: ul-sentinel
+    restart: "no"
+    networks: [ul-net]
+    ports:
+      - "8718:8858"
+    environment:
+      JAVA_OPTS: -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=ul-sentinel -Djava.security.egd=file:/dev/./urandom
+      TZ: Asia/Shanghai
+
+  ul-seata:
+    image: apache/seata-server:2.5.0
+    container_name: ul-seata
+    restart: "no"
+    networks: [ul-net]
+    ports:
+      - "8091:8091"
+      - "7091:7091"
+    environment:
+      SEATA_IP: ul-seata
+      SEATA_PORT: 8091
+      STORE_MODE: file
+      TZ: Asia/Shanghai
+    volumes:
+      - ./seata/logs:/root/logs
+
+networks:
+  ul-net:
+    external: true
+    name: ul-net

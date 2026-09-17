@@ -1,5 +1,7 @@
 package com.yukimomo;
 
+import com.yukimomo.school.config.UlSchoolProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,6 +13,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 @MapperScan("com.yukimomo.school.mapper")
+@EnableConfigurationProperties(UlSchoolProperties.class)
 public class SchoolServiceApplication {
 
     /** 启动 Spring Boot 应用。 */

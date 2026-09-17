@@ -193,7 +193,7 @@ def main() -> int:
     parser.add_argument(
         "--replace-guangdong",
         action="store_true",
-        help="清空 school_major、major_dict，并删除广东院校后再导入（保留山东等）",
+        help="清空广东 school_major/school 与无引用 major_dict 后再导入（保留山东等）",
     )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -234,10 +234,21 @@ def main() -> int:
     try:
         with conn.cursor() as cur:
             if args.replace_guangdong:
-                cur.execute("DELETE FROM school_major")
-                cur.execute("DELETE FROM major_dict")
+                # 只清广东院校/开设；保留山东等。词典：删掉已无引用的行，再由本次 mapping 重建。
+                cur.execute(
+                    """DELETE sm FROM school_major sm
+                       INNER JOIN school s ON s.id = sm.school_id
+                       WHERE s.province = %s""",
+                    ("广东",),
+                )
                 cur.execute("DELETE FROM school WHERE province=%s", ("广东",))
-                print("cleared school_major, major_dict, and Guangdong schools")
+                cur.execute(
+                    """DELETE d FROM major_dict d
+                       LEFT JOIN school_major sm
+                         ON sm.major_dict_id = d.id AND sm.deleted = 0
+                       WHERE sm.id IS NULL"""
+                )
+                print("cleared Guangdong school_major/schools + unused major_dict")
 
             school_ids: dict[str, int] = {}
             dict_ids: dict[str, int] = {}

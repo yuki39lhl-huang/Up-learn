@@ -18,6 +18,8 @@ spring:
       password: nacos
       discovery:
         ephemeral: true
+  elasticsearch:
+    uris: ${ul.school.elasticsearch-uris:http://localhost:9200}
 
 mybatis-plus:
   global-config:
@@ -50,3 +52,8 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+
+ul:
+  school:
+    es-enabled: true
+    elasticsearch-uris: http://localhost:9200

@@ -59,14 +59,13 @@ Open decisions (do not invent in UI copy):
 - Logo 资产：`frontend/public/brand/logo-mark.png`（及 favicon 系列）；通过 `BrandLogo` 组件使用。**保留现有 Logo，不擅自更换图标体系。**
 - 官网顶栏保留品牌标识；首屏正文区不重复堆第二个同等 Logo。
 - Voice: 务实、清晰、像备考工具说明，避免「AI 模板腔」、空洞激励口号与假社会证明。
-- Visual direction for marketing is established elsewhere (Stitch「Academic Utility Console」绿色学术控制台方向)；本文件不规定调色板或字体配方。
+- Visual direction for marketing: `/home` 采用 **Agent Liftoff**（Antigravity 语法的黑底全屏营销页）；控制台作业层仍为 Academic Utility Console 绿色学术控制台。本文件不规定调色板细节（见 DESIGN.md / surface brief）。
 
 ## Evidence on Hand
 
 - Real school/major list APIs（官网与控制台招生预览共用）。
 - Real paper list/detail APIs（登录后）；卷面含公式渲染。
 - Brand raster assets under `frontend/public/brand/`.
-- Stitch landing HTML reference (design exploration): `frontend/tmp/stitch-landing.html`（参考稿，非运行时依赖）。
 - **Do not fabricate:** testimonials, press quotes, “近百万考生”、机构合作徽章、未接入的省份覆盖声明。
 
 ## Product Principles

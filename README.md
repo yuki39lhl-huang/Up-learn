@@ -111,6 +111,7 @@ npm run dev
 | [配置文件](markdown/配置文件.md) | profile / Nacos / OSS / 邮件 |
 | [docker](markdown/docker.md) | 本机 Docker 端口与编排 |
 | [主观题评分与 Agent 边界](markdown/主观题评分与Agent边界.md) | AI 评分边界 |
+| [免费部署：Vercel + Tunnel](markdown/免费部署-Vercel与Tunnel.md) | 前端上云、后端本机隧道 |
 
 ---
 

@@ -15,6 +15,10 @@ public class UserInfoVO {
     private String nickname;
     /** 头像展示 URL（可能为 OSS 签名链接，约 2h 有效） */
     private String avatarUrl;
+    /** 个人简介（社区展示） */
+    private String bio;
+    /** 是否公开关注/粉丝列表 */
+    private Boolean showFollowList;
     /** 是否已设置登录密码（{@code user.password_set = 1}） */
     private boolean hasPassword;
 }

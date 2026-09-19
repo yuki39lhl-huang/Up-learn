@@ -36,11 +36,20 @@ public interface UserAuthService {
     /** 当前用户资料（头像为展示用签名 URL） */
     UserInfoVO getCurrentUserInfo(Long userId);
 
-    /** 修改昵称和/或头像 URL */
+    /** 批量简要资料（社区等；不含邮箱） */
+    java.util.List<com.yukimomo.api.user.vo.UserBriefVO> listBriefs(java.util.List<Long> ids);
+
+    /** 公开资料（社区主页：简介、关注列表开关、备考省/专业） */
+    com.yukimomo.api.user.vo.UserPublicProfileVO getPublicProfile(Long userId);
+
+    /** 修改昵称 / 头像 / 简介 / 关注列表可见性（至少填一项） */
     UserInfoVO updateProfile(Long userId, UserProfileUpdateDTO dto);
 
     /** 上传头像到 OSS 并更新库内 canonical URL */
     AvatarUploadVO uploadAvatar(Long userId, MultipartFile file);
+
+    /** 上传社区帖子配图，返回可写入正文的公网 URL */
+    com.yukimomo.user.vo.CommunityImageUploadVO uploadCommunityImage(Long userId, MultipartFile file);
 
     /**
      * 首次设置或修改登录密码（需已登录）。

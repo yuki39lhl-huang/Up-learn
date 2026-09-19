@@ -1,0 +1,11 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        ip: 127.0.0.1
+
+ul:
+  db:
+    host: localhost
+    port: 3308
+    pw: 1234

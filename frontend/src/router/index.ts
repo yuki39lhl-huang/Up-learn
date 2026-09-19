@@ -36,6 +36,24 @@ const router = createRouter({
       component: () => import('../views/PaperExamView.vue'),
       meta: { title: '试卷作答', requiresAuth: true },
     },
+    {
+      path: '/community/compose',
+      name: 'community-compose',
+      component: () => import('../views/community/CommunityComposeView.vue'),
+      meta: { title: '发布帖子', requiresAuth: true },
+    },
+    {
+      path: '/community/post/:id',
+      name: 'community-post',
+      component: () => import('../views/community/CommunityPostView.vue'),
+      meta: { title: '帖子详情', requiresAuth: true },
+    },
+    {
+      path: '/community/u/:userId',
+      name: 'community-profile',
+      component: () => import('../views/community/CommunityProfileView.vue'),
+      meta: { title: '个人主页', requiresAuth: true },
+    },
     { path: '/practice', redirect: { path: '/console', hash: '#dashboard' } },
   ],
 })

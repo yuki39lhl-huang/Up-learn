@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import com.yukimomo.api.user.vo.UserPublicProfileVO;
 
 /**
  * 认证与账号：验证码/密码登录、Token、资料、头像、设密与忘记密码重置。
@@ -77,7 +79,20 @@ public class UserAuthController {
         return Result.ok(userAuthService.getCurrentUserInfo(userId));
     }
 
-    @Operation(summary = "修改资料", description = "修改昵称或头像 URL（至少填一项）")
+    @Operation(summary = "批量用户简要资料", description = "社区 Feed 等展示用；不含邮箱；公开可读")
+    @GetMapping("/briefs")
+    public Result<java.util.List<com.yukimomo.api.user.vo.UserBriefVO>> briefs(
+            @RequestParam("ids") java.util.List<Long> ids) {
+        return Result.ok(userAuthService.listBriefs(ids));
+    }
+
+    @Operation(summary = "公开用户资料", description = "社区主页用：昵称头像简介、关注列表开关、备考省/专业")
+    @GetMapping("/public/{userId}")
+    public Result<UserPublicProfileVO> publicProfile(@PathVariable Long userId) {
+        return Result.ok(userAuthService.getPublicProfile(userId));
+    }
+
+    @Operation(summary = "修改资料", description = "修改昵称、头像、简介或关注列表可见性（至少填一项）")
     @PutMapping("/info")
     public Result<UserInfoVO> updateInfo(@Valid @RequestBody UserProfileUpdateDTO dto) {
         Long userId = UserContext.requireUserId();
@@ -89,6 +104,14 @@ public class UserAuthController {
     public Result<AvatarUploadVO> uploadAvatar(@RequestParam("file") MultipartFile file) {
         Long userId = UserContext.requireUserId();
         return Result.ok(userAuthService.uploadAvatar(userId, file));
+    }
+
+    @Operation(summary = "上传社区配图", description = "公共读对象，返回可写入帖子封面/正文的 URL")
+    @PostMapping("/community/image")
+    public Result<com.yukimomo.user.vo.CommunityImageUploadVO> uploadCommunityImage(
+            @RequestParam("file") MultipartFile file) {
+        Long userId = UserContext.requireUserId();
+        return Result.ok(userAuthService.uploadCommunityImage(userId, file));
     }
 
     @Operation(summary = "设置或修改登录密码", description = "首次设置无需旧密码；已设密须校验旧密码")

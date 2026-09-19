@@ -6,47 +6,19 @@ spring:
     name: agent-service
   profiles:
     active: dev
+  config:
+    import:
+      # agent 排除了 DataSource，不要引 ul-datasource
+      - optional:nacos:ul-common.yaml
+      - optional:nacos:${spring.application.name}.yaml
   cloud:
     nacos:
       server-addr: localhost:8858
       username: nacos
       password: nacos
+      config:
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        refresh-enabled: true
       discovery:
         ephemeral: true
-  data:
-    redis:
-      host: ${ul.redis.host}
-      port: ${ul.redis.port}
-
-# chat / score 用 DeepSeek；embedding（一点通 RAG）默认不启用，见 application-local 注释
-langchain4j:
-  open-ai:
-    chat-model:
-      base-url: https://api.deepseek.com
-      api-key: ${ANTHROPIC_AUTH_TOKEN:}
-      model-name: deepseek-v4-flash
-      log-requests: true
-      log-responses: true
-    streaming-chat-model:
-      base-url: https://api.deepseek.com
-      api-key: ${ANTHROPIC_AUTH_TOKEN:}
-      model-name: deepseek-v4-flash
-      log-requests: true
-      log-responses: true
-
-ul:
-  agent:
-    rag:
-      # 本地见 application-local；无 DashScope 时也可开 RAG（走本地 embedding）
-      enabled: false
-      ingest-on-startup: false
-      embedding: auto
-      segment-size: 500
-      segment-overlap: 80
-      min-score: 0.45
-      max-results: 5
-
-logging:
-  level:
-    dev.langchain4j: debug
-    '[com.yukimomo]': debug

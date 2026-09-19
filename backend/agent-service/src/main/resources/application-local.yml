@@ -1,4 +1,5 @@
-# profile=local：IDEA 本机启动，连 Docker 映射端口（与 user/practice-service 一致）
+﻿# profile=local：IDEA 本机启动，连 Docker 映射端口
+# DeepSeek Key 写本机，勿提交明文
 spring:
   cloud:
     nacos:
@@ -14,8 +15,8 @@ ul:
     host: localhost
     port: 6380
   agent:
+    deepseek-api-key: ""
     rag:
-      # 向量存现有 Redis 8（6380，已带 RediSearch）；embedding 优先环境变量 DASHSCOPE_API_KEY，否则本地 AllMiniLm
       enabled: true
       ingest-on-startup: true
       embedding: auto

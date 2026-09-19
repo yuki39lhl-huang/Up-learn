@@ -2,6 +2,9 @@ package com.yukimomo.user.service;
 
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
+import com.aliyun.oss.model.CannedAccessControlList;
+import com.aliyun.oss.model.ObjectMetadata;
+import com.aliyun.oss.model.PutObjectRequest;
 import com.yukimomo.common.exception.BizException;
 import com.yukimomo.common.exception.ErrorCode;
 import com.yukimomo.user.config.OssProperties;
@@ -24,17 +27,31 @@ public class OssService {
      * 上传头像到 OSS，返回写入数据库的 canonical URL（自定义域名 + object key）。
      */
     public String uploadAvatar(Long userId, String extension, InputStream input) {
-        return upload(ossProperties.getAvatarDir(), userId, extension, input, "头像上传失败");
+        return upload(ossProperties.getAvatarDir(), userId, extension, input, false, "头像上传失败", null);
     }
 
     /**
      * 上传控制台底层背景图到 OSS，返回写入数据库的 canonical URL。
      */
     public String uploadWallpaper(Long userId, String extension, InputStream input) {
-        return upload(ossProperties.getWallpaperDir(), userId, extension, input, "背景图上传失败");
+        return upload(ossProperties.getWallpaperDir(), userId, extension, input, false, "背景图上传失败", null);
     }
 
-    private String upload(String dir, Long userId, String extension, InputStream input, String failMessage) {
+    /**
+     * 上传社区帖子配图；对象设为公共读，便于正文 Markdown 长期展示。
+     */
+    public String uploadCommunityImage(Long userId, String extension, InputStream input, String contentType) {
+        return upload(ossProperties.getCommunityDir(), userId, extension, input, true, "配图上传失败", contentType);
+    }
+
+    private String upload(
+            String dir,
+            Long userId,
+            String extension,
+            InputStream input,
+            boolean publicRead,
+            String failMessage,
+            String contentType) {
         if (!ossProperties.isEnabled() || !hasCredentials()) {
             throw new BizException(ErrorCode.OSS_NOT_CONFIGURED);
         }
@@ -42,8 +59,18 @@ public class OssService {
                 + System.currentTimeMillis() + "_" + RandomUtil.randomString(6) + extension;
         OSS client = createClient();
         try {
-            client.putObject(ossProperties.getBucket(), key, input);
+            ObjectMetadata meta = new ObjectMetadata();
+            if (StrUtil.isNotBlank(contentType)) {
+                meta.setContentType(contentType);
+            }
+            PutObjectRequest request = new PutObjectRequest(ossProperties.getBucket(), key, input, meta);
+            client.putObject(request);
+            if (publicRead) {
+                client.setObjectAcl(ossProperties.getBucket(), key, CannedAccessControlList.PublicRead);
+            }
             return buildPublicUrl(key);
+        } catch (BizException e) {
+            throw e;
         } catch (Exception e) {
             throw new BizException(ErrorCode.INTERNAL_ERROR, failMessage);
         } finally {
@@ -61,6 +88,11 @@ public class OssService {
         }
         String key = extractObjectKey(storedUrl);
         if (key == null) {
+            return storedUrl;
+        }
+        // 社区配图按公共读上传，直接用 canonical URL
+        String communityMarker = ossProperties.getCommunityDir() + "/";
+        if (key.startsWith(communityMarker)) {
             return storedUrl;
         }
         OSS client = createClient();
@@ -114,6 +146,11 @@ public class OssService {
         int wallpaperIdx = normalized.indexOf(wallpaperMarker);
         if (wallpaperIdx >= 0) {
             return normalized.substring(wallpaperIdx + 1);
+        }
+        String communityMarker = "/" + ossProperties.getCommunityDir() + "/";
+        int communityIdx = normalized.indexOf(communityMarker);
+        if (communityIdx >= 0) {
+            return normalized.substring(communityIdx + 1);
         }
         return null;
     }

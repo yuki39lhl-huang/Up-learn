@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import DashboardPanel from '../components/stitch/DashboardPanel.vue'
@@ -15,6 +15,8 @@ import {
   pushConsole,
   type ConsoleModule,
 } from '../utils/consoleNav'
+import { fetchCommunityNotifications } from '../api/community'
+import { subscribeCommunitySync } from '../utils/communitySync'
 import '../styles/console-workbench.css'
 
 /** 非首屏模块异步分包，首次进入控制台只扛主页 */
@@ -22,11 +24,15 @@ const SchoolQueryPanel = defineAsyncComponent(() => import('../components/stitch
 const SyllabusPanel = defineAsyncComponent(() => import('../components/stitch/SyllabusPanel.vue'))
 const PracticePanel = defineAsyncComponent(() => import('../components/stitch/PracticePanel.vue'))
 const PapersPanel = defineAsyncComponent(() => import('../components/stitch/PapersPanel.vue'))
+const CommunityPanel = defineAsyncComponent(() => import('../components/stitch/CommunityPanel.vue'))
 const AgentChatPanel = defineAsyncComponent(() => import('../components/stitch/AgentChatPanel.vue'))
 const AccountSettingsPanel = defineAsyncComponent(
   () => import('../components/stitch/AccountSettingsPanel.vue'),
 )
 const SettingsPanel = defineAsyncComponent(() => import('../components/stitch/SettingsPanel.vue'))
+const CommunityNotificationsPanel = defineAsyncComponent(
+  () => import('../components/stitch/CommunityNotificationsPanel.vue'),
+)
 
 type ModuleKey = ConsoleModule
 type SystemKey = 'ui-settings' | 'notifications' | 'account'
@@ -77,10 +83,25 @@ const navItems = computed(() => [
   { key: 'agent' as const, label: ui.tr('nav.agent'), icon: 'agent' as const },
 ])
 
-const mockNotifications = [
-  { id: 1, title: '每日一练提醒', desc: '今天还有 1 道题未完成', time: '2 小时前', unread: true },
-  { id: 2, title: '院校数据更新', desc: '广东省 2025 招生计划已同步', time: '昨天', unread: false },
-]
+const notifyUnread = ref(0)
+let unsubNotifySync: (() => void) | null = null
+
+function onNotifyUnreadChange(n: number) {
+  notifyUnread.value = n
+}
+
+async function refreshNotifyBadge() {
+  if (!auth.isLoggedIn) {
+    notifyUnread.value = 0
+    return
+  }
+  try {
+    const list = await fetchCommunityNotifications()
+    notifyUnread.value = (list || []).filter((n) => !n.read).length
+  } catch {
+    // 静默：未起 community-service 时不打扰
+  }
+}
 
 /** 系统视图 hash；模块 hash 交给 consoleNav 的单一映射 */
 const SYSTEM_HASH: Record<string, SystemKey> = {
@@ -201,7 +222,30 @@ watch(
 onMounted(() => {
   if (auth.isLoggedIn) {
     void auth.refreshProfile()
+    void refreshNotifyBadge()
   }
+  unsubNotifySync = subscribeCommunitySync((ev) => {
+    if (
+      ev.type === 'comment-changed' ||
+      ev.type === 'post-updated' ||
+      ev.type === 'favorite-changed' ||
+      ev.type === 'follow-changed'
+    ) {
+      void refreshNotifyBadge()
+    }
+  })
+  document.addEventListener('visibilitychange', onConsoleVisibility)
+})
+
+function onConsoleVisibility() {
+  if (document.visibilityState === 'visible' && auth.isLoggedIn) {
+    void refreshNotifyBadge()
+  }
+}
+
+onBeforeUnmount(() => {
+  unsubNotifySync?.()
+  document.removeEventListener('visibilitychange', onConsoleVisibility)
 })
 
 async function handleLogout() {
@@ -239,13 +283,16 @@ async function handleLogout() {
         </button>
         <button
           type="button"
-          class="gmail-icon-btn"
+          class="gmail-icon-btn gmail-icon-btn--notify"
           :class="{ 'gmail-icon-btn--active': activeView === 'notifications' }"
           :aria-label="ui.tr('topbar.notifications')"
           :title="ui.tr('topbar.notifications')"
           @click="selectSystem('notifications')"
         >
           <StitchIcon name="bell" />
+          <span v-if="notifyUnread > 0" class="gmail-notify-badge">
+            {{ notifyUnread > 99 ? '99+' : notifyUnread }}
+          </span>
         </button>
         <button
           type="button"
@@ -325,24 +372,10 @@ async function handleLogout() {
               v-show="activeView === 'notifications'"
               class="gmail-panel__content gmail-panel__content--flush"
             >
-              <div class="notify-toolbar">
-                {{ ui.tr('notify.unread', { n: mockNotifications.filter((n) => n.unread).length }) }}
-              </div>
-              <ul class="notify-list">
-                <li
-                  v-for="n in mockNotifications"
-                  :key="n.id"
-                  class="notify-item"
-                  :class="{ 'notify-item--unread': n.unread }"
-                >
-                  <div class="notify-item__dot" />
-                  <div class="notify-item__body">
-                    <strong>{{ n.title }}</strong>
-                    <p>{{ n.desc }}</p>
-                    <small>{{ n.time }}</small>
-                  </div>
-                </li>
-              </ul>
+              <CommunityNotificationsPanel
+                :active="activeView === 'notifications'"
+                @unread-change="onNotifyUnreadChange"
+              />
             </div>
 
             <div
@@ -381,25 +414,10 @@ async function handleLogout() {
                 v-if="mountedViews.papers"
                 v-show="activeView === 'papers'"
               />
-              <div
+              <CommunityPanel
                 v-if="mountedViews.community"
                 v-show="activeView === 'community'"
-                class="module-shell"
-              >
-                <section class="module-card">
-                  <header class="module-card__head">
-                    <div>
-                      <p class="module-card__eyebrow">升学通 · 交流中心</p>
-                      <h2>院校经验</h2>
-                    </div>
-                  </header>
-                  <div class="workbench-placeholder">
-                    <StitchIcon name="community" />
-                    <h3>社区交流 · 规划中</h3>
-                    <p>院校经验分享、备考答疑，后续版本开放。</p>
-                  </div>
-                </section>
-              </div>
+              />
               <AgentChatPanel
                 v-if="mountedViews.agent"
                 v-show="activeView === 'agent'"

@@ -20,9 +20,14 @@ const elementLocale = computed(() => (ui.locale === 'en-US' ? en : zhCn))
 const isLanding = computed(() => route.path === '/home' || route.path === '/')
 const isConsole = computed(() => route.path.startsWith('/console'))
 const isPaperExam = computed(() => route.path.startsWith('/paper/'))
-/** 落地页 / 控制台 / 试卷作答页：隐藏全局顶栏 */
-const hideAppChrome = computed(() => isLanding.value || isConsole.value || isPaperExam.value)
-const showWorkbenchLink = computed(() => auth.isLoggedIn && !isConsole.value && !isPaperExam.value)
+const isCommunityWin = computed(() => route.path.startsWith('/community/'))
+/** 落地页 / 控制台 / 试卷 / 社区独立窗：隐藏全局顶栏 */
+const hideAppChrome = computed(
+  () => isLanding.value || isConsole.value || isPaperExam.value || isCommunityWin.value,
+)
+const showWorkbenchLink = computed(
+  () => auth.isLoggedIn && !isConsole.value && !isPaperExam.value && !isCommunityWin.value,
+)
 
 watch(
   () => auth.isLoggedIn,
@@ -90,9 +95,9 @@ async function handleLogout() {
       <main
         class="main"
         :class="{
-          'main--wide': !isConsole && !isPaperExam && route.path !== '/home',
+          'main--wide': !isConsole && !isPaperExam && !isCommunityWin && route.path !== '/home',
           'main--landing': isLanding,
-          'main--console': isConsole || isPaperExam,
+          'main--console': isConsole || isPaperExam || isCommunityWin,
         }"
       >
         <router-view />

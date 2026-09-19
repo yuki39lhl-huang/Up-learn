@@ -17,9 +17,9 @@
   --apple-bg: #ffffff;
   --apple-bg-muted: #f4f4f5;
   --apple-text: #121212;
-  --apple-text-muted: #5c5c5c;
-  --apple-border: rgb(0 0 0 / 10%);
-  --apple-divider: rgb(0 0 0 / 8%);
+  --apple-text-muted: #3f3f46;
+  --apple-border: rgb(0 0 0 / 14%);
+  --apple-divider: rgb(0 0 0 / 10%);
   --apple-nav-bg: color-mix(in srgb, #ffffff 88%, transparent);
   --apple-surface: #ffffff;
   --apple-btn-primary-bg: #121212;
@@ -33,9 +33,9 @@
   --landing-accent: #121212;
   --lp-hero-bg: #ffffff;
   --lp-hero-title: #121212;
-  --lp-ghost-border: rgb(0 0 0 / 16%);
-  --lp-ghost-hover-bg: rgb(0 0 0 / 4%);
-  --lp-focus-ring: rgb(0 0 0 / 35%);
+  --lp-ghost-border: rgb(0 0 0 / 28%);
+  --lp-ghost-hover-bg: rgb(0 0 0 / 5%);
+  --lp-focus-ring: rgb(0 0 0 / 40%);
   --lp-selection-bg: rgb(0 0 0 / 12%);
   --lp-selection-fg: #121212;
   --lp-bridge-bg: #ffffff;

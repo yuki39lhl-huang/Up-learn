@@ -18,8 +18,14 @@ import com.yukimomo.user.service.LoginCodeService;
 import com.yukimomo.user.service.OssService;
 import com.yukimomo.user.service.RefreshTokenService;
 import com.yukimomo.user.service.UserAuthService;
+import com.yukimomo.user.service.UserExamPreferenceService;
+import com.yukimomo.user.service.UserTargetService;
+import com.yukimomo.api.user.vo.UserExamPreferenceVO;
+import com.yukimomo.api.user.vo.UserPublicProfileVO;
+import com.yukimomo.api.user.vo.UserTargetVO;
 import com.yukimomo.user.util.ImageUploadSupport;
 import com.yukimomo.user.vo.AvatarUploadVO;
+import com.yukimomo.user.vo.CommunityImageUploadVO;
 import com.yukimomo.user.vo.LoginVO;
 import com.yukimomo.user.vo.UserInfoVO;
 import cn.hutool.core.util.RandomUtil;
@@ -31,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -48,6 +55,8 @@ public class UserAuthServiceImpl implements UserAuthService {
     private final RefreshTokenService refreshTokenService;
     private final JwtUtils jwtUtils;
     private final OssService ossService;
+    private final UserExamPreferenceService examPreferenceService;
+    private final UserTargetService userTargetService;
 
     private static final long MAX_AVATAR_BYTES = 2 * 1024 * 1024L;
     /** 8～32 位，至少各含一个字母与一个数字 */
@@ -123,31 +132,125 @@ public class UserAuthServiceImpl implements UserAuthService {
     }
 
     @Override
+    public java.util.List<com.yukimomo.api.user.vo.UserBriefVO> listBriefs(java.util.List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.List.of();
+        }
+        java.util.List<Long> distinct = ids.stream().filter(java.util.Objects::nonNull).distinct().limit(100).toList();
+        if (distinct.isEmpty()) {
+            return java.util.List.of();
+        }
+        java.util.List<User> users = userMapper.selectBatchIds(distinct);
+        java.util.List<com.yukimomo.api.user.vo.UserBriefVO> list = new java.util.ArrayList<>();
+        for (User user : users) {
+            com.yukimomo.api.user.vo.UserBriefVO brief = new com.yukimomo.api.user.vo.UserBriefVO();
+            brief.setUserId(user.getId());
+            brief.setNickname(user.getNickname());
+            brief.setAvatarUrl(ossService.toDisplayUrl(user.getAvatarUrl()));
+            list.add(brief);
+        }
+        return list;
+    }
+
+    @Override
+    public UserPublicProfileVO getPublicProfile(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
+        }
+        UserPublicProfileVO vo = new UserPublicProfileVO();
+        vo.setUserId(user.getId());
+        vo.setNickname(user.getNickname());
+        vo.setAvatarUrl(ossService.toDisplayUrl(user.getAvatarUrl()));
+        vo.setBio(user.getBio());
+        vo.setShowFollowList(user.getShowFollowList() == null || user.getShowFollowList() == 1);
+        try {
+            UserExamPreferenceVO pref = examPreferenceService.get(userId);
+            if (pref != null) {
+                vo.setProvince(pref.getProvince());
+                vo.setMajorCategory(pref.getMajorCategory());
+            }
+        } catch (Exception ignored) {
+            // 未设备考偏好时不展示
+        }
+        try {
+            java.util.List<UserTargetVO> targets = userTargetService.list(userId);
+            if (targets != null && !targets.isEmpty()) {
+                vo.setTargetSchools(targets.stream()
+                        .map(t -> {
+                            if (t == null || StrUtil.isBlank(t.getSchoolName())) {
+                                return null;
+                            }
+                            if (StrUtil.isNotBlank(t.getMajorName())) {
+                                return t.getSchoolName().trim() + " · " + t.getMajorName().trim();
+                            }
+                            return t.getSchoolName().trim();
+                        })
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .limit(6)
+                        .toList());
+            }
+        } catch (Exception ignored) {
+            // 未设目标院校时不展示
+        }
+        return vo;
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public UserInfoVO updateProfile(Long userId, UserProfileUpdateDTO dto) {
-        if (StrUtil.isBlank(dto.getNickname()) && StrUtil.isBlank(dto.getAvatarUrl())) {
-            throw new BizException(ErrorCode.BAD_REQUEST, "请至少修改昵称或头像");
+        boolean hasNickname = StrUtil.isNotBlank(dto.getNickname());
+        boolean hasAvatar = StrUtil.isNotBlank(dto.getAvatarUrl());
+        boolean hasBio = dto.getBio() != null;
+        boolean hasShowFollow = dto.getShowFollowList() != null;
+        if (!hasNickname && !hasAvatar && !hasBio && !hasShowFollow) {
+            throw new BizException(ErrorCode.BAD_REQUEST, "请至少修改一项资料");
         }
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new BizException(ErrorCode.USER_NOT_FOUND);
         }
-        if (StrUtil.isNotBlank(dto.getNickname())) {
+        if (hasNickname) {
             String nickname = dto.getNickname().trim();
             if (nickname.length() < 1 || nickname.length() > 32) {
                 throw new BizException(ErrorCode.NICKNAME_INVALID);
             }
             user.setNickname(nickname);
         }
-        if (StrUtil.isNotBlank(dto.getAvatarUrl())) {
+        if (hasAvatar) {
             String avatarUrl = dto.getAvatarUrl().trim();
             if (!isValidAvatarUrl(avatarUrl)) {
                 throw new BizException(ErrorCode.AVATAR_URL_INVALID);
             }
             user.setAvatarUrl(avatarUrl);
         }
-        userMapper.updateById(user);
-        return toUserInfoVO(user);
+        if (hasBio) {
+            String bio = dto.getBio().trim();
+            if (bio.length() > 200) {
+                throw new BizException(ErrorCode.BAD_REQUEST, "简介不能超过 200 个字符");
+            }
+            user.setBio(bio.isEmpty() ? null : bio);
+        }
+        if (hasShowFollow) {
+            user.setShowFollowList(Boolean.TRUE.equals(dto.getShowFollowList()) ? 1 : 0);
+        }
+        // not-null 策略下清空 bio 需显式 set
+        LambdaUpdateWrapper<User> uw = new LambdaUpdateWrapper<User>().eq(User::getId, userId);
+        if (hasNickname) {
+            uw.set(User::getNickname, user.getNickname());
+        }
+        if (hasAvatar) {
+            uw.set(User::getAvatarUrl, user.getAvatarUrl());
+        }
+        if (hasBio) {
+            uw.set(User::getBio, user.getBio());
+        }
+        if (hasShowFollow) {
+            uw.set(User::getShowFollowList, user.getShowFollowList());
+        }
+        userMapper.update(null, uw);
+        return toUserInfoVO(userMapper.selectById(userId));
     }
 
     @Override
@@ -168,6 +271,25 @@ public class UserAuthServiceImpl implements UserAuthService {
         userMapper.updateById(user);
         AvatarUploadVO vo = new AvatarUploadVO();
         vo.setAvatarUrl(ossService.toDisplayUrl(user.getAvatarUrl()));
+        return vo;
+    }
+
+    @Override
+    public CommunityImageUploadVO uploadCommunityImage(Long userId, MultipartFile file) {
+        String contentType = ImageUploadSupport.validateImage(file, MAX_AVATAR_BYTES, ErrorCode.AVATAR_FILE_INVALID);
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
+        }
+        String ext = ImageUploadSupport.extensionForContentType(contentType);
+        String url;
+        try {
+            url = ossService.uploadCommunityImage(userId, ext, file.getInputStream(), contentType);
+        } catch (IOException e) {
+            throw new BizException(ErrorCode.INTERNAL_ERROR, "配图上传失败");
+        }
+        CommunityImageUploadVO vo = new CommunityImageUploadVO();
+        vo.setUrl(url);
         return vo;
     }
 
@@ -251,6 +373,8 @@ public class UserAuthServiceImpl implements UserAuthService {
         vo.setEmail(user.getEmail());
         vo.setNickname(user.getNickname());
         vo.setAvatarUrl(ossService.toDisplayUrl(user.getAvatarUrl()));
+        vo.setBio(user.getBio());
+        vo.setShowFollowList(user.getShowFollowList() == null || user.getShowFollowList() == 1);
         vo.setHasPassword(isPasswordSet(user));
         return vo;
     }

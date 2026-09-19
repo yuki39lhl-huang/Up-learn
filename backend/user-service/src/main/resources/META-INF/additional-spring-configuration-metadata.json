@@ -28,7 +28,7 @@
       "name": "ul.oss.bucket",
       "type": "java.lang.String",
       "description": "Bucket 名称。",
-      "defaultValue": "up-learn"
+      "defaultValue": "uplearn"
     },
     {
       "name": "ul.oss.access-key-id",
@@ -44,7 +44,7 @@
       "name": "ul.oss.public-base-url",
       "type": "java.lang.String",
       "description": "对外访问根 URL（自定义域名或 Bucket 域名）。",
-      "defaultValue": "https://up-learn.cn-beijing.taihangrda.cn"
+      "defaultValue": "https://uplearn.oss-cn-beijing.aliyuncs.com"
     },
     {
       "name": "ul.oss.avatar-dir",

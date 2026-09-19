@@ -1,0 +1,24 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: community-service
+  profiles:
+    active: dev
+  config:
+    import:
+      - optional:nacos:ul-common.yaml
+      - optional:nacos:ul-datasource.yaml
+      - optional:nacos:${spring.application.name}.yaml
+  cloud:
+    nacos:
+      server-addr: localhost:8858
+      username: nacos
+      password: nacos
+      config:
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        refresh-enabled: true
+      discovery:
+        ephemeral: true

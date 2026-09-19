@@ -29,7 +29,12 @@ export function fetchUserInfo() {
   return getData<UserInfoVO>(request.get('/user/info'))
 }
 
-export function updateUserProfile(payload: { nickname?: string; avatarUrl?: string }) {
+export function updateUserProfile(payload: {
+  nickname?: string
+  avatarUrl?: string
+  bio?: string
+  showFollowList?: boolean
+}) {
   return getData<UserInfoVO>(request.put('/user/info', payload))
 }
 
@@ -38,6 +43,17 @@ export function uploadUserAvatar(file: File) {
   form.append('file', file)
   return getData<{ avatarUrl: string }>(
     request.post('/user/avatar', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  )
+}
+
+/** 社区帖子配图（公共读 URL） */
+export function uploadCommunityImage(file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  return getData<{ url: string }>(
+    request.post('/user/community/image', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   )

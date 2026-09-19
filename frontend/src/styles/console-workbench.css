@@ -125,6 +125,27 @@
   height: 20px;
 }
 
+.gmail-icon-btn--notify {
+  position: relative;
+}
+
+.gmail-notify-badge {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
 .gmail-avatar-btn {
   width: 40px;
   height: 40px;
@@ -391,6 +412,18 @@ html[data-theme='dark'] .gmail-panel {
   overflow-x: hidden;
 }
 
+/* 通知页：铺满主面板，列表区内滚动，避免再套一层卡片框 */
+.gmail-panel__content--flush:has(> .msg-center) {
+  overflow: hidden;
+}
+
+.gmail-panel__content--flush > .msg-center {
+  flex: 1;
+  min-height: 0;
+  align-self: stretch;
+  width: 100%;
+}
+
 /* ── 业务模块页公共壳（考纲/院校/刷题/真题/社区/一点通）──
  * 顶栏 pageTitle 只保留一层；内容区用 module-card，勿再套同名 st-card-header。
  * max-width: 1400px。需要视口内分区滚动时加 --fill（见考纲/一点通）。
@@ -492,64 +525,6 @@ html[data-theme='dark'] .gmail-panel {
   font-size: 22px;
   font-weight: 700;
   color: var(--st-on-surface);
-}
-
-/* 通知列表 */
-.notify-toolbar {
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--st-outline-variant);
-  font-size: 13px;
-  color: var(--st-on-surface-variant);
-}
-
-.notify-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.notify-item {
-  display: flex;
-  gap: 12px;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--st-outline-variant);
-}
-
-.notify-item:hover {
-  background: color-mix(in srgb, var(--st-surface-container) 70%, transparent);
-}
-
-.notify-item--unread {
-  background: color-mix(in srgb, var(--st-secondary) 8%, transparent);
-}
-
-.notify-item__dot {
-  width: 8px;
-  height: 8px;
-  margin-top: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.notify-item--unread .notify-item__dot {
-  background: var(--st-secondary);
-}
-
-.notify-item__body strong {
-  display: block;
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.notify-item__body p {
-  margin: 0 0 4px;
-  font-size: 13px;
-  color: var(--st-on-surface-variant);
-}
-
-.notify-item__body small {
-  font-size: 12px;
-  color: var(--st-on-surface-variant);
 }
 
 .workbench-placeholder {

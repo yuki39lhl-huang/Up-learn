@@ -18,4 +18,9 @@ public class UlLoginProperties {
     private boolean devLogCode = true;
     /** 是否经 RabbitMQ 异步投递验证码；MQ 不可用时自动降级同步 */
     private boolean mqEnabled = true;
+    /**
+     * 验证码邮件 logo 公网地址（推荐 OSS）。
+     * 默认：{@code {ul.oss.public-base-url}/brand/logo-mark.png}
+     */
+    private String mailLogoUrl = "https://uplearn.oss-cn-beijing.aliyuncs.com/brand/logo-mark.png";
 }

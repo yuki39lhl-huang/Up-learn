@@ -1,0 +1,49 @@
+# DataId: user-service.yaml
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+  mail:
+    host: smtp.qq.com
+    port: 465
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.ssl.enable: true
+      mail.smtp.ssl.required: true
+
+logging:
+  file:
+    path: logs/user-service.log
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  group-configs:
+    - group: default
+      paths-to-match: /**
+      packages-to-scan: com.yukimomo.user.controller
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+ul:
+  login:
+    code-ttl-seconds: 300
+    send-interval-seconds: 60
+    # 仓库默认只打日志；本机 application-local.yml 可改 false 真发信
+    dev-log-code: true
+    mq-enabled: true
+    mail-logo-url: ${ul.oss.public-base-url}/brand/logo-mark.png
+  oss:
+    enabled: false
+    endpoint: oss-cn-beijing.aliyuncs.com
+    bucket: uplearn
+    public-base-url: https://uplearn.oss-cn-beijing.aliyuncs.com
+    avatar-dir: avatar
+    presign-ttl-seconds: 7200

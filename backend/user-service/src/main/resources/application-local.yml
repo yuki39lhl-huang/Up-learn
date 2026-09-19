@@ -1,4 +1,5 @@
-# profile=local：IDEA 本机启动，连 Docker 映射端口
+﻿# profile=local：IDEA 本机启动，连 Docker 映射端口
+# 密钥只写本机，勿提交真实 AccessKey / 邮箱授权码
 spring:
   cloud:
     nacos:
@@ -8,6 +9,9 @@ spring:
     multipart:
       max-file-size: 2MB
       max-request-size: 2MB
+  mail:
+    username: ""
+    password: ""
 
 ul:
   db:
@@ -15,11 +19,14 @@ ul:
     port: 3308
     pw: 1234
   redis:
-    # ul-redis 主库映射：6380 → 容器 6379（不要用旧单例 6379）
     host: localhost
     port: 6380
+  login:
+    # 本机真发信时改为 false，并填写上方 spring.mail
+    dev-log-code: true
   oss:
-    # 本机填写密钥后改为 true；切勿把真实 AccessKey 提交到 Git
     enabled: false
-    access-key-id: ''
-    access-key-secret: ''
+    bucket: uplearn
+    public-base-url: https://uplearn.oss-cn-beijing.aliyuncs.com
+    access-key-id: ""
+    access-key-secret: ""

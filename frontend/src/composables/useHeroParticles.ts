@@ -26,16 +26,20 @@ const LIFTOFF_DARK = [
 ]
 
 const LIFTOFF_LIGHT = [
+  '29, 78, 216',
+  '30, 64, 175',
   '37, 99, 235',
-  '59, 130, 246',
-  '96, 165, 250',
-  '147, 197, 253',
-  '100, 116, 139',
-  '148, 163, 184',
+  '51, 65, 85',
+  '71, 85, 105',
+  '15, 23, 42',
 ]
 
+function isDarkTheme() {
+  return document.documentElement.getAttribute('data-theme') === 'dark'
+}
+
 function activePalette() {
-  return document.documentElement.getAttribute('data-theme') === 'dark' ? LIFTOFF_DARK : LIFTOFF_LIGHT
+  return isDarkTheme() ? LIFTOFF_DARK : LIFTOFF_LIGHT
 }
 
 /**
@@ -70,13 +74,15 @@ export function useHeroParticles(options: HeroParticlesOptions) {
 
   function seed(count: number) {
     const palette = activePalette()
+    const dark = isDarkTheme()
     particles = Array.from({ length: count }, () => ({
       x: Math.random() * w,
       y: Math.random() * h,
       vx: (Math.random() - 0.5) * 0.4,
       vy: (Math.random() - 0.5) * 0.4,
-      r: 0.9 + Math.random() * 2.4,
-      a: 0.22 + Math.random() * 0.45,
+      // light mode: slightly larger + higher alpha so dots read on white
+      r: dark ? 0.75 + Math.random() * 2.2 : 1.05 + Math.random() * 2.6,
+      a: dark ? 0.2 + Math.random() * 0.48 : 0.38 + Math.random() * 0.42,
       rgb: options.color ?? palette[Math.floor(Math.random() * palette.length)]!,
     }))
   }
@@ -95,8 +101,9 @@ export function useHeroParticles(options: HeroParticlesOptions) {
     canvas.style.height = `${h}px`
     const ctx = canvas.getContext('2d')
     if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    const count = Math.min(180, Math.floor((w * h) / 7500))
-    seed(Math.max(64, count))
+    // denser field; keep a soft Antigravity look (not a snowstorm)
+    const count = Math.min(320, Math.floor((w * h) / 4200))
+    seed(Math.max(110, count))
   }
 
   function frame() {

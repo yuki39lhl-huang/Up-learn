@@ -1,0 +1,31 @@
+# DataId: practice-service.yaml
+
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+logging:
+  file:
+    path: logs/practice-service.log
+
+ul:
+  papers:
+    ai-score-enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  group-configs:
+    - group: default
+      paths-to-match: /**
+      packages-to-scan: com.yukimomo.practice.controller
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn

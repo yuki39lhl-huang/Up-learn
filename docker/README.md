@@ -6,7 +6,7 @@
 |------|------|---------|
 | 一期（常驻） | `ul-mysql` / `ul-nacos` / Redis 主从哨兵 | [docker.md](../markdown/docker.md) |
 | 二期（按需） | RabbitMQ / ES / Kibana / Sentinel / Seata | [`compose.phase2.yml`](./compose.phase2.yml) |
-| 不做 | 社区 | — |
+| 不做 | — | — |
 
 > **内存提醒**：二期不要和一期长期全开，Docker 易卡死。ES / Sentinel / Kibana / Seata / RabbitMQ **用到再起、用完就停**。
 

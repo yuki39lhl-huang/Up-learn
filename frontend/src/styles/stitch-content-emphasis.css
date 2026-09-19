@@ -43,7 +43,14 @@ html[data-content-emphasis='off'] .gmail-shell .quiz__option,
 html[data-content-emphasis='off'] .gmail-shell .quiz__analysis,
 html[data-content-emphasis='off'] .gmail-shell .settings-block,
 html[data-content-emphasis='off'] .gmail-shell .settings-preview,
-html[data-content-emphasis='off'] .gmail-shell .record-item {
+html[data-content-emphasis='off'] .gmail-shell .record-item,
+html[data-content-emphasis='off'] .gmail-shell .msg-center,
+html[data-content-emphasis='off'] .gmail-shell .msg-side,
+html[data-content-emphasis='off'] .gmail-shell .msg-panel,
+html[data-content-emphasis='off'] .gmail-shell .msg-main__head,
+html[data-content-emphasis='off'] .gmail-shell .msg-row__snip,
+html[data-content-emphasis='off'] .gmail-shell .msg-row.is-unread,
+html[data-content-emphasis='off'] .gmail-shell .msg-row:hover {
   /* 只清内层底块；勿动 .dash-card / .module-card 等模块玻璃壳 */
   background: transparent !important;
   background-color: transparent !important;

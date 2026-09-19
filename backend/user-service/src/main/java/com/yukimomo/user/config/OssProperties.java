@@ -15,20 +15,23 @@ public class OssProperties {
 
     private String endpoint = "oss-cn-beijing.aliyuncs.com";
 
-    private String bucket = "up-learn";
+    private String bucket = "uplearn";
 
     private String accessKeyId;
 
     private String accessKeySecret;
 
     /** 对外访问根 URL（自定义域名或 Bucket 域名） */
-    private String publicBaseUrl = "https://up-learn.cn-beijing.taihangrda.cn";
+    private String publicBaseUrl = "https://uplearn.oss-cn-beijing.aliyuncs.com";
 
     /** 头像对象前缀目录 */
     private String avatarDir = "avatar";
 
     /** 控制台底层背景图对象前缀目录 */
     private String wallpaperDir = "wallpaper";
+
+    /** 社区帖子配图对象前缀目录（公开读，便于正文长期展示） */
+    private String communityDir = "community";
 
     /** 签名 URL 有效期（秒），供前端 img 加载私有对象 */
     private long presignTtlSeconds = 7200;

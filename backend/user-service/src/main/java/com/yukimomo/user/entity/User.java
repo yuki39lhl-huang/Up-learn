@@ -28,6 +28,11 @@ public class User {
     private String nickname;
     @TableField("avatar_url")
     private String avatarUrl;
+    /** 个人简介（社区展示） */
+    private String bio;
+    /** 是否公开关注/粉丝列表：1 公开，0 仅自己 */
+    @TableField("show_follow_list")
+    private Integer showFollowList;
     @TableLogic
     private Integer deleted;
     @TableField("created_at")

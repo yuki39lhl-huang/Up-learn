@@ -1,5 +1,6 @@
+# 本地仅保留：端口 / 服务名 / profile / Nacos 连接与拉配置清单
+# 业务配置见 Nacos（backend/nacos-config），本机密钥见 application-local.yml
 server:
-  # 本机 IDEA 直连端口；经 Gateway 时对外仍走网关
   port: 8081
 
 spring:
@@ -7,89 +8,19 @@ spring:
     name: user-service
   profiles:
     active: dev
-  datasource:
-    # 这里虽然读取的是dev文件但是在测试的时候指定spring读取local文件,这里是方便以后部署到docker的时候读取dev文件
-    url: jdbc:mysql://${ul.db.host}:${ul.db.port}/up_learn?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: ${ul.db.pw}
+  config:
+    import:
+      - optional:nacos:ul-common.yaml
+      - optional:nacos:ul-datasource.yaml
+      - optional:nacos:${spring.application.name}.yaml
   cloud:
     nacos:
-      # Nacos 3.x：8848 映射到宿主机 8858（8088 只是控制台 UI，不能当 server-addr）
       server-addr: localhost:8858
-      # 控制台已初始化，账号密码均为 nacos
       username: nacos
       password: nacos
+      config:
+        file-extension: yaml
+        group: DEFAULT_GROUP
+        refresh-enabled: true
       discovery:
-        # true=临时实例（进程挂了会自动摘除，本地调试更合适）
         ephemeral: true
-  data:
-    redis:
-      # 端口/host 见 application-{profile}.yml 的 ul.redis.*
-      host: ${ul.redis.host}
-      port: ${ul.redis.port}
-  rabbitmq:
-    host: ${ul.rabbitmq.host:localhost}
-    port: ${ul.rabbitmq.port:5672}
-    username: ${ul.rabbitmq.username:uplearn}
-    password: ${ul.rabbitmq.password:1234}
-
-# MyBatis-Plus（3.5+ 通用枚举默认可不配 default-enum-type-handler）
-mybatis-plus:
-  global-config:
-    db-config:
-      update-strategy: not-null
-      id-type: auto
-
-logging:
-  level:
-    # 包名带点，用 [] 引起来，IDE 才不会黄线
-    '[com.yukimomo]': debug
-  pattern:
-    dateformat: HH:mm:ss:SSS
-  file:
-    path: logs/user-service.log
-
-# Knife4j Boot4 + springdoc（openapi3 不要用 knife4j.openapi，那是 openapi2 的）
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-  group-configs:
-    - group: default
-      paths-to-match: /**
-      packages-to-scan: com.yukimomo.user.controller
-
-knife4j:
-  enable: true
-  setting:
-    language: zh_cn
-
-# JWT（Access 短效 JWT + Refresh 存 Redis）
-ul:
-  jwt:
-    secret: up-learn-dev-jwt-secret-key-change-in-production!!
-    access-ttl-ms: 1800000
-    refresh-ttl-seconds: 604800
-  login:
-    # 验证码有效期（秒）
-    code-ttl-seconds: 300
-    # 同一邮箱发送间隔（秒）
-    send-interval-seconds: 60
-    # 开发环境 true：验证码打日志，不真实发邮件
-    dev-log-code: true
-    # 经 RabbitMQ 异步投递；MQ 不可用时降级同步日志
-    mq-enabled: true
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: uplearn
-    password: "1234"
-  oss:
-    enabled: false
-    endpoint: oss-cn-beijing.aliyuncs.com
-    bucket: up-learn
-    public-base-url: https://up-learn.cn-beijing.taihangrda.cn
-    avatar-dir: avatar
-    presign-ttl-seconds: 7200

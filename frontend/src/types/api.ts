@@ -29,6 +29,8 @@ export interface UserInfoVO {
   email: string
   nickname: string
   avatarUrl: string
+  bio?: string | null
+  showFollowList?: boolean | null
   hasPassword?: boolean
 }
 

@@ -1,0 +1,39 @@
+# DataId: gateway-service.yaml
+
+spring:
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:8718
+        port: 8719
+      eager: true
+      web-context-unify: true
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/api/user/**
+            - id: school-service
+              uri: lb://school-service
+              predicates:
+                - Path=/api/school/**,/api/major/**,/api/exam-subjects/**,/api/syllabus/**
+            - id: practice-service
+              uri: lb://practice-service
+              predicates:
+                - Path=/api/practice/**
+            - id: agent-service
+              uri: lb://agent-service
+              predicates:
+                - Path=/api/agent/**
+            - id: community-service
+              uri: lb://community-service
+              predicates:
+                - Path=/api/community/**
+
+logging:
+  level:
+    '[org.springframework.cloud.gateway]': info
+    '[com.yukimomo]': debug

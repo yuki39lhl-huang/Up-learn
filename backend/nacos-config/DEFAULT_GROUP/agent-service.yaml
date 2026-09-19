@@ -1,0 +1,36 @@
+# DataId: agent-service.yaml
+# DeepSeek Key：本机 application-local.yml 或 Nacos 控制台填写 ul.agent.deepseek-api-key，勿把明文提交 Git
+
+langchain4j:
+  open-ai:
+    chat-model:
+      base-url: https://api.deepseek.com
+      api-key: ${ul.agent.deepseek-api-key:}
+      model-name: deepseek-v4-flash
+      log-requests: true
+      log-responses: true
+    streaming-chat-model:
+      base-url: https://api.deepseek.com
+      api-key: ${ul.agent.deepseek-api-key:}
+      model-name: deepseek-v4-flash
+      log-requests: true
+      log-responses: true
+
+ul:
+  agent:
+    # 占位：真实 Key 写 application-local.yml 或 Nacos 控制台
+    deepseek-api-key: ""
+    rag:
+      # 默认关；本机 application-local.yml 仍开分页 RAG
+      enabled: false
+      ingest-on-startup: false
+      embedding: auto
+      segment-size: 500
+      segment-overlap: 80
+      min-score: 0.45
+      max-results: 5
+
+logging:
+  level:
+    dev.langchain4j: debug
+    '[com.yukimomo]': debug
